@@ -1,0 +1,61 @@
+/* Base style applied to all buttons */
+.button {
+  /* Layout and size */
+  padding: 10px 20px;
+  min-width: 120px;
+  border-radius: 6px;
+  
+  /* Typography */
+  font-size: 16px;
+  font-weight: 600;
+  text-align: center;
+  
+  /* Aesthetics */
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+  user-select: none; /* Prevents text selection on click */
+}
+
+/* ----------------- Variants ----------------- */
+
+/* Primary variant (e.g., Submit, Login, CTA) - Blue/Primary color */
+.primary {
+  background-color: #007bff; /* Smart Learn Blue */
+  color: white;
+}
+
+.primary:hover:not(:disabled) {
+  background-color: #0056b3;
+  box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
+}
+
+/* Secondary variant (e.g., Cancel, Outline, Ghost) - Grey/Muted */
+.secondary {
+  background-color: #f8f9fa; /* Light Grey */
+  color: #343a40;
+  border: 1px solid #ced4da;
+}
+
+.secondary:hover:not(:disabled) {
+  background-color: #e2e6ea;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* Danger variant (e.g., Delete, Logout) - Red */
+.danger {
+  background-color: #dc3545; /* Red */
+  color: white;
+}
+
+.danger:hover:not(:disabled) {
+  background-color: #c82333;
+}
+
+/* ----------------- State ----------------- */
+
+/* Disabled state applies to all variants */
+.button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

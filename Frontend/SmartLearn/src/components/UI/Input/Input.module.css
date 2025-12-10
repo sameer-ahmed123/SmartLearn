@@ -1,0 +1,42 @@
+.control {
+  /* Container for label and input */
+  margin-bottom: 20px;
+  width: 100%;
+}
+
+.label {
+  /* Typography and display */
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: #343a40;
+  margin-bottom: 8px;
+}
+
+.input {
+  /* Basic input styling */
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  
+  /* Typography */
+  font-size: 16px;
+  color: #495057;
+  
+  /* Important: ensures padding and border are included in the element's total width and height */
+  box-sizing: border-box; 
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+/* Focus state for accessibility and clarity */
+.input:focus {
+  border-color: #007bff; /* Matches the primary button color */
+  outline: 0;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+/* Optional: Placeholder text styling */
+.input::placeholder {
+  color: #adb5bd;
+}
