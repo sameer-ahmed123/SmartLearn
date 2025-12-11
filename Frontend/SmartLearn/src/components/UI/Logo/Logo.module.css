@@ -1,0 +1,15 @@
+.logo {
+  text-decoration: none;
+  font-weight: 800;
+  font-size: 24px;
+  display: inline-block;
+}
+
+.smart {
+  color: #343a40; /* Darker text */
+  margin-right: 2px;
+}
+
+.learn {
+  color: #007bff; /* Primary brand color */
+}

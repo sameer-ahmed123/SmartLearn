@@ -1,0 +1,83 @@
+/* --------------------------------------------------
+ * BASE & WRAPPERS
+ * -------------------------------------------------- */
+
+.appWrapper {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: #f4f7f9; /* Light, soft background for the authenticated area */
+}
+
+/* This container holds the sidebar and main content */
+.contentArea {
+  display: flex;
+  flex: 1; 
+}
+
+.mainContent {
+  flex-grow: 1; /* Takes up all remaining horizontal space */
+  padding: 30px;
+  max-width: 100%; /* Prevents horizontal overflow */
+}
+
+/* --------------------------------------------------
+ * 1. Public Layout (for Login/Signup)
+ * -------------------------------------------------- */
+
+.publicLayoutContainer {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center; /* Center horizontally */
+  align-items: center; /* Center vertically */
+  background-color: #e9ecef; /* Simple, neutral background */
+  padding: 20px;
+}
+
+/* --------------------------------------------------
+ * 2. Header Styles
+ * -------------------------------------------------- */
+
+.header {
+  height: 60px;
+  background-color: #ffffff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  padding: 0 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 100; /* Keeps header above other content */
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 15px; /* Spacing between profile icon, tag, and button */
+}
+
+/* --------------------------------------------------
+ * 3. Sidebar Styles
+ * -------------------------------------------------- */
+
+.sidebar {
+  width: 240px; /* Slightly wider sidebar */
+  padding: 20px 0;
+  background-color: #ffffff;
+  border-right: 1px solid #e9ecef;
+  flex-shrink: 0; /* Prevents sidebar from shrinking */
+  height: calc(100vh - 60px); /* Fill space below the header */
+  position: sticky;
+  top: 60px; /* Aligns with the bottom of the header */
+}
+
+.sidebarNav {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+/* Note: The styling for the sidebar navigation links is primarily handled
+   by the .sidebar variant within the components/UI/LinkButton/LinkButton.module.css
+   to ensure consistent hover and active states. */

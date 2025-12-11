@@ -1,0 +1,28 @@
+.badge {
+  /* Positioning and Size */
+  display: inline-flex;
+  min-width: 20px; 
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 10px;
+  
+  /* Text and Alignment */
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 20px; /* Vertically centers text */
+  text-align: center;
+  white-space: nowrap;
+  
+  /* Aesthetics */
+  color: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Variants */
+.danger {
+  background-color: #dc3545; /* Red: for warnings/high priority */
+}
+
+.primary {
+  background-color: #007bff; /* Blue: for general counts */
+}

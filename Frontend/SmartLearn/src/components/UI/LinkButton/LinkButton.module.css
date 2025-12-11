@@ -1,0 +1,44 @@
+/* Base styles - similar to a button */
+.linkButton {
+  padding: 10px 15px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none; /* Must remove default link underline */
+  text-align: center;
+  transition: background-color 0.2s, box-shadow 0.2s;
+  display: inline-block;
+  cursor: pointer;
+}
+
+/* Primary Link (for Header CTAs) */
+.primary {
+  background-color: #007bff;
+  color: white;
+}
+.primary:hover {
+  background-color: #0056b3;
+}
+
+/* Secondary Link (for neutral navigation) */
+.secondary {
+  background-color: transparent;
+  color: #343a40;
+  border: 1px solid #ced4da;
+}
+.secondary:hover {
+  background-color: #f8f9fa;
+}
+
+/* Sidebar Link Variant (no background, only hover effect) */
+.sidebar {
+  padding: 10px 20px; /* Wider padding for sidebar feel */
+  border-radius: 0; /* Square edges */
+  text-align: left;
+  display: block; /* Takes full width of container */
+  color: #495057;
+}
+.sidebar:hover {
+  background-color: #f0f4f7; /* Soft hover color */
+  color: #007bff;
+}

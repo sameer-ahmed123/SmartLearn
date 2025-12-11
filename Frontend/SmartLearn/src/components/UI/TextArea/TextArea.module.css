@@ -1,0 +1,30 @@
+.control {
+  margin-bottom: 20px;
+  width: 100%;
+}
+
+.label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: #343a40;
+  margin-bottom: 8px;
+}
+
+.textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 16px;
+  color: #495057;
+  resize: vertical; /* Allows resizing only vertically */
+  box-sizing: border-box; 
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.textarea:focus {
+  border-color: #007bff;
+  outline: 0;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
