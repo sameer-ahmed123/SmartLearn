@@ -1,10 +1,10 @@
 import { Routes, Route,  } from 'react-router-dom';
-import Header from './components/Layout/Header';
+import MainAppLayout from './components/Layout/MainLayout';
 const App: React.FC = () => {
   return (
     <Routes>
       {/* PUBLIC ROUTES */}
-      <Route path="/" element={<Header/> } />
+      <Route path="/" element={<MainAppLayout>a</MainAppLayout> } />
       {/* <Route path="/" element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} replace />} /> */}
 
       {/* AUTHENTICATED/PROTECTED ROUTES */}
