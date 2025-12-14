@@ -10,7 +10,7 @@ interface User {
   id: number;
   email: string;
   name: string; // Used for ProfileIcon
-  role: 'Student' | 'Teacher'; // Explicitly defined here as well
+  role: 'student' | 'teacher'; // Explicitly defined here as well
   // Add other user details you get from the Django backend
   // e.g., avatarUrl: string;
 }
@@ -20,14 +20,16 @@ interface AuthState {
   // State variables
   isAuthenticated: boolean;
   token: string | null;
+  refreshToken :string |null;
   user: User | null;
-  role: 'Student' | 'Teacher' | null;
+  role: 'student' | 'teacher' | null;
 
   // Actions (Functions that modify state)
-  login: (userData: User, token: string) => void;
+  login: (userData: User, token: string, refreshToken: string) => void;
   logout: () => void;
+  setAccessToken: (token: string) => void; // Used by interceptor to update store
   // A helper function to check if the user is a specific role
-  isRole: (role: 'Student' | 'Teacher') => boolean; 
+  isRole: (role: 'student' | 'teacher') => boolean; 
 }
 
 // ----------------------------------------------------
@@ -41,6 +43,7 @@ export const useAuthStore = create<AuthState>()(
       // INITIAL STATE
       isAuthenticated: false,
       token: null,
+      refreshToken:null,
       user: null,
       role: null,
 
@@ -73,12 +76,15 @@ export const useAuthStore = create<AuthState>()(
         });
         // Optional: Redirect to login page (handled by parent component/router)
       },
+      setAccessToken: (token: string) => {
+        set({ token });
+      },
 
       /**
        * Helper function to check the current user role.
        * @param requiredRole - The role to check against ('Student' or 'Teacher').
        */
-      isRole: (requiredRole: 'Student' | 'Teacher') => {
+      isRole: (requiredRole: 'student' | 'teacher') => {
         return get().role === requiredRole;
       },
     }),

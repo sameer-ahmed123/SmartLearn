@@ -17,6 +17,9 @@ import {
 } from "@/components/UI/select"
 import { Input } from "@/components/UI/input"
 import { Link } from "react-router-dom"
+import apiClient from "@/api/apiClient"
+import { useNavigate } from "react-router-dom" 
+import { useAuthStore } from "@/store/useAuthStore"
 
 type SignupValues = {
   name: string
@@ -41,6 +44,9 @@ export function SignupForm({
   })
 
   const [errors, setErrors] = useState<SignupErrors>({})
+  const navigate = useNavigate()
+  const login = useAuthStore((state)=>state.login)
+  // const register = useAuthStore((state)=>state.)
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement>
@@ -90,12 +96,31 @@ export function SignupForm({
     return Object.keys(newErrors).length === 0
   }
 
-  const handleSubmit = (
+  const handleSubmit = async (
     e: React.FormEvent<HTMLFormElement>
-  ): void => {
+  ): Promise<void> => {
     e.preventDefault()
 
     if (!validate()) return
+    const registrationData = {
+      email: values.email,
+      password: values.password,
+      full_name: values.name,
+      role: values.role.toLowerCase(), 
+    };
+    try{
+      await apiClient.post("/auth/register/",registrationData)
+      const loginResposne = await apiClient.post("/auth/login/",{email:values.email,password:values.password})
+      const {user,access,refresh} = loginResposne.data
+      login(user,access,refresh)
+      navigate("/")
+      
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    catch(err:any){
+      const msg = err.response?.data?.email?.[0] || "Registration failed. Try again."
+      console.log(msg)
+    }
 
     console.log("Validated data:", values)
     // send to backend
@@ -107,7 +132,7 @@ export function SignupForm({
       className={cn("flex flex-col", className)}
       {...props}
     >
-      <FieldGroup>
+      <FieldGroup className="gap-3">
         <div className="flex flex-col items-center gap-1 text-center">
           <h1 className="text-2xl font-bold">
             Create your account
@@ -163,10 +188,10 @@ export function SignupForm({
               <SelectValue placeholder="Select role" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="Teacher">
+              <SelectItem value="teacher">
                 Teacher
               </SelectItem>
-              <SelectItem value="Student">
+              <SelectItem value="student">
                 Student
               </SelectItem>
             </SelectContent>
@@ -226,13 +251,9 @@ export function SignupForm({
           </Button>
         </Field>
 
-        <FieldSeparator>Or continue with</FieldSeparator>
+        <FieldSeparator></FieldSeparator>
 
         <Field>
-          <Button variant="outline" type="button">
-            Sign up with GitHub
-          </Button>
-
           <FieldDescription className="px-6 text-center">
             Already have an account?{" "}
             <Link to="/login">Sign in</Link>

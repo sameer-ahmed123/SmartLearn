@@ -1,8 +1,62 @@
 from django.shortcuts import render
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view,permission_classes
+from rest_framework.permissions import AllowAny,IsAuthenticated
 from rest_framework.response import Response
+from rest_framework import status
+from users.serializers import UserSerializer
+from django.contrib.auth import authenticate
+from rest_framework_simplejwt.tokens import RefreshToken
+
 
 # Create your views here.
-@api_view(["GET"])
-def TestIndex(request):
-    return Response({"message":"HELLO WORLD TEST"})
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def register_user(request):
+    serialzer = UserSerializer(data=request.data)
+    if serialzer.is_valid():
+        serialzer.save()
+        return Response({
+            "message": "User Created Successfuly!",
+            "user": serialzer.data},
+            status=status.HTTP_201_CREATED
+        )
+    return Response(serialzer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def login_user(request):
+    email = request.data.get('email')
+    password = request.data.get('password')
+
+    user = authenticate(email=email, password=password)
+
+    if user is not None:
+        refresh = RefreshToken.for_user(user)
+        return Response({
+            'refresh': str(refresh),
+            'access': str(refresh.access_token),
+            'user': {
+                'full_name': user.full_name,
+                'role': user.role,
+                'email': user.email
+            }
+        }, status=status.HTTP_200_OK)
+    
+    return Response({"detail": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def logout_user(request):
+    try:
+        # React must send the refresh token in the body
+        refresh_token = request.data.get("refresh")
+        token = RefreshToken(refresh_token)
+        
+        # This permanently invalidates the token
+        token.blacklist()
+
+        return Response({"message": "Successfully logged out"}, status=status.HTTP_205_RESET_CONTENT)
+    except Exception as e:
+        return Response({"detail": "Invalid or expired token"}, status=status.HTTP_400_BAD_REQUEST)
