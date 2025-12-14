@@ -1,12 +1,14 @@
-import { Routes, Route,  } from 'react-router-dom';
-import MainAppLayout from './components/Layout/MainLayout';
+import { Routes, Route } from "react-router-dom";
+import { ModeToggle } from "./components/Layout/mode-toggle";
+import LoginPage from "./pages/LoginPage";
+import SignupPage from "./pages/SignupPage";
 const App: React.FC = () => {
   return (
     <Routes>
       {/* PUBLIC ROUTES */}
-      <Route path="/" element={<MainAppLayout>a</MainAppLayout> } />
-      {/* <Route path="/" element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} replace />} /> */}
-
+      <Route path="/" element={<ModeToggle />} />
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/signup" element={<SignupPage />} />
       {/* AUTHENTICATED/PROTECTED ROUTES */}
       {/* <Route path="/dashboard" element={
         <ProtectedRoute>
