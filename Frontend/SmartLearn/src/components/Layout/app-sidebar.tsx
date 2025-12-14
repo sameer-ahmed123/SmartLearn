@@ -26,7 +26,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@/components/Layout/sidebar";
+} from "@/components/Layout/SideBar";
 
 const data = {
   user: {
