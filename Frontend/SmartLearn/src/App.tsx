@@ -29,7 +29,7 @@ const App: React.FC = () => {
       </Route>
 
       {/* Protected Route ====> only Authenticated Teachers Allowed */}
-      <Route element={<ProtectedRoute />}>
+      <Route element={<ProtectedRoute allowedRole={["teacher"]} />}>
         <Route
           path="/allow_teacher"
           element={<h1>hello teacher</h1>}
