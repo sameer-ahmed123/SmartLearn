@@ -11,6 +11,6 @@ class UserSerializer(serializers.ModelSerializer):
         }
 
     def create(self, validated_data):
-        # Uses our custom UserManager to hash the password properly 3
+        # Uses our custom UserManager to hash the password properly 4
         user = User.objects.create_user(**validated_data)
         return user
