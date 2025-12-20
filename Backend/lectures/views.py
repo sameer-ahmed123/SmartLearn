@@ -9,6 +9,8 @@ from .serializers import (
     ContentSourceSerializer, ContentSourceCreateSerializer
 )
 from users.permissions import IsTeacher
+from .tasks import generate_lecture_from_source
+
 
 # -----------------------------------------------------------
 # NEW FBV 1: COURSE - GET (List) and POST (Create)
@@ -125,10 +127,20 @@ def content_source_list_create(request):
             # 2. Save the ContentSource, automatically setting the uploader
             instance = serializer.save(uploaded_by=user)
             
-            # 3. FUTURE STEP: Trigger the AI processing function here
-            # E.g., trigger_ai_lecture_generation.delay(instance.id)
+            # 3. Trigger the AI processing function here
+                # the delay hands over the function to Celery
+            generate_lecture_from_source.delay(instance.id)
             
-            return Response(ContentSourceSerializer(instance).data, status=status.HTTP_201_CREATED)
+            # return 202 Accepted Status to show ==> content accepted and lecture generation started in background
+            return Response(
+                {
+                    "id": instance.id,
+                    "course_id": instance.course_id,
+                    "message": "Content uploaded successfully. AI lecture generation is starting in the background.",
+                    "status_check_url": f"/api/v1/lectures/content-sources/{instance.id}/"
+                }, 
+                status=status.HTTP_202_ACCEPTED # Key Change: 202 Accepted
+            )
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 

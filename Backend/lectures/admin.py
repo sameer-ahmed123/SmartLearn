@@ -4,7 +4,7 @@ from .models import Lecture, ContentSource, Course
 # Register your models here.
 @admin.register(ContentSource)
 class ContentSourceAdmin(admin.ModelAdmin):
-    list_display = ("course","uploaded_by","created_at")
+    list_display = ("id","course","uploaded_by","created_at")
     search_fields = ("course",)
 
 @admin.register(Course)

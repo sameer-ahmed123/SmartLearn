@@ -54,3 +54,4 @@ yarn-debug.log*
 # 3. RAW CONTENT UPLOADS
 # --------------------------------------
 */raw_content_uploads/
+*/media
