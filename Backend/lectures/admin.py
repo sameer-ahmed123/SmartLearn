@@ -5,13 +5,13 @@ from .models import Lecture, ContentSource, Course
 @admin.register(ContentSource)
 class ContentSourceAdmin(admin.ModelAdmin):
     list_display = ("course","uploaded_by","created_at")
-    search_fields = ("course")
+    search_fields = ("course",)
 
 @admin.register(Course)
 class CourseAdmin(admin.ModelAdmin):
     list_display = ("title","teacher","description","status","created_at")
-    list_filter = ("stauts")
-    search_fields = ("title", "teacher")
+    list_filter = ("status","teacher")
+    search_fields = ("title", "teacher",)
 @admin.register(Lecture)
 class LectureAdmin(admin.ModelAdmin):
     list_display = ('topic', 'generated_by', 'validated_by', 'validation_status', 'created_at')

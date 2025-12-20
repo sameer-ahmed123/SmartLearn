@@ -1,11 +1,14 @@
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from .models import Lecture,Course,ContentSource
 from users.serializers import UserSerializer
 
+User = get_user_model()
+
 class TeacherDetailSerializer(serializers.ModelSerializer):
     class Meta:
-        model = settings.AUTH_USER_MODEL
+        model = User
         fields = ['id','full_name','email']
         
 class CourseSerializer(serializers.ModelSerializer):
@@ -19,7 +22,7 @@ class CourseSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['teacher','created_at']
         
-    def get_content_sources_count(self,obj):
+    def get_content_source_count(self,obj):
         return obj.content_sources.count()
     
     def get_lecture_count(self,obj):

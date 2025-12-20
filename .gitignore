@@ -49,3 +49,8 @@ __pycache__/
 # Log Files
 npm-debug.log*
 yarn-debug.log*
+
+# --------------------------------------
+# 3. RAW CONTENT UPLOADS
+# --------------------------------------
+*/raw_content_uploads/
