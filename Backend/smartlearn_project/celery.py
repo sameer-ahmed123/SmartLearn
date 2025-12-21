@@ -1,6 +1,8 @@
 import os
 from celery import Celery
 
+# ------ COMMAND TO RUN CELERY WORKER : celery -A smartlearn_project worker -l info --pool=solo   ------ #
+
 # Set the default Django settings module for the 'celery' program.
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'smartlearn_project.settings')
 
