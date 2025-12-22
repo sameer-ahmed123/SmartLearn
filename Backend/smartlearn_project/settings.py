@@ -213,5 +213,6 @@ CELERY_TIMEZONE = 'Asia/Karachi' # Set to your local timezone (e.g., 'Asia/Karac
 
 # GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
 
-GEMINI_API_KEY = "AIzaSyAEUYCXMWaP4XddJBLROW4GFYxziLzY-rA"
+## FKN IDIOT DO NOT LEAK THIS AGAIN !!!!!!!!!!
+GEMINI_API_KEY = ""
 # Use a similar method for other keys (e.g., VIDEO_GEN_KEY)
