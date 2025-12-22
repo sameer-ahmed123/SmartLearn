@@ -22,7 +22,9 @@ AUTH_USER_MODEL = 'users.User'
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get("SECRET_KEY")
+# SECRET_KEY = os.environ.get("SECRET_KEY")
+SECRET_KEY = 'django-insecure-b#l*+n)$8c%e&$wk9qlr=(6s$k7n_+!cch4y^l7b8cx!$oddro'
+
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get("DEBUG")
@@ -189,9 +191,11 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # ----------------------- CELERY CONFIGURATION ----------------------
 #--------------------------------------------------------------------
 # Broker: The service Celery uses to send and receive tasks (using Redis on localhost default port)
-CELERY_BROKER_URL = os.environ.get("CELERY_BROKER")
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
+# CELERY_BROKER_URL = os.environ.get("CELERY_BROKER")
 # Backend: Where Celery stores the task results (also using Redis)
-CELERY_RESULT_BACKEND = os.environ.get("CELERY_BROKER")
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+# CELERY_RESULT_BACKEND = os.environ.get("CELERY_BROKER")
 
 # Content Type: Defines how task messages are serialized
 CELERY_ACCEPT_CONTENT = ['json']
@@ -203,3 +207,11 @@ CELERY_ENABLE_UTC = True
 CELERY_TIMEZONE = 'Asia/Karachi' # Set to your local timezone (e.g., 'Asia/Karachi' or 'UTC')
 
 
+#######
+##     AI API SERVICE RELATED SETTINGS
+######
+
+# GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
+
+GEMINI_API_KEY = "AIzaSyAEUYCXMWaP4XddJBLROW4GFYxziLzY-rA"
+# Use a similar method for other keys (e.g., VIDEO_GEN_KEY)
