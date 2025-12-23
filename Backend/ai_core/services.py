@@ -3,17 +3,24 @@
 ##
 #       significantly faster response time for images
 #       (down from 83-100 seconds to 13-16 seconds)
+
+# NOTE gemini-3-flash-preview significantly fast ha gemini-2.5-flash se But 
+# Return tokens yah output significantly kam ha gemini-3-flash-preview ka
+# COMPARE GENERATED LECTURE NUMBER 60 and 59 
+# 60 --- gemini-2.5-flash
+# 59 --- gemini-3-flash-preview
 ##
 ########
 
 import os
-import base64
-import magic  # You might need a library to detect file types robustly
 from django.conf import settings
 from PIL import Image
-# from PyPDF2 import PdfReader # Uncomment if you need to read PDFs
+import fitz  # PyMuPDF library for PDF
+from pptx import Presentation # python-pptx library for PPTX
 import google.genai as genai
+import logging
 
+logger = logging.getLogger(__name__)
 
 api_key = settings.GEMINI_API_KEY
 # Initialize the client, explicitly passing the key
@@ -23,9 +30,6 @@ if not api_key:
 
 # Initialize genai Client . Note the client will automatically read gemini api key from settings
 client = genai.Client(api_key=api_key)
-
-# helper to convert local image to part object
-
 
 def get_image_part(file_path):
     """ converts a local image file to a GenerativePart for Gemini API
@@ -46,6 +50,32 @@ def get_image_part(file_path):
                 f"Unsupported image file extension for Gemini: {file_path}")
         return genai.types.Part.from_bytes(data=image_bytes, mime_type=mime_type)
 
+def extract_text_from_pdf(full_path):
+    """ Extracts text content from a PDF using PyMuPDF. """
+    text_content = []
+    try:
+        with fitz.open(full_path) as doc:
+            for page in doc:
+                text_content.append(page.get_text())
+            # doc.close() # the close happens automatically jab "with" use hoga
+            return "\n".join(text_content)
+    except Exception as e:
+        logger.error(f"Error extracting PDF Text From {full_path}: {e}")
+        return None
+        
+def extract_text_from_pptx(full_path):
+    """ Extracts text content form a Power Point using python-pptx """
+    text_content = []
+    try:
+        prs = Presentation(full_path)
+        for slide in prs.slides:
+            for shape in slide.shapes:
+                if hasattr(shape,"text"):
+                    text_content.append(shape.text)
+                return "\n".join(text_content)
+    except Exception as e:
+        logger.error(f"Error extracting text from {full_path} : {e}")
+        return None
 
 def read_content_file(file_path_db):
     """
@@ -69,34 +99,38 @@ def read_content_file(file_path_db):
                 "path": full_path,
                 "content": f"load image file: {os.path.basename(file_path_db)}"
             }
-            # # For LLMs, you usually send the image as a base64 string or binary data
-            # # Placeholder: confirm the image is valid
-            # with Image.open(full_path) as img:
-            #     return {
-            #         'type': 'image',
-            #         'content': f"Loaded image file: {os.path.basename(file_path_db)} (Size: {img.size})"
-            #     }
 
         elif file_path_db.lower().endswith(('.txt', '.csv', '.md')):
             with open(full_path, 'r', encoding='utf-8') as f:
                 return {'type': 'text', 'content': f.read()}
+            
         elif file_path_db.lower().endswith('.pdf'):
-            # TODO: Use a library like PyPDF2 to extract text
-            return {'type': 'pdf', 'content': f"Placeholder for PDF content at {full_path}"}
+            content = extract_text_from_pdf(full_path)
+            if content is None:
+                raise Exception("PDF extraction Failed")
+            return {'type': 'pdf', 'path':full_path, 'content': content,}
+        
+        elif file_path_db.lower().endswith('.pptx'):
+            content = extract_text_from_pptx(full_path)
+            if content is None:
+                raise Exception("PPTX extraction failed.")
+            return {'type': 'text', 'path': full_path, 'content': content}
+        
         else:
             return {'type': 'unknown', 'content': f"Unsupported file type: {os.path.basename(file_path_db)}"}
 
     except Exception as e:
         return {'type': 'error', 'content': f"Error processing file {full_path}: {e}"}
-
-
+  
 def generate_lecture_script(prompt, file_data):
     """
     Calls Gemini API to Generate Script and Context in Json format
     """
     # 1. Prepare input Parts
     # model_name = "gemini-2.5-flash"
-    model_name = "gemini-3-flash-preview"
+    # model_name = "gemini-3-flash-preview"
+    model_name = "gemini-3-flash"
+    
     system_instructions = (
         "You are an expert curriculum designer. Your task is to generate a comprehensive"
         "lecture script and brief chatbot context based on the user's prompt and provided content."
