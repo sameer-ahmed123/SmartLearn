@@ -55,7 +55,7 @@ def generate_lecture_from_source(content_source_id):
         # 3. Read the File  -- Links to services.py (read_content_file)
         #    converts the uploaded file into a format that ai can understand
         file_data = read_content_file(file_path_db)
-        print(file_data)
+        # print(file_data)
         if isinstance(file_data, str) and file_data.startswith("Error"):
             logger.error(
                 f"Failed to process file for lecture ID {content_source_id}: {file_data}")

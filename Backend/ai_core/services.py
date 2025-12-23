@@ -12,13 +12,12 @@
 ##
 ########
 
-import os
+import os,uuid,fitz,logging
 from django.conf import settings
 from PIL import Image
-import fitz  # PyMuPDF library for PDF
 from pptx import Presentation # python-pptx library for PPTX
 import google.genai as genai
-import logging
+
 
 logger = logging.getLogger(__name__)
 
@@ -50,18 +49,50 @@ def get_image_part(file_path):
                 f"Unsupported image file extension for Gemini: {file_path}")
         return genai.types.Part.from_bytes(data=image_bytes, mime_type=mime_type)
 
-def extract_text_from_pdf(full_path):
-    """ Extracts text content from a PDF using PyMuPDF. """
+def extract_content_from_pdf(full_path):
+    """ 
+    Extracts text content from a PDF using PyMuPDF.
+    AND saves temporary images to feed to the ai model 
+    returns text_content_str and [list_of_image_paths]
+    """
     text_content = []
+    image_paths = []
+    
+    # A temporary folder to store extracted images
+    temp_dir = os.path.join(settings.MEDIA_ROOT, 'temp_pdf_images')
+    os.makedirs(temp_dir, exist_ok=True)
+    
     try:
         with fitz.open(full_path) as doc:
-            for page in doc:
+            for page_num, page in enumerate(doc):
+                # 1. extract text
                 text_content.append(page.get_text())
-            # doc.close() # the close happens automatically jab "with" use hoga
-            return "\n".join(text_content)
+                
+                # 2. extract images
+                for img_index, img in enumerate(page.get_images(full=True)):
+                    xref = img[0] # cross reference of image
+                    base_image = doc.extract_image(xref)
+                    
+                    if base_image:
+                        image_bytes = base_image["image"]
+                        ext = base_image["ext"]  # extention type ... jpg , png etc
+                        
+                        #create unique filename
+                        unique_id = uuid.uuid4().hex[:8]
+                        image_filename = f"pdf_img_{page_num}_{img_index}_{unique_id}.{ext}"
+                        temp_image_path = os.path.join(temp_dir,image_filename)
+                        
+                        # save the image bytes to temporary file 
+                        with open(temp_image_path,"wb") as img_file:
+                            img_file.write(image_bytes)
+                        
+                        image_paths.append(temp_image_path)
+                        
+            extracted_text = "\n".join(text_content).strip()
+        return extracted_text ,image_paths
     except Exception as e:
         logger.error(f"Error extracting PDF Text From {full_path}: {e}")
-        return None
+        return "", []
         
 def extract_text_from_pptx(full_path):
     """ Extracts text content form a Power Point using python-pptx """
@@ -72,7 +103,7 @@ def extract_text_from_pptx(full_path):
             for shape in slide.shapes:
                 if hasattr(shape,"text"):
                     text_content.append(shape.text)
-                return "\n".join(text_content)
+        return "\n".join(text_content)
     except Exception as e:
         logger.error(f"Error extracting text from {full_path} : {e}")
         return None
@@ -105,10 +136,11 @@ def read_content_file(file_path_db):
                 return {'type': 'text', 'content': f.read()}
             
         elif file_path_db.lower().endswith('.pdf'):
-            content = extract_text_from_pdf(full_path)
-            if content is None:
+            text_content, image_paths = extract_content_from_pdf(full_path)
+            if not text_content and not image_paths :
                 raise Exception("PDF extraction Failed")
-            return {'type': 'pdf', 'path':full_path, 'content': content,}
+            
+            return {'type': 'multimodal', 'path':full_path, 'content': text_content,'image_paths':image_paths}
         
         elif file_path_db.lower().endswith('.pptx'):
             content = extract_text_from_pptx(full_path)
@@ -127,9 +159,8 @@ def generate_lecture_script(prompt, file_data):
     Calls Gemini API to Generate Script and Context in Json format
     """
     # 1. Prepare input Parts
-    # model_name = "gemini-2.5-flash"
+    model_name = "gemini-2.5-flash"
     # model_name = "gemini-3-flash-preview"
-    model_name = "gemini-3-flash"
     
     system_instructions = (
         "You are an expert curriculum designer. Your task is to generate a comprehensive"
@@ -144,8 +175,23 @@ def generate_lecture_script(prompt, file_data):
         # You will need to update read_content_file to return the path!
         image_part = get_image_part(file_data['path'])
         content_parts.append(image_part)
-    else:
+    elif file_data['type'] == 'text':
         content_parts.append(f"content for lecture: {file_data['content']}")
+    elif file_data['type'] == 'multimodal':
+        # new file type to send both iamge data and text content to ai
+        
+        # extracted text first
+        content_parts.append(f"content for lecture: {file_data['content']}")
+        
+        # add all extracted (temporary) images as separate parts
+        for image_path in file_data['image_paths']:
+            try:
+                # image_part helper use kar k image bytes or mime_type set kardo
+                image_part = get_image_part(image_path)
+                content_parts.append(image_part)
+            except Exception as e:
+                logger.warning(f"failed to process extracted image {image_path}: {e}")
+        content_parts.append("IMPORTANT: Use provided text and ALL attached images to generate the script." )
 
     try:
         response = client.models.generate_content(
