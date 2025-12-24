@@ -12,11 +12,11 @@
 ##
 ########
 
-import os,uuid,fitz,logging
+import os,uuid,fitz,logging # type: ignore
 from django.conf import settings
-from PIL import Image
-from pptx import Presentation # python-pptx library for PPTX
-import google.genai as genai
+from PIL import Image # type: ignore
+from pptx import Presentation # python-pptx library for PPTX # type: ignore
+import google.genai as genai # type: ignore
 
 
 logger = logging.getLogger(__name__)
@@ -165,6 +165,8 @@ def generate_lecture_script(prompt, file_data):
     system_instructions = (
         "You are an expert curriculum designer. Your task is to generate a comprehensive"
         "lecture script and brief chatbot context based on the user's prompt and provided content."
+        "The content may be text, images, or both. **If the text content is empty, rely on the "
+        "attached images to generate the lecture.** "
         "the Output MUST be a JSON object with 'script' and 'context' keys."
     )
     # 2. build content array for the api call

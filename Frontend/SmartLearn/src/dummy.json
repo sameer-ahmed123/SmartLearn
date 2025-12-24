@@ -1,0 +1,110 @@
+{
+  "student": {
+    "id": "STU-1023",
+    "name": "Sameer Ahmed",
+    "email": "sameer@student.aiacademy.com",
+    "avatar": "https://i.pravatar.cc/150?img=12",
+    "enrolledSince": "2024-09-10",
+    "learningStreak": 18
+  },
+
+  "stats": {
+    "totalCourses": 6,
+    "completedCourses": 2,
+    "inProgressCourses": 3,
+    "totalLecturesWatched": 84,
+    "totalQuizzesAttempted": 19,
+    "averageScore": 82
+  },
+
+  "enrolledCourses": [
+    {
+      "courseId": "C-001",
+      "title": "AI Fundamentals",
+      "progress": 72,
+      "status": "in-progress",
+      "lastAccessed": "2025-12-22",
+      "nextLecture": {
+        "lectureId": "L-014",
+        "title": "Neural Networks Basics",
+        "estimatedTime": "18 min"
+      }
+    },
+    {
+      "courseId": "C-002",
+      "title": "Full Stack Web Development",
+      "progress": 100,
+      "status": "completed",
+      "completedOn": "2025-11-30"
+    },
+    {
+      "courseId": "C-003",
+      "title": "Data Structures & Algorithms",
+      "progress": 41,
+      "status": "in-progress",
+      "lastAccessed": "2025-12-20"
+    }
+  ],
+
+  "recentLectures": [
+    {
+      "lectureId": "L-021",
+      "courseTitle": "AI Fundamentals",
+      "title": "Backpropagation Explained",
+      "watchedOn": "2025-12-22",
+      "watchDuration": "15:32"
+    },
+    {
+      "lectureId": "L-089",
+      "courseTitle": "DSA",
+      "title": "Binary Search Trees",
+      "watchedOn": "2025-12-21",
+      "watchDuration": "22:10"
+    }
+  ],
+
+  "aiGeneratedRecommendations": [
+    {
+      "type": "lecture",
+      "title": "Gradient Descent Intuition",
+      "reason": "Based on your weak quiz performance in optimization topics"
+    },
+    {
+      "type": "practice",
+      "title": "BST Practice Problems",
+      "reason": "You paused multiple times in the BST lecture"
+    }
+  ],
+
+  "upcomingTasks": [
+    {
+      "taskId": "T-101",
+      "type": "quiz",
+      "courseTitle": "AI Fundamentals",
+      "title": "Neural Networks Quiz",
+      "dueDate": "2025-12-25"
+    },
+    {
+      "taskId": "T-102",
+      "type": "assignment",
+      "courseTitle": "DSA",
+      "title": "Binary Tree Implementation",
+      "dueDate": "2025-12-28"
+    }
+  ],
+
+  "notifications": [
+    {
+      "id": "N-1",
+      "message": "New AI-generated lecture added to AI Fundamentals",
+      "createdAt": "2025-12-22",
+      "read": false
+    },
+    {
+      "id": "N-2",
+      "message": "You completed Full Stack Web Development 🎉",
+      "createdAt": "2025-12-18",
+      "read": true
+    }
+  ]
+}
