@@ -1,97 +1,79 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-// ----------------------------------------------------
-// 1. INTERFACE DEFINITIONS (Type Safety)
-// ----------------------------------------------------
-
-/** Defines the structure for a logged-in User object */
+// --- 1. INTERFACE DEFINITIONS ---
 interface User {
   id: number;
   email: string;
-  name: string; // Used for ProfileIcon
-  role: 'student' | 'teacher'; // Explicitly defined here as well
-  // Add other user details you get from the Django backend
-  // e.g., avatarUrl: string;
+  name: string;
+  role: 'student' | 'teacher'; // Role based dashboard switch ke liye
 }
 
-/** Defines the shape of the entire Authentication State */
 interface AuthState {
-  // State variables
   isAuthenticated: boolean;
   token: string | null;
-  refreshToken :string |null;
+  refreshToken: string | null;
   user: User | null;
   role: 'student' | 'teacher' | null;
 
-  // Actions (Functions that modify state)
+  // Actions
   login: (userData: User, token: string, refreshToken: string) => void;
   logout: () => void;
-  setAccessToken: (token: string) => void; // Used by interceptor to update store
-  // A helper function to check if the user is a specific role
-  isRole: (role: 'student' | 'teacher') => boolean; 
+  setAccessToken: (token: string) => void;
+  isRole: (role: 'student' | 'teacher') => boolean;
 }
 
-// ----------------------------------------------------
-// 2. THE ZUSTAND STORE
-// ----------------------------------------------------
-
+// --- 2. THE ZUSTAND STORE ---
 export const useAuthStore = create<AuthState>()(
-  // Use 'persist' middleware to automatically save the state to localStorage
   persist(
     (set, get) => ({
       // INITIAL STATE
       isAuthenticated: false,
       token: null,
-      refreshToken:null,
+      refreshToken: null,
       user: null,
       role: null,
 
-      // ACTIONS
-      
-      /**
-       * Saves user data and JWT token upon successful login.
-       * @param userData - The user object returned from the Django backend.
-       * @param token - The JWT or session token.
-       */
-      login: (userData: User, token: string) => {
+      // LOGIN ACTION (Theek kiya gaya hai)
+      login: (userData, token, refreshToken) => {
         set({
           isAuthenticated: true,
           token: token,
+          refreshToken: refreshToken, // Refresh token ko bhi save karna zaroori hai
           user: userData,
-          role: userData.role, // Set the role directly from user data
+          role: userData.role,
         });
-        // Optional: Navigate user to dashboard after login (handled by parent component typically)
       },
 
-      /**
-       * Clears all authentication state.
-       */
+      // LOGOUT ACTION
       logout: () => {
         set({
           isAuthenticated: false,
           token: null,
+          refreshToken: null,
           user: null,
           role: null,
         });
-        // Optional: Redirect to login page (handled by parent component/router)
+        localStorage.removeItem('smartlearn-auth-storage');
       },
+
       setAccessToken: (token: string) => {
         set({ token });
       },
 
-      /**
-       * Helper function to check the current user role.
-       * @param requiredRole - The role to check against ('Student' or 'Teacher').
-       */
       isRole: (requiredRole: 'student' | 'teacher') => {
         return get().role === requiredRole;
       },
     }),
     {
-      name: 'smartlearn-auth-storage', // Key used in localStorage
-      // only store the token and role in local storage for rehydration
-      partialize: (state) => ({ token: state.token, user: state.user, role: state.role, isAuthenticated: state.isAuthenticated }), 
+      name: 'smartlearn-auth-storage',
+      partialize: (state) => ({
+        token: state.token,
+        refreshToken: state.refreshToken, // Isay bhi persist karna zaroori hai
+        user: state.user,
+        role: state.role,
+        isAuthenticated: state.isAuthenticated
+      }),
     }
   )
 );

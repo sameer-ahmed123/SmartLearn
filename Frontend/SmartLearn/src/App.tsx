@@ -1,43 +1,60 @@
-import { Routes, Route } from "react-router-dom";
-import { ModeToggle } from "./components/Layout/mode-toggle";
+import { Routes, Route, Navigate } from "react-router-dom";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
+import Dashboard from "./pages/Dashboard"; // Naya Dashboard import karein
 import ProtectedRoute from "./components/Auth/ProtectedRoute";
 import LogoutButton from "./components/Auth/LogoutButton";
+import { useAuthStore } from "./store/useAuthStore";
+import StudentDashboard from "./pages/student/StudentDashboard";
+import TeacherDashboard from "./pages/teacher/TeacherDashboard";
 const App: React.FC = () => {
+  const { user } = useAuthStore();
+
   return (
-    <Routes>
-      {/* PUBLIC ROUTES */}
-      <Route path="/" element={<><ModeToggle /> <LogoutButton/></>} />
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/signup" element={<SignupPage />} />
+    <>
+      {/* Agar aap chahte hain ke toggle aur logout har jagah nazar aayein */}
+      <div style={{ position: 'fixed', top: '10px', right: '10px', zIndex: 1000, display: 'flex', gap: '10px' }}>
 
-      {/* Protected Routes ====> only authenticated users Allowed */}
-      <Route element={<ProtectedRoute />}>
-        <Route
-          path="/dashBoard"
-          element={<h1>Protected H1 dashboard</h1>}
-        ></Route>
-      </Route>
+        {user && <LogoutButton />}
+      </div>
 
-      {/* Protected Route ====> only Authenticated Students Allowed */}
-      <Route element={<ProtectedRoute allowedRole={["student"]} />}>
-        <Route
-          path="/allow_student"
-          element={<h1>hello student</h1>}
-        ></Route>
-      </Route>
+      <Routes>
+        {/* PUBLIC ROUTES */}
+        {/* Agar user login hai to '/' par jane se wo Dashboard par redirect ho jaye */}
+        <Route path="/" element={user ? <Navigate to="/dashboard" /> : <Navigate to="/login" />} />
 
-      {/* Protected Route ====> only Authenticated Teachers Allowed */}
-      <Route element={<ProtectedRoute allowedRole={["teacher"]} />}>
-        <Route
-          path="/allow_teacher"
-          element={<h1>hello teacher</h1>}
-        ></Route>
-      </Route>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/signup" element={<SignupPage />} />
 
-      <Route path="/unauthorized" element={<h1>YOU ARE NOT ALLOWED IN THIS PAGE</h1>}></Route>
-    </Routes>
+        {/* PROTECTED DASHBOARD (Dono roles ke liye) */}
+        <Route element={<ProtectedRoute />}>
+          <Route path="/dashboard" element={<Dashboard />} />
+        </Route>
+
+        {/* STUDENT SPECIFIC ROUTES */}
+        <Route element={<ProtectedRoute allowedRole={["student"]} />}>
+          <Route path="/student" element={<StudentDashboard />} />
+        </Route>
+
+
+        {/* TEACHER SPECIFIC ROUTES */}
+        <Route element={<ProtectedRoute allowedRole={["teacher"]} />}>
+          <Route path="/teacher/dashboard" element={<TeacherDashboard />} />
+        </Route>
+
+
+        {/* ERROR ROUTES */}
+        <Route path="/unauthorized" element={
+          <div style={{ textAlign: 'center', marginTop: '100px' }}>
+            <h1>🚫 YOU ARE NOT ALLOWED</h1>
+            <p>You have no permission to this page</p>
+          </div>
+        } />
+
+        {/* 404 - Not Found */}
+        <Route path="*" element={<Navigate to="/" />} />
+      </Routes>
+    </>
   );
 };
 
