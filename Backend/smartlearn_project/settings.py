@@ -22,10 +22,12 @@ AUTH_USER_MODEL = 'users.User'
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
+# SECRET_KEY = os.environ.get("SECRET_KEY")
 SECRET_KEY = 'django-insecure-b#l*+n)$8c%e&$wk9qlr=(6s$k7n_+!cch4y^l7b8cx!$oddro'
 
+
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get("DEBUG")
 
 ALLOWED_HOSTS = []
 
@@ -107,16 +109,39 @@ WSGI_APPLICATION = 'smartlearn_project.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+
+######
+##    CURRENTLY DO NOT USE THIS SETUP  
+##    REASON ==> CRASHES THE CELERY WORKER -DOES NOT ALLOW CELERY WORKER TO CONNECT WITH DATABASE 
+######
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': os.environ.get("DB_NAME"),  
         'USER': os.environ.get("DB_USER"),  
         'PASSWORD': os.environ.get("DB_PASS"), 
-        'PORT': os.environ.get("DB_PORT"),
+        'PORT':os.environ.get("DB_PORT"),
+        'HOST':os.environ.get("DB_HOST"),
     }
 }
 
+
+# ######
+# ##    TEMPORARY WORKAROUND 
+# ##    ONLY USE IN DEV ENVIORNMENT 
+# ##    NOTE* DO NOT PUSH API KEYS EVER 🙏
+# ######
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.mysql',
+#         'NAME': "smartlearn",  
+#         'USER': "smartlearn_user",  
+#         'PASSWORD': "celerypass", 
+#         'PORT': "3306",
+#         'HOST':"127.0.0.1",        
+#     }
+# }
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -153,8 +178,40 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
+MEDIA_URL = '/media/'
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+# ----------------------- CELERY CONFIGURATION ----------------------
+#--------------------------------------------------------------------
+# Broker: The service Celery uses to send and receive tasks (using Redis on localhost default port)
+
+CELERY_BROKER_URL = os.environ.get("CELERY_BROKER")
+# Backend: Where Celery stores the task results (also using Redis)
+CELERY_RESULT_BACKEND = os.environ.get("CELERY_BROKER")
+
+# Content Type: Defines how task messages are serialized
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+
+# Time zone setup
+CELERY_ENABLE_UTC = True
+CELERY_TIMEZONE = 'Asia/Karachi' # Set to your local timezone (e.g., 'Asia/Karachi' or 'UTC')
+
+
+#######
+##     AI API SERVICE RELATED SETTINGS
+######
+
+# GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
+
+## FKN IDIOT DO NOT LEAK THIS AGAIN !!!!!!!!!!
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+# Use a similar method for other keys (e.g., VIDEO_GEN_KEY)
