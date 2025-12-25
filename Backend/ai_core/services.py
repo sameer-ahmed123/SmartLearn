@@ -17,6 +17,7 @@ from django.conf import settings
 from PIL import Image # type: ignore
 from pptx import Presentation # python-pptx library for PPTX # type: ignore
 import google.genai as genai # type: ignore
+from pptx.enum.shapes import MSO_SHAPE_TYPE 
 
 
 logger = logging.getLogger(__name__)
@@ -94,19 +95,71 @@ def extract_content_from_pdf(full_path):
         logger.error(f"Error extracting PDF Text From {full_path}: {e}")
         return "", []
         
-def extract_text_from_pptx(full_path):
-    """ Extracts text content form a Power Point using python-pptx """
+def extract_content_from_pptx(full_path):
+    """
+    Extracts text and images  form a Power Point using python-pptx
+    returns (text_content_str, [list_of_image_paths])
+    """
     text_content = []
+    image_paths = []
+    
+    temp_dir = os.path.join(settings.MEDIA_ROOT, 'temp_pptx_images')
+    os.makedirs(temp_dir, exist_ok=True)
     try:
         prs = Presentation(full_path)
-        for slide in prs.slides:
-            for shape in slide.shapes:
+        for slide_num, slide in enumerate(prs.slides):
+            for shape_index, shape in enumerate(slide.shapes):
+                #1. extract text from the presentation slides
                 if hasattr(shape,"text"):
                     text_content.append(shape.text)
-        return "\n".join(text_content)
+                
+                #2. extract images from ppt (check for image shapes)
+                if shape.shape_type == MSO_SHAPE_TYPE.PICTURE: # checks if the encontered shape is even a picture or not 
+                    image_data = shape.image
+                    image_bytes = image_data.blob
+                    ext = image_data.ext #ext means extenstion
+
+                    #create a unique id for each image
+                    unique_id = uuid.uuid4().hex[:8]
+                    original_img_filename = f"pptx_img_{slide_num}_{shape_index}_{unique_id}.{ext}"
+                    temp_image_path = os.path.join(temp_dir, original_img_filename)
+                    
+                    #save the image bytes to image_file
+                    with open(temp_image_path,"wb") as img_file:
+                        img_file.write(image_bytes)
+                        
+                    # --- WMF/EMF CONVERSION STEP ---
+                    #convert .wmb files to png (so ai can process it )
+                    if ext.lower() in ['wmf','emf']:
+                        final_image_path = temp_image_path
+                        try:
+                            png_filename = f"ppt_img_{slide_num}_{shape_index}_{unique_id}.png"
+                            png_path = os.path.join(temp_dir, png_filename)
+                            with Image.open(temp_image_path) as img:
+                                #ensure its converted to RGB before storing in png
+                                if img.mode not in ('RGB','RGBA'):
+                                    img = img.convert('RGB')
+                                img.save(png_path, 'PNG')
+                            # use png images for LLM    
+                            final_image_path = png_path
+                            # clean up unnessary files to save space
+                            os.remove(temp_image_path)
+                        except Exception as e:
+                            logger.warning(f"failed to convert WMF/EMF {temp_image_path} to png ,error: {e}")
+                    else:
+                        # If it's a standard format (PNG/JPG), use the path directly
+                        final_image_path = temp_image_path
+                        
+                    image_paths.append(final_image_path)
+        extracted_text = "\n".join(text_content).strip()
+        
+        if not extracted_text and image_paths:
+            logger.warning(f"PPTX extaction did not contain text or image for :{full_path}.")
+            
+        return extracted_text, image_paths
     except Exception as e:
         logger.error(f"Error extracting text from {full_path} : {e}")
-        return None
+        return "", []
 
 def read_content_file(file_path_db):
     """
@@ -143,10 +196,10 @@ def read_content_file(file_path_db):
             return {'type': 'multimodal', 'path':full_path, 'content': text_content,'image_paths':image_paths}
         
         elif file_path_db.lower().endswith('.pptx'):
-            content = extract_text_from_pptx(full_path)
-            if content is None:
+            text_content, image_paths = extract_content_from_pptx(full_path)
+            if not text_content and not image_paths:
                 raise Exception("PPTX extraction failed.")
-            return {'type': 'text', 'path': full_path, 'content': content}
+            return {'type': 'text', 'path': full_path, 'content': text_content, 'image_paths':image_paths}
         
         else:
             return {'type': 'unknown', 'content': f"Unsupported file type: {os.path.basename(file_path_db)}"}
@@ -180,7 +233,7 @@ def generate_lecture_script(prompt, file_data):
     elif file_data['type'] == 'text':
         content_parts.append(f"content for lecture: {file_data['content']}")
     elif file_data['type'] == 'multimodal':
-        # new file type to send both iamge data and text content to ai
+        # new file type to send both iamge data and text content to ai (handles both pdf and ppt)
         
         # extracted text first
         content_parts.append(f"content for lecture: {file_data['content']}")

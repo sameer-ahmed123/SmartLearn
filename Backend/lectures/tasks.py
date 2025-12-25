@@ -1,5 +1,5 @@
 from .models import ContentSource, Lecture, Course
-import logging
+import logging, os
 from ai_core.services import read_content_file, generate_lecture_script, generate_video
 from smartlearn_project import celery_app
 print("--- LECTURES TASKS MODULE LOADED ---")
@@ -18,6 +18,7 @@ def generate_lecture_from_source(content_source_id):
 
     # We retrieve the data as a dictionary to prevent ORM-level crashes on corrupted fields.
     source_data = None
+    image_paths = []
 
     try:
         # 1. Retrieve the ContentSource data as a dictionary (safer than object)
@@ -56,10 +57,15 @@ def generate_lecture_from_source(content_source_id):
         #    converts the uploaded file into a format that ai can understand
         file_data = read_content_file(file_path_db)
         # print(file_data)
-        if isinstance(file_data, str) and file_data.startswith("Error"):
-            logger.error(
-                f"Failed to process file for lecture ID {content_source_id}: {file_data}")
-            return  # Exit the task on file failure
+        if isinstance(file_data,str):
+            logger.error(f"Failed to process file for lecture Id {content_source_id} : file returned string error: {file_data}")
+            return
+        
+        if file_data.get('type')=='error':
+            logger.error(f"Failed to process file for lecture Id{content_source_id} :file processing error: {file_data}")
+            return
+            
+        image_paths = file_data.get('image_paths',[])
 
         print(f"--- DEBUG: ID from DB: {source_data['id']}")
         print(f"--- DEBUG: Course Title: {course_title}")
@@ -74,7 +80,7 @@ def generate_lecture_from_source(content_source_id):
         generated_script, context_text = generate_lecture_script(
             ai_prompt,
             file_data
-        )
+        ) 
 
         print(generated_script)
         print(context_text)
@@ -118,5 +124,15 @@ def generate_lecture_from_source(content_source_id):
         # Log the full traceback for better error diagnostics
         logger.exception(
             f"FATAL ERROR during lecture generation for ID {content_source_id}: {e}")
+    finally:
+        # CLEANUP THE TEMPORARY IMAGE FILES
+        if image_paths:
+            logger.info(f"cleaning up {len(image_paths)} temporary files form source ID {content_source_id}")
+            for path in image_paths:
+                try:
+                    if os.path.exists(path):
+                        os.remove(path)
+                except Exception as cleanup_e:
+                    logger.warning(f"failed to remove  temp file {path}: {cleanup_e}")
 
     return None
