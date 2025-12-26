@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'assessment',
     'ai_core',
     'notifications',
+    'dashboard',
     #### Packages/Libraries ####
     'rest_framework',
     'corsheaders',

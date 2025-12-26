@@ -1,4 +1,4 @@
-import CourseList from "./CourseList";
+import CourseList from "../../components/Dashboard/student/CourseList";
 
 const StudentDashboard = () => {
     return (
