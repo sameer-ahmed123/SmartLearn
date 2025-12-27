@@ -1,4 +1,3 @@
-import DashboardLayout from "@/components/Layout/DashboardLayout";
 import TeacherStats from "@/components/Dashboard/teacher/TeacherStats";
 import CoursePreview from "@/components/Dashboard/teacher/CoursePreview";
 import ContentUploadCard from "@/components/Dashboard/teacher/ContentUploadCard";
@@ -8,15 +7,13 @@ import LectureStatusTable from "@/components/Dashboard/teacher/LectureStatusTabl
 
 const TeacherDashboard = () => {
     return (
-        <DashboardLayout>
-            <div className="main-content">
-                <TeacherStats />
-                <CoursePreview />
-                <ContentUploadCard />
-                <LectureStatusTable/>
-                <ContentSourceStatusTable />
-            </div>
-        </DashboardLayout>
+        <>
+            <TeacherStats />
+            <CoursePreview />
+            <ContentUploadCard />
+            <LectureStatusTable/>
+            <ContentSourceStatusTable />
+        </>
     );
 };
 

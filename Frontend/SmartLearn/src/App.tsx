@@ -1,12 +1,11 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
-import Dashboard from "./pages/Dashboard"; // Naya Dashboard import karein
+import DashboardPage from "./features/dashboard/DashboardPage";
 import ProtectedRoute from "./components/Auth/ProtectedRoute";
 import LogoutButton from "./components/Auth/LogoutButton";
 import { useAuthStore } from "./store/useAuthStore";
-import StudentDashboard from "./pages/student/StudentDashboard";
-import TeacherDashboard from "./pages/teacher/TeacherDashboard";
+
 const App: React.FC = () => {
   const { user } = useAuthStore();
 
@@ -41,17 +40,7 @@ const App: React.FC = () => {
 
         {/* PROTECTED DASHBOARD (Dono roles ke liye) */}
         <Route element={<ProtectedRoute />}>
-          <Route path="/dashboard" element={<Dashboard />} />
-        </Route>
-
-        {/* STUDENT SPECIFIC ROUTES */}
-        <Route element={<ProtectedRoute allowedRole={["student"]} />}>
-          <Route path="/student" element={<StudentDashboard />} />
-        </Route>
-
-        {/* TEACHER SPECIFIC ROUTES */}
-        <Route element={<ProtectedRoute allowedRole={["teacher"]} />}>
-          <Route path="/teacher/dashboard" element={<TeacherDashboard />} />
+          <Route path="/dashboard" element={<DashboardPage />} />
         </Route>
 
         {/* ERROR ROUTES */}
