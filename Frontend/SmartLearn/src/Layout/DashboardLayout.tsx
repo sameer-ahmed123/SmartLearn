@@ -1,4 +1,6 @@
-import Sidebar from "./Sidebar";
+// OVERALL PAGE STRUCTURE
+
+import Sidebar from "./SideBar";
 
 const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
     return (

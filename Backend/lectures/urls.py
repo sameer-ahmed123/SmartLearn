@@ -5,7 +5,10 @@ from .views import (
     course_detail_actions, 
     # ContentSource FBVs (already existed)
     content_source_list_create, 
-    content_source_detail_actions
+    content_source_detail_actions,
+    #LECTURE 
+    lecture_detail,
+    lecture_validation_queue
 )
 
 app_name = "lectures"
@@ -17,4 +20,7 @@ urlpatterns = [
     #CONTENT_SOURCE_ENDPOINTS
     path('content-sources/', content_source_list_create, name='content-source-list-create'),
     path('content-sources/<int:pk>/', content_source_detail_actions, name='content-source-detail'),
+    # LECTURE ENDPOINTS
+    path('<int:id>/',lecture_detail,name='lecture-detail'),
+    path('pending/',lecture_validation_queue,name='lecture-validation-queue')
 ]

@@ -77,3 +77,26 @@ class Lecture(models.Model):
     
     class Meta:
         db_table = "lecture"
+        
+        
+# Enrollment Model (student enrolls in a course)
+class Enrollment(models.Model):
+    student = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        limit_choices_to={"role":"student"},
+        related_name="course_enrollments"
+    )
+    course = models.ForeignKey(
+        Course,
+        on_delete=models.CASCADE,
+        related_name="enrollments"
+    )
+    enrolled_at = models.DateField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"{self.student.full_name} enrolled in {self.course.title}"
+    class Meta:
+        db_table = "enrollment"
+        unique_together = (("student","course"),)
+        ordering = ['-enrolled_at']

@@ -10,3 +10,15 @@ class IsTeacher(permissions.BasePermission):
             return False
 
         return request.user.role == "teacher"
+    
+class IsStudent(permissions.BasePermission):
+    """
+    Custom Permission to only allow users with the 'student' role
+    to access view
+    """
+    
+    def has_permission(self,request,view):
+        if not request.user.is_authenticated:
+            return False
+        
+        return request.user.role == "student"

@@ -2,13 +2,14 @@ from rest_framework import permissions, status
 from rest_framework.decorators import api_view, permission_classes # NEW IMPORTS
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404 # Useful for retrieving objects
-from .models import Course, ContentSource
+from .models import Course, ContentSource, Enrollment, Lecture
 from .serializers import (
     ContentSourceSerializer, ContentSourceCreateSerializer,
     CourseSerializer, CourseCreateSerializer, 
-    ContentSourceSerializer, ContentSourceCreateSerializer
+    ContentSourceSerializer, ContentSourceCreateSerializer, LectureDetailSerializer, LectureQuerySerializer
 )
 from users.permissions import IsTeacher
+from rest_framework.permissions import IsAuthenticated
 from .tasks import generate_lecture_from_source
 
 
@@ -183,3 +184,54 @@ def content_source_detail_actions(request, pk):
     elif request.method == 'DELETE':
         content_source.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+    
+@api_view(["GET"])
+@permission_classes([IsAuthenticated,IsTeacher])    
+def lecture_validation_queue(request):
+    """
+    Retrive a list of lectures that require Teachers review
+    """
+    user = request.user
+    queryset = Lecture.objects.filter(
+        generated_by = user,
+        validation_status ='pending'
+    ).select_related(
+        'content_source',
+        'content_source__course'
+    ).order_by('created_at')
+    
+    
+    serializer = LectureQuerySerializer(queryset,many=True)
+    return Response(serializer.data)
+    
+    
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])    
+def lecture_detail(request, id):
+    """
+    GET FULL DETAILS OF A LECTURE
+    """
+    lecture = get_object_or_404(
+        Lecture.objects.select_related(
+            'content_source',
+            'content_source__course'
+        ),
+        id=id)
+    print(f"lecture_id: {id}")
+    user = request.user
+    course = lecture.content_source.course
+    is_course_owner = (course.teacher == user)
+    is_enrolled_student = False
+    if user.role == 'student':
+        is_enrolled_student = Enrollment.objects.filter(student=user,course=course).exists()
+    
+    can_view = is_course_owner or is_enrolled_student
+    
+    if user.role == 'student' and lecture.validation_status != 'validated':
+        can_view = False
+    
+    if not can_view :
+        return Response({"detail":"You Do Not Have Permission To View This Lecture or it is not Validated."},status=status.HTTP_403_FORBIDDEN)
+    
+    serializer = LectureDetailSerializer(lecture)
+    return Response(serializer.data)
