@@ -5,7 +5,7 @@ const CoursePreview = () => {
     const [courses, setCourses] = useState<any[]>([]);
 
     useEffect(() => {
-        apiClient.get("/courses/").then(res => setCourses(res.data));
+        apiClient.get("/lectures/courses/").then(res => setCourses(res.data));
     }, []);
 
     return (

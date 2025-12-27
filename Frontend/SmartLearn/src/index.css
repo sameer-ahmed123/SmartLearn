@@ -1,4 +1,4 @@
-@import "tailwindcss";
+/* @import "tailwindcss";
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
@@ -120,4 +120,71 @@
   body {
     @apply bg-background text-foreground;
   }
+} */
+
+
+/* src/index.css or public/styles.css */
+
+:root {
+    --primary-color: #4f46e5; /* Indigo-600 */
+    --primary-dark: #4338ca;  /* Indigo-700 */
+    --secondary-color: #10b981; /* Emerald-500 */
+    --background-light: #f9fafb; /* Gray-50 */
+    --card-background: #ffffff;
+    --text-color: #1f2937; /* Gray-800 */
+    --border-color: #e5e7eb; /* Gray-200 */
+    --shadow-light: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+}
+
+body {
+    font-family: 'Inter', sans-serif; /* Use a modern sans-serif font */
+    color: var(--text-color);
+    background-color: var(--background-light);
+    margin: 0;
+    padding: 0;
+}
+
+/* Base styles for buttons and inputs */
+button, select, input[type="text"], input[type="file"], textarea {
+    padding: 10px 15px;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s;
+    box-sizing: border-box; /* Important for input width calculations */
+}
+
+button {
+    background-color: var(--primary-color);
+    color: white;
+    font-weight: 500;
+}
+
+button:hover {
+    background-color: var(--primary-dark);
+}
+
+button:active {
+    transform: translateY(1px);
+}
+
+/* Secondary/default button style */
+button:not(.btn-primary) {
+    background-color: #f3f4f6; /* Gray-100 */
+    color: var(--text-color);
+    border-color: #d1d5db; /* Gray-300 */
+}
+
+button:not(.btn-primary):hover {
+    background-color: #e5e7eb; /* Gray-200 */
+}
+
+/* Card utility class for a unified look */
+.card {
+    background-color: var(--card-background);
+    padding: 24px;
+    border-radius: 12px;
+    box-shadow: var(--shadow-light);
+    border: 1px solid var(--border-color);
 }

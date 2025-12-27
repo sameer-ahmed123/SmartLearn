@@ -1,0 +1,27 @@
+/* For TeacherDashboard using a DashboardLayout wrapper (optional) */
+.main-content {
+    display: grid;
+    /* Create two main content areas: stats/upload, and tables */
+    grid-template-columns: 1fr;
+    gap: 32px;
+    padding: 24px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+@media (min-width: 1024px) {
+    .main-content {
+        /* On larger screens, arrange elements into two columns */
+        grid-template-columns: 2fr 1fr;
+        grid-template-areas:
+            "stats stats"
+            "upload preview"
+            "table table";
+    }
+
+    /* Assign components to grid areas for a clean layout */
+    .stats-grid-wrapper { grid-area: stats; }
+    .content-upload-card { grid-area: upload; }
+    .course-preview-card { grid-area: preview; }
+    .content-source-status-table { grid-area: table; }
+}

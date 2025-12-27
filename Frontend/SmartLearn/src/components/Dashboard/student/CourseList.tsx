@@ -7,7 +7,7 @@ const CourseList = () => {
     const [activeCourseId, setActiveCourseId] = useState<number | null>(null);
 
     useEffect(() => {
-        apiClient.get("/courses/").then((res) => setCourses(res.data));
+        apiClient.get("/lectures/student/courses/").then((res) => setCourses(res.data));
     }, []);
 
     return (
@@ -16,7 +16,7 @@ const CourseList = () => {
                 <div
                     key={course.id}
                     style={{
-                        border: "1px solid #ddd",
+                        border: "1px solid black",
                         padding: "16px",
                         borderRadius: "8px",
                         marginBottom: "12px",

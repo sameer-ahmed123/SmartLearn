@@ -10,8 +10,8 @@ const TeacherStats = () => {
 
     useEffect(() => {
         const fetchStats = async () => {
-            const coursesRes = await apiClient.get("/courses/");
-            const contentRes = await apiClient.get("/content-sources/");
+            const coursesRes = await apiClient.get("/lectures/courses/");
+            const contentRes = await apiClient.get("/lectures/content-sources/");
 
             const published = coursesRes.data.filter(
                 (c: any) => c.status === "published"

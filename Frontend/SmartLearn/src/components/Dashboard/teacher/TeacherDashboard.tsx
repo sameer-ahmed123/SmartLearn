@@ -7,7 +7,7 @@ const TeacherDashboard = () => {
             <h1>Teacher Dashboard</h1>
 
             <CourseOverview />
-
+            
             <ContentSourceStatusTable />
         </div>
     );

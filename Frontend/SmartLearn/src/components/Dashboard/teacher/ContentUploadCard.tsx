@@ -8,7 +8,7 @@ const ContentUploadCard = () => {
     const [prompt, setPrompt] = useState("");
 
     useEffect(() => {
-        apiClient.get("/courses/").then(res => setCourses(res.data));
+        apiClient.get("/lectures/courses/").then(res => setCourses(res.data));
     }, []);
 
     const handleSubmit = async () => {
@@ -17,7 +17,7 @@ const ContentUploadCard = () => {
         formData.append("raw_file", file!);
         formData.append("ai_prompt", prompt);
 
-        await apiClient.post("/content-sources/", formData);
+        await apiClient.post("/lectures/content-sources/", formData);
         alert("Content uploaded. AI lecture generation started.");
     };
 

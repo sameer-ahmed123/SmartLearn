@@ -1,0 +1,32 @@
+/* For ContentUploadCard component */
+.content-upload-card {
+    /* Inherits .card styles */
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.content-upload-card h3 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.content-upload-card select,
+.content-upload-card input[type="file"],
+.content-upload-card textarea {
+    width: 100%;
+    padding: 12px;
+    background-color: var(--background-light);
+}
+
+.content-upload-card textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+.content-upload-card button.btn-primary {
+    width: 100%;
+    margin-top: 5px;
+}

@@ -5,7 +5,7 @@ const CourseOverview = () => {
     const [courses, setCourses] = useState<any[]>([]);
 
     useEffect(() => {
-        apiClient.get("/courses/").then((res) => setCourses(res.data));
+        apiClient.get("/lectures/courses/").then((res) => setCourses(res.data));
     }, []);
 
     return (
@@ -18,6 +18,7 @@ const CourseOverview = () => {
                         border: "1px solid #ddd",
                         borderRadius: "8px",
                         width: "250px",
+                        color:"black",
                     }}
                 >
                     <h3>{course.title}</h3>

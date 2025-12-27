@@ -1,0 +1,65 @@
+/* --- 1. Base Layout --- */
+.dashboardContainer { /* Using camelCase for module naming convention */
+    display: flex; 
+    width: 100%;
+    min-height: 100vh;
+    overflow-x: hidden; 
+}
+
+/* --- 2. Sidebar Styling (Fixed) --- */
+.sidebar { 
+    position: fixed; 
+    top: 0;
+    left: 0;
+    
+    width: 250px; 
+    height: 100vh; 
+    padding: 25px 20px;
+    background-color: #f8f9fa;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+    
+    display: flex; 
+    flex-direction: column;
+    z-index: 1000; 
+}
+
+/* --- 3. Main Content Area (Scrollable and Offset) --- */
+.mainContent { /* Using camelCase for module naming convention */
+    margin-left: 250px; 
+    flex-grow: 1; 
+    box-sizing: border-box; 
+    padding: 20px; 
+}
+
+
+/* --- 4. Responsiveness (Mobile/Tablet Adjustments) --- */
+
+@media (max-width: 992px) {
+    /* Tablet/Smaller Screens: Collapsed Sidebar (80px) */
+    .sidebar {
+        width: 80px;
+        padding: 10px;
+    }
+    
+    .mainContent {
+        margin-left: 80px; /* Adjust margin for collapsed sidebar */
+    }
+    
+    /* Note: If the h1 is inside the Sidebar component, you might need to adjust 
+       the h1 selector to reference the globally defined h1 style, or style it 
+       within the module if it's not a generic tag: 
+       .sidebar h1 { display: none; } 
+    */
+}
+
+@media (max-width: 576px) {
+    /* Mobile Screens: Hide Sidebar, use full width for content */
+    .sidebar {
+        display: none; 
+    }
+
+    .mainContent {
+        margin-left: 0; /* Remove offset margin */
+        width: 100%; 
+    }
+}

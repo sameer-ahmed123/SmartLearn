@@ -1,0 +1,47 @@
+/* For ContentSourceStatusTable and ContentSourceTable components */
+
+/* Wrapper to hold table card styling */
+.content-source-status-table,
+.content-source-table-wrapper {
+    /* Inherits .card styles */
+    overflow-x: auto; /* Make table responsive horizontally */
+}
+
+.content-source-status-table h3,
+.content-source-table-wrapper h2 {
+    margin-top: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 20px;
+}
+
+.content-source-status-table table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 600px; /* Ensure table looks good on smaller screens */
+}
+
+.content-source-status-table th,
+.content-source-status-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.content-source-status-table th {
+    background-color: #f3f4f6; /* Gray-100 */
+    font-weight: 600;
+    color: #4b5563; /* Gray-600 */
+    text-transform: uppercase;
+    font-size: 0.85rem;
+}
+
+.content-source-status-table tr:hover {
+    background-color: #f9fafb; /* Slight hover effect */
+}
+
+.content-source-status-table td button {
+    padding: 6px 10px;
+    font-size: 0.9rem;
+    white-space: nowrap;
+}

@@ -1,0 +1,163 @@
+/* For StudentDashboard */
+.student-dashboard {
+    padding: 24px;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.student-dashboard h1 {
+    font-size: 2.25rem;
+    font-weight: 700;
+    margin-bottom: 30px;
+    color: var(--primary-dark);
+}
+
+/* CourseList Styling */
+.course-list-item {
+    border: 1px solid var(--border-color);
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 15px;
+    background-color: var(--card-background);
+    transition: box-shadow 0.2s;
+}
+
+.course-list-item:hover {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.course-list-item h3 {
+    margin-top: 0;
+    margin-bottom: 8px;
+    font-size: 1.5rem;
+    color: var(--text-color);
+}
+
+.course-list-item p {
+    color: #6b7280; /* Gray-500 */
+    margin-bottom: 15px;
+}
+
+.course-list-item > button {
+    padding: 8px 12px;
+    font-size: 0.9rem;
+    background-color: var(--secondary-color);
+}
+
+.course-list-item > button:hover {
+    background-color: #059669; /* Emerald-600 */
+}
+
+/* LectureList Styling */
+.lecture-list-controls {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+    align-items: center;
+}
+
+.lecture-list-controls input,
+.lecture-list-controls select {
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    flex-grow: 1;
+    max-width: 300px;
+}
+
+.course-list-item ul {
+    list-style: none;
+    padding: 0;
+    margin-top: 20px;
+    border-top: 1px solid var(--border-color);
+}
+
+.course-list-item li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.course-list-item li button {
+    background: none;
+    border: none;
+    color: var(--primary-color);
+    text-align: left;
+    padding: 0;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.course-list-item li button:hover {
+    text-decoration: underline;
+    background: none;
+}
+
+/* LectureViewer Styling (Modal-like view) */
+.lecture-viewer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.85); /* Dark full-screen backdrop */
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.lecture-viewer > * {
+    background-color: var(--card-background);
+    padding: 25px;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 900px;
+    margin-top: 20px;
+}
+
+.lecture-viewer h3 {
+    margin-top: 0;
+    font-size: 2rem;
+    color: var(--primary-dark);
+}
+
+.lecture-viewer video {
+    border-radius: 8px;
+    margin-bottom: 20px;
+    background-color: black;
+}
+
+.lecture-viewer h4 {
+    margin: 15px 0 5px 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.lecture-viewer p {
+    line-height: 1.6;
+    color: #4b5563;
+}
+
+.lecture-viewer .actions {
+    display: flex;
+    gap: 15px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color);
+    margin-top: 20px;
+    justify-content: flex-end;
+}
+
+.lecture-viewer .actions button:first-child {
+    background-color: var(--secondary-color); /* Use a different color for completion */
+}
+
+.lecture-viewer .actions button:first-child:hover {
+    background-color: #059669;
+}

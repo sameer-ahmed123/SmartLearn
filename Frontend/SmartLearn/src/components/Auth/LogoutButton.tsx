@@ -10,7 +10,7 @@ const LogoutButton = () => {
         const refreshToken = getRefreshToken()
         if (refreshToken) {
             try {
-                await apiClient.post('auth/logout', { refresh: refreshToken });
+                await apiClient.post('auth/logout/', { refresh: refreshToken });
             }
             catch (e) {
                 console.log("ERROR", e)
@@ -20,7 +20,7 @@ const LogoutButton = () => {
         logout()
         navigate('/login')
     }
-    return (< button onClick={handleLogout}>LOGOUT</button>)
+    return (< button onClick={handleLogout}>🚪 Logout</button>)
 }
 
 export default LogoutButton;
