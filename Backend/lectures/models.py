@@ -77,3 +77,52 @@ class Lecture(models.Model):
     
     class Meta:
         db_table = "lecture"
+        
+
+class Enrollment(models.Model):
+    student = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        limit_choices_to={"role": "student"},
+        related_name="enrollments"
+    )
+    course = models.ForeignKey(
+        Course,
+        on_delete=models.CASCADE,
+        related_name="enrollments"
+    )
+    enrolled_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("student", "course")
+        db_table = "enrollment"
+
+
+class LectureProgress(models.Model):
+    STATUS_CHOICES = (
+        ("not_started", "Not Started"),
+        ("watched", "Watched"),
+        ("completed", "Completed"),
+    )
+
+    student = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        limit_choices_to={"role": "student"},
+        related_name="lecture_progress"
+    )
+    lecture = models.ForeignKey(
+        Lecture,
+        on_delete=models.CASCADE,
+        related_name="progress"
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default="not_started"
+    )
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ("student", "lecture")
+        db_table = "lecture_progress"

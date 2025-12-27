@@ -2,13 +2,13 @@ from rest_framework import permissions, status
 from rest_framework.decorators import api_view, permission_classes # NEW IMPORTS
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404 # Useful for retrieving objects
-from .models import Course, ContentSource
+from .models import Course, ContentSource, Enrollment, Lecture, LectureProgress
 from .serializers import (
-    ContentSourceSerializer, ContentSourceCreateSerializer,
+    ContentSourceSerializer, ContentSourceCreateSerializer, CourseListSerializer,
     CourseSerializer, CourseCreateSerializer, 
-    ContentSourceSerializer, ContentSourceCreateSerializer
+    ContentSourceSerializer, ContentSourceCreateSerializer, EnrollmentCreateSerializer, EnrollmentListSerializer, LectureListSerializer, LectureProgressSerializer, LectureSerializer
 )
-from users.permissions import IsTeacher
+from users.permissions import IsStudent, IsTeacher
 from .tasks import generate_lecture_from_source
 
 
@@ -183,3 +183,78 @@ def content_source_detail_actions(request, pk):
     elif request.method == 'DELETE':
         content_source.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+    
+
+
+# -----------------------------------------------------------
+# FBV 5: LECTURE - GET (List All for Teacher Review)
+# -----------------------------------------------------------
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated, IsTeacher])
+def lecture_list_view(request):
+    """
+    Handles listing of all generated Lectures belonging to the teacher's courses.
+    This list is primarily for review/status checking.
+    """
+    user = request.user
+    
+    # Filter queryset: Only show lectures generated from content sources 
+    # within the logged-in teacher's courses.
+    queryset = Lecture.objects.filter(
+        content_source__course__teacher=user
+    ).order_by('-created_at')
+    
+    # Note: Using the LectureListSerializer (assumed/defined above)
+    serializer = LectureListSerializer(queryset, many=True)
+    return Response(serializer.data)
+
+
+# -----------------------------------------------------------
+# FBV 6: LECTURE - GET/POST/PUT/PATCH (Detail & Validation)
+# -----------------------------------------------------------
+# You would also need a detail view for review/validation
+# e.g., /api/v1/lectures/{pk}/validate/
+
+@api_view(['GET', 'PUT'])
+@permission_classes([permissions.IsAuthenticated, IsTeacher])
+def lecture_detail_and_validate(request, pk):
+    """
+    Handles detail retrieval and validation/rejection action for a specific Lecture.
+    """
+    # Check ownership and retrieve the lecture
+    lecture = get_object_or_404(
+        Lecture, 
+        pk=pk, 
+        content_source__course__teacher=request.user # Ensures the lecture belongs to the user's course
+    )
+
+    # --- GET (Detail) ---
+    if request.method == 'GET':
+        # Use a detailed serializer for the lecture content
+        serializer = LectureSerializer(lecture) # Assuming a LectureSerializer exists
+        return Response(serializer.data)
+
+    # --- PUT (Validate/Reject) ---
+    elif request.method == 'PUT':
+        # This endpoint handles the teacher's decision (Validation or Rejection)
+        action = request.data.get('action')
+        comment = request.data.get('comment', '') # Only for rejection
+
+        if action == 'validate':
+            if lecture.validation_status == 'pending':
+                lecture.validation_status = 'validated'
+                lecture.save()
+                return Response({'detail': 'Lecture validated successfully.'}, status=status.HTTP_200_OK)
+            else:
+                return Response({'detail': f'Lecture is already {lecture.validation_status}.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        elif action == 'reject':
+            if lecture.validation_status == 'pending':
+                lecture.validation_status = 'rejected'
+                lecture.rejection_comment = comment # Assumed field
+                lecture.save()
+                return Response({'detail': 'Lecture rejected successfully.'}, status=status.HTTP_200_OK)
+            else:
+                return Response({'detail': f'Lecture is already {lecture.validation_status}.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response({'detail': 'Invalid action specified.'}, status=status.HTTP_400_BAD_REQUEST)
