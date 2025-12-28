@@ -8,7 +8,8 @@ from .views import (
     content_source_detail_actions,
     #LECTURE 
     lecture_detail,
-    lecture_validation_queue
+    lecture_validation_queue,
+    lecture_validate_action
 )
 
 app_name = "lectures"
@@ -22,5 +23,6 @@ urlpatterns = [
     path('content-sources/<int:pk>/', content_source_detail_actions, name='content-source-detail'),
     # LECTURE ENDPOINTS
     path('<int:id>/',lecture_detail,name='lecture-detail'),
-    path('pending/',lecture_validation_queue,name='lecture-validation-queue')
+    path('pending/',lecture_validation_queue,name='lecture-validation-queue'),
+    path('<int:id>/validate/',lecture_validate_action,name='lecture-validate-action')
 ]

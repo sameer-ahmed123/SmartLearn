@@ -39,11 +39,19 @@ class CourseCreateSerializer(serializers.ModelSerializer):
         fields = ['title', 'description']
 
 
+class CourseBaseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Course
+        fields = ['title']
+
+
 class ContentSourceBaseSerializer(serializers.ModelSerializer):
     """A minimal serializer for ContentSource, useful for nesting."""
+    course = CourseBaseSerializer(read_only=True)
+
     class Meta:
         model = ContentSource
-        fields = ['id', 'ai_prompt', 'created_at']
+        fields = ['id', 'ai_prompt', 'created_at', 'course']
 
 
 class ContentSourceCreateSerializer(serializers.ModelSerializer):
@@ -56,11 +64,12 @@ class ContentSourceCreateSerializer(serializers.ModelSerializer):
 class ContentSourceSerializer(serializers.ModelSerializer):
     """Serializer for detailed display of a ContentSource."""
     uploaded_by = TeacherDetailSerializer(read_only=True)
+    course = CourseBaseSerializer(read_only=True)
 
     class Meta:
         model = ContentSource
         fields = ['id', 'course', 'uploaded_by',
-                  'raw_file', 'ai_prompt', 'created_at']
+                  'raw_file', 'ai_prompt', 'created_at', 'course']
         read_only_fields = ['uploaded_by']
 
 
@@ -80,8 +89,6 @@ class LectureSerializer(serializers.ModelSerializer):
                             'rejection_comment', 'content_source')
 
 
-
-
 # LECTURE_DETAIL_SERIALIZER DEDICATED FOR LECTURE REVIEW/STUDY PAGE
 class LectureDetailSerializer(serializers.ModelSerializer):
     """
@@ -93,6 +100,7 @@ class LectureDetailSerializer(serializers.ModelSerializer):
     validated_by = TeacherDetailSerializer(read_only=True)
     status_display = serializers.CharField(
         source='get_validation_status_display', read_only=True)
+
     class Meta:
         model = Lecture
         fields = [
@@ -108,7 +116,7 @@ class LectureDetailSerializer(serializers.ModelSerializer):
             'created_at',
             'content_source',
         ]
-        
+
         read_only_fields = ('generated_by', 'validated_by',
                             'validation_status', 'created_at')
 
@@ -129,3 +137,33 @@ class LectureQuerySerializer(serializers.ModelSerializer):
 
     def get_review_url(self, obj):
         return f"/teacher/lecture/{obj.id}/review"
+
+
+
+class LectureValidationActionSerializer(serializers.ModelSerializer):
+    """
+    Serializer used specifically for updating the validation status 
+    of a lecture via a PATCH request.
+    """
+    class Meta:
+        model = Lecture
+        fields = ['validation_status', 'rejection_comment']
+        read_only_fields = ['id', 'topic', 'video_url', 'summary_text', 'content_source'] 
+        
+    def validate(self, data):
+        """
+        Custom validation rule: Rejection requires a comment.
+        """
+        status = data.get('validation_status')
+        comment = data.get('rejection_comment')
+
+
+        if status == 'rejected' and not comment:
+            raise serializers.ValidationError({
+                "rejection_comment": "Rejection requires a comment explaining the reason for failure."
+            })
+            
+        if status != 'rejected' and comment:
+             data['rejection_comment'] = None
+             
+        return data

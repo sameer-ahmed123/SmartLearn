@@ -6,9 +6,9 @@ from .models import Course, ContentSource, Enrollment, Lecture
 from .serializers import (
     ContentSourceSerializer, ContentSourceCreateSerializer,
     CourseSerializer, CourseCreateSerializer, 
-    ContentSourceSerializer, ContentSourceCreateSerializer, LectureDetailSerializer, LectureQuerySerializer
+    ContentSourceSerializer, ContentSourceCreateSerializer, LectureDetailSerializer, LectureQuerySerializer, LectureValidationActionSerializer
 )
-from users.permissions import IsTeacher
+from users.permissions import CanViewLecture, IsCourseOwner, IsTeacher
 from rest_framework.permissions import IsAuthenticated
 from .tasks import generate_lecture_from_source
 
@@ -206,7 +206,7 @@ def lecture_validation_queue(request):
     
     
 @api_view(["GET"])
-@permission_classes([IsAuthenticated])    
+@permission_classes([IsAuthenticated, CanViewLecture])    
 def lecture_detail(request, id):
     """
     GET FULL DETAILS OF A LECTURE
@@ -217,21 +217,33 @@ def lecture_detail(request, id):
             'content_source__course'
         ),
         id=id)
-    print(f"lecture_id: {id}")
-    user = request.user
-    course = lecture.content_source.course
-    is_course_owner = (course.teacher == user)
-    is_enrolled_student = False
-    if user.role == 'student':
-        is_enrolled_student = Enrollment.objects.filter(student=user,course=course).exists()
-    
-    can_view = is_course_owner or is_enrolled_student
-    
-    if user.role == 'student' and lecture.validation_status != 'validated':
-        can_view = False
-    
-    if not can_view :
-        return Response({"detail":"You Do Not Have Permission To View This Lecture or it is not Validated."},status=status.HTTP_403_FORBIDDEN)
     
     serializer = LectureDetailSerializer(lecture)
     return Response(serializer.data)
+
+
+@api_view(["PATCH"])
+@permission_classes([IsAuthenticated,IsCourseOwner])
+def lecture_validate_action(request,id):
+    """
+    Handle the validation and rejection for Lectures
+    """
+    
+    lecture = get_object_or_404(Lecture, id=id)
+    if lecture.validation_status != 'pending':
+        return Response(
+            {"detail": f"Lecture status is already '{lecture.validation_status}'..."},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    serializer = LectureValidationActionSerializer(
+        lecture,
+        data=request.data,
+        partial =True
+    )
+    
+    if serializer.is_valid():
+        serializer.save(validated_by=request.user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    return Response(serializer.data, status=status.HTTP_400_BAD_REQUEST)
