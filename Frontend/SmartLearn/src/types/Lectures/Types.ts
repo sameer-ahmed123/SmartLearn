@@ -49,3 +49,14 @@ export interface LectureDetails{
     created_at:string,
     content_source:ContentSource,
 }
+
+// list of lectures to a course
+export interface CourseContentItem {
+  id: number;
+  topic: string;
+  validation_status: 'pending' | 'validated' | 'rejected';
+  status_display: string;
+  course_topic: string; 
+  created_at: string;
+  review_url :string
+}

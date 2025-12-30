@@ -139,7 +139,6 @@ class LectureQuerySerializer(serializers.ModelSerializer):
         return f"/teacher/lecture/{obj.id}/review"
 
 
-
 class LectureValidationActionSerializer(serializers.ModelSerializer):
     """
     Serializer used specifically for updating the validation status 
@@ -148,8 +147,9 @@ class LectureValidationActionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Lecture
         fields = ['validation_status', 'rejection_comment']
-        read_only_fields = ['id', 'topic', 'video_url', 'summary_text', 'content_source'] 
-        
+        read_only_fields = ['id', 'topic', 'video_url',
+                            'summary_text', 'content_source']
+
     def validate(self, data):
         """
         Custom validation rule: Rejection requires a comment.
@@ -157,13 +157,35 @@ class LectureValidationActionSerializer(serializers.ModelSerializer):
         status = data.get('validation_status')
         comment = data.get('rejection_comment')
 
-
         if status == 'rejected' and not comment:
             raise serializers.ValidationError({
                 "rejection_comment": "Rejection requires a comment explaining the reason for failure."
             })
-            
+
         if status != 'rejected' and comment:
-             data['rejection_comment'] = None
-             
+            data['rejection_comment'] = None
+
         return data
+
+
+class CourseLectureListItem(serializers.ModelSerializer):
+    status_display = serializers.CharField(
+        source='get_validation_status_display', read_only=True)
+    course_topic = serializers.CharField(
+        source='content_source.course.title', read_only=True)
+    review_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Lecture
+        fields = [
+            'id',
+            'validation_status',
+            'topic',
+            'course_topic',
+            'created_at',
+            'status_display',
+            'review_url'
+        ]
+
+    def get_review_url(self, obj):
+        return f"/teacher/lecture/{obj.id}/review"

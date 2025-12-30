@@ -6,6 +6,7 @@ import ProtectedRoute from "./components/Auth/ProtectedRoute";
 import { useAuthStore } from "./store/useAuthStore";
 import TeacherDashboardPage from "./pages/teacher/DashboardPage";
 import LectureReviewPage from "./pages/teacher/LectureReviewPage";
+import TeacherCourseDetailPage from "./pages/teacher/TeacherCourseDetailPage";
 // import DashboardPage from "./pages/student/DashboardPage";
 // import DashboardPage from "./pages/teacher/DashboardPage";
 const App: React.FC = () => {
@@ -57,6 +58,10 @@ const App: React.FC = () => {
             path="/teacher/lecture/:id/review"
             element={<LectureReviewPage />}
           ></Route>
+          <Route
+            path="/teacher/course/:courseid"
+            element={<TeacherCourseDetailPage />}
+          />
         </Route>
 
         {/* ERROR ROUTES */}

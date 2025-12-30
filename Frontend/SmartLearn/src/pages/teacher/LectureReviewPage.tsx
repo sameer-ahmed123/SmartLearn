@@ -1,5 +1,5 @@
 import DashboardLayout from "@/Layout/DashboardLayout";
-import type { LectureDetails } from "@/components/Dashboard/shared/Types";
+import type { LectureDetails } from "@/types/Lectures/Types";
 import styles from "./LectureReviewPage.module.css";
 import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
@@ -29,7 +29,7 @@ const LectureReviewPage = () => {
         }
 
         const data: LectureDetails = response.data;
-        console.log(data)
+        console.log(data);
         setlecture(data);
       } catch (err) {
         console.error(`Failed to load lecture. Error: ${err}`);

@@ -1,5 +1,5 @@
 // DISPLAY LIST OF COURSES WITH ( VALIDATION STATUS OF "pending" )
-import type { LectureQueueItem } from "@/components/Dashboard/shared/Types";
+import type { LectureQueueItem } from "@/types/Lectures/Types";
 import styles from "./LectureValidationQueueTable.module.css";
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
@@ -13,7 +13,7 @@ const LectureValidationQueueTable = () => {
     const fetchQueue = async () => {
       try {
         const response = await apiClient.get("/lectures/pending/");
-        console.log(response.data)
+        console.log(response.data);
         if (!response.status) {
           throw new Error(`Http error! status: ${response.status}`);
         }
@@ -64,7 +64,7 @@ const LectureValidationQueueTable = () => {
                 </Link>
               </td>
             </tr>
-          ))} 
+          ))}
         </tbody>
       </table>
     </div>

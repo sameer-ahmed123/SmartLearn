@@ -17,7 +17,7 @@ from django.conf import settings
 from PIL import Image # type: ignore
 from pptx import Presentation # python-pptx library for PPTX # type: ignore
 import google.genai as genai # type: ignore
-from pptx.enum.shapes import MSO_SHAPE_TYPE 
+from pptx.enum.shapes import MSO_SHAPE_TYPE  #type:ignore
 
 
 logger = logging.getLogger(__name__)
