@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-import './Auth.css';
-import apiClient from '@/api/apiClient';
-import { useAuthStore } from '@/store/useAuthStore';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from "react";
+import "./Auth.css";
+import apiClient from "@/api/apiClient";
+import { useAuthStore } from "@/store/useAuthStore";
+import { useNavigate } from "react-router-dom";
 
 type FormDataType = {
   full_name: string;
@@ -14,18 +14,20 @@ type FormDataType = {
 
 export function SignupForm() {
   const [formData, setFormData] = useState<FormDataType>({
-    full_name: '',
-    email: '',
-    role: '',
-    password: '',
-    confirmPassword: ''
+    full_name: "",
+    email: "",
+    role: "",
+    password: "",
+    confirmPassword: "",
   });
 
-  const [error, setError] = useState(''); // Error message dikhane ke liye state
+  const [error, setError] = useState(""); // Error message dikhane ke liye state
   const login = useAuthStore((state) => state.login);
   const navigate = useNavigate();
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
@@ -35,7 +37,7 @@ export function SignupForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(''); // Naye submit par purana error clear karein
+    setError(""); // Naye submit par purana error clear karein
 
     const { full_name, email, role, password, confirmPassword } = formData;
 
@@ -62,7 +64,9 @@ export function SignupForm() {
 
     // 5. Special characters check (Rule #4)
     if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
-      return setError("Password should contain at least one special character.");
+      return setError(
+        "Password should contain at least one special character."
+      );
     }
 
     // 6. Same password and confirmation (Rule #2)
@@ -73,14 +77,18 @@ export function SignupForm() {
     const registration_data = { email, password, full_name, role };
 
     try {
-      await apiClient.post('/auth/register/', registration_data);
-      const login_response = await apiClient.post('/auth/login/', { email, password });
+      await apiClient.post("/auth/register/", registration_data);
+      const login_response = await apiClient.post("/auth/login/", {
+        email,
+        password,
+      });
       const { user, access, refresh } = login_response.data;
       login(user, access, refresh);
       navigate("/");
-    } catch (err: any) {
+    } catch {
       // Backend se aane wala error UI par dikhana
-      setError(err.response?.data?.error || "Signup failed! Try again.");
+      // Backend se ane wale Error ?? plz dont do this ...
+      setError("Signup failed! Try again.");
     }
   };
 
@@ -88,28 +96,43 @@ export function SignupForm() {
     <form onSubmit={handleSubmit}>
       {/* Agar error ho toh yahan red text mein nazar aaye */}
       {error && (
-        <div className="error-box" style={{
-          color: '#ff4d4d',
-          backgroundColor: '#ffe6e6',
-          padding: '10px',
-          borderRadius: '5px',
-          marginBottom: '15px',
-          fontSize: '14px',
-          textAlign: 'center',
-          border: '1px solid #ffcccc'
-        }}>
+        <div
+          className="error-box"
+          style={{
+            color: "#ff4d4d",
+            backgroundColor: "#ffe6e6",
+            padding: "10px",
+            borderRadius: "5px",
+            marginBottom: "15px",
+            fontSize: "14px",
+            textAlign: "center",
+            border: "1px solid #ffcccc",
+          }}
+        >
           {error}
         </div>
       )}
 
       <div className="input-field">
         <label>Full Name</label>
-        <input type="text" name="full_name" placeholder="Enter name" onChange={handleChange} required />
+        <input
+          type="text"
+          name="full_name"
+          placeholder="Enter name"
+          onChange={handleChange}
+          required
+        />
       </div>
 
       <div className="input-field">
         <label>Email</label>
-        <input type="email" name="email" placeholder="email@example.com" onChange={handleChange} required />
+        <input
+          type="email"
+          name="email"
+          placeholder="email@example.com"
+          onChange={handleChange}
+          required
+        />
       </div>
 
       <div className="input-field">
@@ -123,15 +146,29 @@ export function SignupForm() {
 
       <div className="input-field">
         <label>Password</label>
-        <input type="password" name="password" placeholder="••••••••" onChange={handleChange} required />
+        <input
+          type="password"
+          name="password"
+          placeholder="••••••••"
+          onChange={handleChange}
+          required
+        />
       </div>
 
       <div className="input-field">
         <label>Confirm Password</label>
-        <input type="password" name="confirmPassword" placeholder="••••••••" onChange={handleChange} required />
+        <input
+          type="password"
+          name="confirmPassword"
+          placeholder="••••••••"
+          onChange={handleChange}
+          required
+        />
       </div>
 
-      <button type="submit" className="submit-button">Create Account</button>
+      <button type="submit" className="submit-button">
+        Create Account
+      </button>
     </form>
   );
 }

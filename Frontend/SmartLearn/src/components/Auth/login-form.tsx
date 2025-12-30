@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
-import './Auth.css';
-import apiClient from '@/api/apiClient';
-import { useAuthStore } from '@/store/useAuthStore';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from "react";
+import "./Auth.css";
+import apiClient from "@/api/apiClient";
+import { useAuthStore } from "@/store/useAuthStore";
+import { useNavigate } from "react-router-dom";
 
 export function LoginForm() {
-  const [credentials, setCredentials] = useState({ email: '', password: '' });
-  const [error, setError] = useState(''); // Error state add ki
+  const [credentials, setCredentials] = useState({ email: "", password: "" });
+  const [error, setError] = useState(""); // Error state add ki
 
   const login = useAuthStore((state) => state.login);
   const navigate = useNavigate();
@@ -17,7 +17,7 @@ export function LoginForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(''); // Purana error clear karein
+    setError(""); // Purana error clear karein
 
     const { email, password } = credentials;
 
@@ -33,11 +33,11 @@ export function LoginForm() {
     }
 
     try {
-      const res = await apiClient.post('/auth/login/', credentials);
+      const res = await apiClient.post("/auth/login/", credentials);
       const { user, access, refresh } = res.data;
       login(user, access, refresh);
-      navigate("/");
-    } catch (err: any) {
+      navigate("/dashboard");
+    } catch {
       // Alert ki jagah UI par error dikhayein
       setError("Invalid Email or Password. Please try again.");
     }
@@ -47,16 +47,19 @@ export function LoginForm() {
     <form onSubmit={handleSubmit}>
       {/* Error Message UI par dikhane ke liye box */}
       {error && (
-        <div className="error-box" style={{
-          color: '#ff4d4d',
-          backgroundColor: '#ffe6e6',
-          padding: '10px',
-          borderRadius: '5px',
-          marginBottom: '15px',
-          fontSize: '14px',
-          textAlign: 'center',
-          border: '1px solid #ffcccc'
-        }}>
+        <div
+          className="error-box"
+          style={{
+            color: "#ff4d4d",
+            backgroundColor: "#ffe6e6",
+            padding: "10px",
+            borderRadius: "5px",
+            marginBottom: "15px",
+            fontSize: "14px",
+            textAlign: "center",
+            border: "1px solid #ffcccc",
+          }}
+        >
           {error}
         </div>
       )}
@@ -83,7 +86,9 @@ export function LoginForm() {
         />
       </div>
 
-      <button type="submit" className="submit-button">Login Now</button>
+      <button type="submit" className="submit-button">
+        Login Now
+      </button>
     </form>
   );
 }
