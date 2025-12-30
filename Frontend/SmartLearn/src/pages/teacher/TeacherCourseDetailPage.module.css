@@ -1,0 +1,51 @@
+/* src/pages/teacher/TeacherCourseDetailPage.module.css */
+
+.courseTitle {
+  color: #2c3e50;
+  margin-bottom: 5px;
+  border-bottom: 2px solid #3498db;
+  padding-bottom: 10px;
+}
+
+.courseMetadata {
+  color: #7f8c8d;
+  font-size: 1rem;
+  margin-bottom: 20px;
+}
+
+.headerActions {
+  display: flex;
+  justify-content: flex-end; /* Pushes action buttons to the right */
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.actionButton {
+  background-color: #2ecc71; /* Green for primary action */
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.actionButton:hover {
+  background-color: #27ae60;
+}
+
+.sectionTitle {
+  color: #34495e;
+  border-left: 4px solid #3498db;
+  padding-left: 10px;
+  margin-top: 40px;
+  margin-bottom: 15px;
+}
+
+.error {
+    color: #e74c3c;
+    padding: 20px;
+    font-weight: 600;
+}

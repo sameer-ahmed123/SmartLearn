@@ -3,17 +3,19 @@ import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
 import Dashboard from "./pages/Dashboard"; // Naya Dashboard import karein
 import ProtectedRoute from "./components/Auth/ProtectedRoute";
-import LogoutButton from "./components/Auth/LogoutButton";
 import { useAuthStore } from "./store/useAuthStore";
-import StudentDashboard from "./pages/student/StudentDashboard";
-import TeacherDashboard from "./pages/teacher/TeacherDashboard";
+import TeacherDashboardPage from "./pages/teacher/DashboardPage";
+import LectureReviewPage from "./pages/teacher/LectureReviewPage";
+import TeacherCourseDetailPage from "./pages/teacher/TeacherCourseDetailPage";
+// import DashboardPage from "./pages/student/DashboardPage";
+// import DashboardPage from "./pages/teacher/DashboardPage";
 const App: React.FC = () => {
   const { user } = useAuthStore();
 
   return (
     <>
       {/* Agar aap chahte hain ke toggle aur logout har jagah nazar aayein */}
-      <div
+      {/* <div
         style={{
           position: "fixed",
           top: "10px",
@@ -24,7 +26,7 @@ const App: React.FC = () => {
         }}
       >
         {user && <LogoutButton />}
-      </div>
+      </div> */}
 
       <Routes>
         {/* PUBLIC ROUTES */}
@@ -46,12 +48,20 @@ const App: React.FC = () => {
 
         {/* STUDENT SPECIFIC ROUTES */}
         <Route element={<ProtectedRoute allowedRole={["student"]} />}>
-          <Route path="/student" element={<StudentDashboard />} />
+          <Route path="/student/dashboard" element={<Dashboard />} />
         </Route>
 
         {/* TEACHER SPECIFIC ROUTES */}
         <Route element={<ProtectedRoute allowedRole={["teacher"]} />}>
-          <Route path="/teacher/dashboard" element={<TeacherDashboard />} />
+          <Route path="/teacher/dashboard" element={<TeacherDashboardPage />} />
+          <Route
+            path="/teacher/lecture/:id/review"
+            element={<LectureReviewPage />}
+          ></Route>
+          <Route
+            path="/teacher/course/:courseid"
+            element={<TeacherCourseDetailPage />}
+          />
         </Route>
 
         {/* ERROR ROUTES */}

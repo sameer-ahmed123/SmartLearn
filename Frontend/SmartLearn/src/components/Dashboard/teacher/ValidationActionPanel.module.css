@@ -1,0 +1,75 @@
+/* src/components/Dashboard/teacher/ValidationActionPanel.module.css */
+
+.panel {
+    background-color: #ffffff;
+    border: 1px solid #3498db; /* Highlight border for the action panel */
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.panel h3 {
+    color: #3498db;
+    margin-top: 0;
+    border-bottom: 2px solid #3498db;
+    padding-bottom: 5px;
+    margin-bottom: 15px;
+}
+
+.commentInput {
+    width: 100%;
+    min-height: 120px;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+    resize: vertical;
+    font-size: 1rem;
+    color: #434343;
+}
+
+.buttonGroup {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.validateButton, .rejectButton {
+    padding: 6px 10px;
+    border: none;
+    border-radius: 6px;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    flex-grow: 1;
+    transition: background-color 0.2s, opacity 0.2s;
+}
+
+.validateButton {
+    background-color: #27ae60; /* Green for success/approval */
+}
+
+.validateButton:hover:not(:disabled) {
+    background-color: #219d55;
+}
+
+.rejectButton {
+    background-color: #e74c3c; /* Red for rejection/warning */
+}
+
+.rejectButton:hover:not(:disabled) {
+    background-color: #c0392b;
+}
+
+.validateButton:disabled, .rejectButton:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.note {
+    font-size: 0.85rem;
+    color: #7f8c8d;
+    margin-top: 15px;
+    text-align: center;
+}
