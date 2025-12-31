@@ -20,13 +20,71 @@
 }
 
 .queuePlaceholder {
-    min-height: 300px;
-    background-color: #ffffff;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-    padding: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #7f8c8d;
+  min-height: 300px;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #7f8c8d;
+}
+
+
+.dashboardSplitSection {
+  display: grid;
+  grid-template-columns: 2fr 1fr; /* 2/3 width for courses, 1/3 for chart */
+  gap: 25px;
+  align-items: start; /* Aligns items to the top */
+  margin-bottom: 40px;
+}
+
+/* UPDATED: Course Grid to force 2 columns */
+.courseGrid {
+  display: grid;
+  /* Changed from auto-fill to exactly 2 columns */
+  grid-template-columns: repeat(2, 1fr); 
+  gap: 20px;
+  /* Removed top/bottom margins as the parent wrapper handles spacing now */
+}
+
+/* NEW: Styles for the Chart Card */
+.chartCard {
+  position: sticky;
+  top: 20px; /* Stays 20px from the top of the viewport while scrolling */
+  z-index: 10;
+  align-self: start;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  padding: 20px;
+  min-height: 300px; /* Ensure it has some height */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #e0e0e0;
+}
+
+.chartTitle {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 20px;
+  align-self: flex-start;
+}
+
+
+
+/* Responsive: Stack them on smaller screens */
+@media (max-width: 1024px) {
+  .dashboardSplitSection {
+    grid-template-columns: 1fr; /* Stack vertically */
+  }
+  
+  .courseGrid {
+    /* Optional: revert to auto-fill on mobile if 2 columns is too squished */
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  }
 }

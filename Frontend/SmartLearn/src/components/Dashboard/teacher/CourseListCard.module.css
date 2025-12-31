@@ -1,0 +1,126 @@
+/* src/components/Dashboard/teacher/CourseListCard.module.css */
+
+.card {
+  background-color: #ffffff;
+  color: #434343;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  height: 100%; /* Ensures cards in a grid row are same height */
+  justify-content: space-between;
+}
+
+.card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  border-color: #3498db;
+}
+
+/* --- Header Section --- */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #2c3e50;
+  font-weight: 700;
+  line-height: 1.4;
+  flex: 1; /* Allows title to take up available space */
+  margin-right: 10px;
+}
+
+.status {
+  font-size: 0.75rem;
+  padding: 3px 8px;
+  border-radius: 12px;
+  background-color: #ecf0f1;
+  color: #7f8c8d;
+  text-transform: uppercase;
+  font-weight: 700;
+  white-space: nowrap;
+  letter-spacing: 0.5px;
+}
+
+.statusPublished {
+  padding: 3px 8px;
+  border-radius: 12px;
+  background-color: #81ffbe;
+  color: #03513b;
+  border: 1px solid #a7f3d0;
+}
+
+.statusDraft {
+  padding: 3px 8px;
+  border-radius: 12px;
+  background-color: #ffd8a5;
+  color: #c2410c;
+  border: 1px solid #fed7aa;
+}
+
+.statusArchived {
+  padding: 3px 8px;
+  border-radius: 12px;
+  background-color: #c7c8cb;
+  color: #555b64;
+  border: 1px solid #e5e7eb;
+}
+
+.statusRejected {
+  padding: 3px 8px;
+  border-radius: 12px;
+  background-color: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+
+/* --- Content Section --- */
+.description {
+  color: #7f8c8d;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin-bottom: 20px;
+  flex-grow: 1; /* Pushes the stats/actions to the bottom */
+}
+
+.statsRow {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 20px;
+  padding-top: 15px;
+  border-top: 1px solid #f0f0f0;
+  font-size: 0.85rem;
+  color: #34495e;
+  font-weight: 500;
+}
+
+/* --- Actions Section --- */
+.actions {
+  display: flex;
+}
+
+.manageBtn {
+  display: block;
+  width: 100%;
+  text-align: center;
+  background-color: #3498db;
+  color: white;
+  text-decoration: none;
+  padding: 10px 0;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: background-color 0.2s;
+}
+
+.manageBtn:hover {
+  background-color: #2980b9;
+}

@@ -17,7 +17,7 @@ from .tasks import generate_lecture_from_source
 # NEW FBV 1: COURSE - GET (List) and POST (Create)
 # -----------------------------------------------------------
 @api_view(['GET', 'POST'])
-@permission_classes([permissions.IsAuthenticated, IsTeacher])
+@permission_classes([IsAuthenticated, IsTeacher])
 def course_list_create(request):
     """
     Handles listing all courses created by the teacher and creation of a new course.
@@ -256,6 +256,7 @@ def lecture_validate_action(request, id):
 @permission_classes([IsAuthenticated, IsCourseOwner])
 def course_lecture_list(request, course_id):
     # get list of Lectures that belong to the Current Course that belong to the current user (teacher)
-    lecture_list = Lecture.objects.filter(content_source__course__id=course_id).select_related('content_source','content_source__course')
+    lecture_list = Lecture.objects.filter(content_source__course__id=course_id).select_related(
+        'content_source', 'content_source__course')
     serializer = CourseLectureListItem(lecture_list, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)

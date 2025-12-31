@@ -15,7 +15,7 @@ class Course(models.Model):
         related_name="taught_courses"
     )
     title = models.CharField(max_length=225)
-    description = models.TextField()
+    description = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     STATUS_CHOICES = [

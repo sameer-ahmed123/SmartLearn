@@ -1,5 +1,3 @@
-// src/components/Dashboard/teacher/CourseContentTable.tsx
-
 import React, { useState } from "react";
 import type { CourseContentItem } from "../../../types/Lectures/Types";
 import styles from "./CourseContentTable.module.css";
