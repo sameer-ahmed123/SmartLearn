@@ -1,0 +1,73 @@
+.headerContainer {
+    background-color: white;
+    padding: 25px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    margin-bottom: 30px; /* Space between header and table */
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    border: 1px solid #e0e0e0;
+}
+
+.infoSection {
+    flex: 1;
+    margin-right: 20px;
+}
+
+.title {
+    margin: 0 0 10px 0;
+    color: #2c3e50;
+    font-size: 1.8rem;
+}
+
+.description {
+    color: #7f8c8d;
+    line-height: 1.5;
+    margin: 0;
+}
+
+.controlSection {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 15px;
+    min-width: 200px;
+}
+
+.statusGroup {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #34495e;
+}
+
+.statusSelect {
+    padding: 8px 12px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+/* Dynamic styling based on status */
+.statusSelect.draft { border-color: #f39c12; color: #d35400; background-color: #fdf2e9; }
+.statusSelect.published { border-color: #27ae60; color: #27ae60; background-color: #eafaf1; }
+.statusSelect.archived { border-color: #7f8c8d; color: #7f8c8d; background-color: #f4f6f7; }
+
+.deleteBtn {
+    background: none;
+    border: 1px solid #e74c3c;
+    color: #e74c3c;
+    padding: 8px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.2s;
+}
+
+.deleteBtn:hover {
+    background-color: #fdedec;
+}

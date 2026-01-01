@@ -67,7 +67,7 @@ def course_detail_actions(request, pk):
     # --- PUT / PATCH (Update) ---
     elif request.method in ['PUT', 'PATCH']:
         # Use the CourseCreateSerializer for updates (allows changing title/description/status)
-        serializer = CourseCreateSerializer(
+        serializer = CourseSerializer(
             course,
             data=request.data,
             partial=(request.method == 'PATCH')
@@ -193,12 +193,14 @@ def content_source_detail_actions(request, pk):
 @permission_classes([IsAuthenticated, IsTeacher])
 def lecture_validation_queue(request):
     """
-    Retrive a list of lectures that require Teachers review
+    Retrieve a list of lectures that require Teachers review,
+    ONLY for courses that are currently 'published'.
     """
     user = request.user
     queryset = Lecture.objects.filter(
         generated_by=user,
-        validation_status='pending'
+        validation_status='pending',
+        content_source__course__status="published"
     ).select_related(
         'content_source',
         'content_source__course'

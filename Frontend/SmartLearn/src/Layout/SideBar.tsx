@@ -13,6 +13,7 @@ interface SideBarProps {
 const teacherLinks = [
   { path: '/teacher/dashboard', label: 'Dashboard', icon: '📊' },
   { path: '/teacher/courses/create', label: 'Create Course', icon: '+' },
+  
 
 ];
 

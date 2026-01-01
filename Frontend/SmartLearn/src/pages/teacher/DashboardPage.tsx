@@ -10,6 +10,7 @@ import styles from "./TeacherDashboard.module.css";
 import { useAuthStore } from "@/store/useAuthStore";
 import apiClient from "@/api/apiClient";
 import type { CourseSummary } from "@/types/Courses/Types";
+import { Link } from "react-router-dom";
 
 interface MetricsData {
   total_courses: number;
@@ -182,7 +183,9 @@ const TeacherDashboardPage: React.FC = () => {
         <div className={styles.courseGrid}>
           {courses.length > 0 ? (
             courses.map((course) => (
-              <CourseListCard key={course.id} course={course} />
+              <Link key={course.id} to={`/teacher/course/${course.id}`}>
+                <CourseListCard course={course} />
+              </Link>
             ))
           ) : (
             <p>No Courses available. Create your first Course</p>
