@@ -17,7 +17,7 @@ from .tasks import generate_lecture_from_source
 # NEW FBV 1: COURSE - GET (List) and POST (Create)
 # -----------------------------------------------------------
 @api_view(['GET', 'POST'])
-@permission_classes([permissions.IsAuthenticated, IsTeacher])
+@permission_classes([IsAuthenticated, IsTeacher])
 def course_list_create(request):
     """
     Handles listing all courses created by the teacher and creation of a new course.
@@ -67,7 +67,7 @@ def course_detail_actions(request, pk):
     # --- PUT / PATCH (Update) ---
     elif request.method in ['PUT', 'PATCH']:
         # Use the CourseCreateSerializer for updates (allows changing title/description/status)
-        serializer = CourseCreateSerializer(
+        serializer = CourseSerializer(
             course,
             data=request.data,
             partial=(request.method == 'PATCH')
@@ -193,12 +193,14 @@ def content_source_detail_actions(request, pk):
 @permission_classes([IsAuthenticated, IsTeacher])
 def lecture_validation_queue(request):
     """
-    Retrive a list of lectures that require Teachers review
+    Retrieve a list of lectures that require Teachers review,
+    ONLY for courses that are currently 'published'.
     """
     user = request.user
     queryset = Lecture.objects.filter(
         generated_by=user,
-        validation_status='pending'
+        validation_status='pending',
+        content_source__course__status="published"
     ).select_related(
         'content_source',
         'content_source__course'
@@ -256,6 +258,7 @@ def lecture_validate_action(request, id):
 @permission_classes([IsAuthenticated, IsCourseOwner])
 def course_lecture_list(request, course_id):
     # get list of Lectures that belong to the Current Course that belong to the current user (teacher)
-    lecture_list = Lecture.objects.filter(content_source__course__id=course_id).select_related('content_source','content_source__course')
+    lecture_list = Lecture.objects.filter(content_source__course__id=course_id).select_related(
+        'content_source', 'content_source__course')
     serializer = CourseLectureListItem(lecture_list, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)

@@ -17,8 +17,11 @@ const LectureValidationQueueTable = () => {
         if (!response.status) {
           throw new Error(`Http error! status: ${response.status}`);
         }
-        const data: LectureQueueItem[] = response.data;
+        const data: LectureQueueItem[] = Array.isArray(response.data)
+          ? response.data
+          : [];
         setQueue(data);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (err: any) {
         console.error("failed to load pending validation queue", err);
         setError("Failed to load Validation Queue data.");
@@ -53,7 +56,9 @@ const LectureValidationQueueTable = () => {
           {queue.map((item) => (
             <tr key={item.id}>
               <td>{item.topic}</td>
-              <td>{item.content_source.course.title}</td>
+              <td>
+                {item.content_source?.course?.title ?? "Unassigned Course"}
+              </td>
               <td>{new Date(item.created_at).toLocaleDateString()}</td>
               <td>
                 <span className={styles.statusPill}>{item.status_display}</span>
