@@ -1,5 +1,6 @@
 from .models import ContentSource, Lecture, Course
-import logging, os
+import logging
+import os
 from ai_core.services import read_content_file, generate_lecture_script, generate_video
 from smartlearn_project import celery_app
 print("--- LECTURES TASKS MODULE LOADED ---")
@@ -57,15 +58,17 @@ def generate_lecture_from_source(content_source_id):
         #    converts the uploaded file into a format that ai can understand
         file_data = read_content_file(file_path_db)
         # print(file_data)
-        if isinstance(file_data,str):
-            logger.error(f"Failed to process file for lecture Id {content_source_id} : file returned string error: {file_data}")
+        if isinstance(file_data, str):
+            logger.error(
+                f"Failed to process file for lecture Id {content_source_id} : file returned string error: {file_data}")
             return
-        
-        if file_data.get('type')=='error':
-            logger.error(f"Failed to process file for lecture Id{content_source_id} :file processing error: {file_data}")
+
+        if file_data.get('type') == 'error':
+            logger.error(
+                f"Failed to process file for lecture Id{content_source_id} :file processing error: {file_data}")
             return
-            
-        image_paths = file_data.get('image_paths',[])
+
+        image_paths = file_data.get('image_paths', [])
 
         print(f"--- DEBUG: ID from DB: {source_data['id']}")
         print(f"--- DEBUG: Course Title: {course_title}")
@@ -77,20 +80,20 @@ def generate_lecture_from_source(content_source_id):
         # --- STEP 1: provide processed file and ai assist prompt to helper function ---
         #             that calls external api  (gemini)
         #             Generates Script and Context
-        generated_script, context_text = generate_lecture_script(
+        script, context = generate_lecture_script(
             ai_prompt,
             file_data
-        ) 
+        )
 
-        print(generated_script)
-        print(context_text)
+        print(script)
+        print(context)
 
         # --- STEP 2: Generate Video and Transcript (External API Call) ---
         #             (Takes in the Generated Script)
         #             should spit out Video url and transcript
         #             Currently a Placeholder (Genereic hardcoded output)
 
-        video_url, transcript_text = generate_video(generated_script)
+        video_url, transcript_text = generate_video(script)
 
         # --- STEP 3: Create the final Lecture object and update the DB ---
 
@@ -107,11 +110,14 @@ def generate_lecture_from_source(content_source_id):
             topic=f"Auto-Generated Lecture: {course_title} Part {source_data['id']}",
             # (should be something else...maybe the transcript?  , gen_script should go to a video_gen ai )
             # potentail DB schema change (to add transcript Feild)
-            summary_text=generated_script,
+            summary_text=script,
             video_url=video_url,
             # Use the raw ID, we assume the user exists
             generated_by_id=source_data.get('uploaded_by_id'),
-            validation_status='pending'
+            validation_status='pending',
+
+            script=script,
+            context=context
         )
 
         logger.info(
@@ -127,12 +133,14 @@ def generate_lecture_from_source(content_source_id):
     finally:
         # CLEANUP THE TEMPORARY IMAGE FILES
         if image_paths:
-            logger.info(f"cleaning up {len(image_paths)} temporary files form source ID {content_source_id}")
+            logger.info(
+                f"cleaning up {len(image_paths)} temporary files form source ID {content_source_id}")
             for path in image_paths:
                 try:
                     if os.path.exists(path):
                         os.remove(path)
                 except Exception as cleanup_e:
-                    logger.warning(f"failed to remove  temp file {path}: {cleanup_e}")
+                    logger.warning(
+                        f"failed to remove  temp file {path}: {cleanup_e}")
 
     return None

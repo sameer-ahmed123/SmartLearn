@@ -4,20 +4,23 @@
 #       significantly faster response time for images
 #       (down from 83-100 seconds to 13-16 seconds)
 
-# NOTE gemini-3-flash-preview significantly fast ha gemini-2.5-flash se But 
+# NOTE gemini-3-flash-preview significantly fast ha gemini-2.5-flash se But
 # Return tokens yah output significantly kam ha gemini-3-flash-preview ka
-# COMPARE GENERATED LECTURE NUMBER 60 and 59 
+# COMPARE GENERATED LECTURE NUMBER 60 and 59
 # 60 --- gemini-2.5-flash
 # 59 --- gemini-3-flash-preview
 ##
 ########
 
-import os,uuid,fitz,logging # type: ignore
+import os
+import uuid
+import fitz #type:ignore  its a part of the pymupdf library (required for pdf processing)
+import logging  # type: ignore
 from django.conf import settings
-from PIL import Image # type: ignore
-from pptx import Presentation # python-pptx library for PPTX # type: ignore
-import google.genai as genai # type: ignore
-from pptx.enum.shapes import MSO_SHAPE_TYPE  #type:ignore
+from PIL import Image  # type: ignore
+from pptx import Presentation  # python-pptx library for PPTX # type: ignore
+import google.genai as genai  # type: ignore
+from pptx.enum.shapes import MSO_SHAPE_TYPE  # type:ignore
 
 
 logger = logging.getLogger(__name__)
@@ -30,6 +33,13 @@ if not api_key:
 
 # Initialize genai Client . Note the client will automatically read gemini api key from settings
 client = genai.Client(api_key=api_key)
+
+#######
+##
+# BELOW CODE : HELPER FUNCTIONS
+##
+######
+
 
 def get_image_part(file_path):
     """ converts a local image file to a GenerativePart for Gemini API
@@ -50,6 +60,7 @@ def get_image_part(file_path):
                 f"Unsupported image file extension for Gemini: {file_path}")
         return genai.types.Part.from_bytes(data=image_bytes, mime_type=mime_type)
 
+
 def extract_content_from_pdf(full_path):
     """ 
     Extracts text content from a PDF using PyMuPDF.
@@ -58,43 +69,46 @@ def extract_content_from_pdf(full_path):
     """
     text_content = []
     image_paths = []
-    
+
     # A temporary folder to store extracted images
     temp_dir = os.path.join(settings.MEDIA_ROOT, 'temp_pdf_images')
     os.makedirs(temp_dir, exist_ok=True)
-    
+
     try:
         with fitz.open(full_path) as doc:
             for page_num, page in enumerate(doc):
                 # 1. extract text
                 text_content.append(page.get_text())
-                
+
                 # 2. extract images
                 for img_index, img in enumerate(page.get_images(full=True)):
-                    xref = img[0] # cross reference of image
+                    xref = img[0]  # cross reference of image
                     base_image = doc.extract_image(xref)
-                    
+
                     if base_image:
                         image_bytes = base_image["image"]
-                        ext = base_image["ext"]  # extention type ... jpg , png etc
-                        
-                        #create unique filename
+                        # extention type ... jpg , png etc
+                        ext = base_image["ext"]
+
+                        # create unique filename
                         unique_id = uuid.uuid4().hex[:8]
                         image_filename = f"pdf_img_{page_num}_{img_index}_{unique_id}.{ext}"
-                        temp_image_path = os.path.join(temp_dir,image_filename)
-                        
-                        # save the image bytes to temporary file 
-                        with open(temp_image_path,"wb") as img_file:
+                        temp_image_path = os.path.join(
+                            temp_dir, image_filename)
+
+                        # save the image bytes to temporary file
+                        with open(temp_image_path, "wb") as img_file:
                             img_file.write(image_bytes)
-                        
+
                         image_paths.append(temp_image_path)
-                        
+
             extracted_text = "\n".join(text_content).strip()
-        return extracted_text ,image_paths
+        return extracted_text, image_paths
     except Exception as e:
         logger.error(f"Error extracting PDF Text From {full_path}: {e}")
         return "", []
-        
+
+
 def extract_content_from_pptx(full_path):
     """
     Extracts text and images  form a Power Point using python-pptx
@@ -102,64 +116,68 @@ def extract_content_from_pptx(full_path):
     """
     text_content = []
     image_paths = []
-    
+
     temp_dir = os.path.join(settings.MEDIA_ROOT, 'temp_pptx_images')
     os.makedirs(temp_dir, exist_ok=True)
     try:
         prs = Presentation(full_path)
         for slide_num, slide in enumerate(prs.slides):
             for shape_index, shape in enumerate(slide.shapes):
-                #1. extract text from the presentation slides
-                if hasattr(shape,"text"):
+                # 1. extract text from the presentation slides
+                if hasattr(shape, "text"):
                     text_content.append(shape.text)
-                
-                #2. extract images from ppt (check for image shapes)
-                if shape.shape_type == MSO_SHAPE_TYPE.PICTURE: # checks if the encontered shape is even a picture or not 
+
+                # 2. extract images from ppt (check for image shapes)
+                if shape.shape_type == MSO_SHAPE_TYPE.PICTURE:  # checks if the encontered shape is even a picture or not
                     image_data = shape.image
                     image_bytes = image_data.blob
-                    ext = image_data.ext #ext means extenstion
+                    ext = image_data.ext  # ext means extenstion
 
-                    #create a unique id for each image
+                    # create a unique id for each image
                     unique_id = uuid.uuid4().hex[:8]
                     original_img_filename = f"pptx_img_{slide_num}_{shape_index}_{unique_id}.{ext}"
-                    temp_image_path = os.path.join(temp_dir, original_img_filename)
-                    
-                    #save the image bytes to image_file
-                    with open(temp_image_path,"wb") as img_file:
+                    temp_image_path = os.path.join(
+                        temp_dir, original_img_filename)
+
+                    # save the image bytes to image_file
+                    with open(temp_image_path, "wb") as img_file:
                         img_file.write(image_bytes)
-                        
+
                     # --- WMF/EMF CONVERSION STEP ---
-                    #convert .wmb files to png (so ai can process it )
-                    if ext.lower() in ['wmf','emf']:
+                    # convert .wmb files to png (so ai can process it )
+                    if ext.lower() in ['wmf', 'emf']:
                         final_image_path = temp_image_path
                         try:
                             png_filename = f"ppt_img_{slide_num}_{shape_index}_{unique_id}.png"
                             png_path = os.path.join(temp_dir, png_filename)
                             with Image.open(temp_image_path) as img:
-                                #ensure its converted to RGB before storing in png
-                                if img.mode not in ('RGB','RGBA'):
+                                # ensure its converted to RGB before storing in png
+                                if img.mode not in ('RGB', 'RGBA'):
                                     img = img.convert('RGB')
                                 img.save(png_path, 'PNG')
-                            # use png images for LLM    
+                            # use png images for LLM
                             final_image_path = png_path
                             # clean up unnessary files to save space
                             os.remove(temp_image_path)
                         except Exception as e:
-                            logger.warning(f"failed to convert WMF/EMF {temp_image_path} to png ,error: {e}")
+                            logger.warning(
+                                f"failed to convert WMF/EMF {temp_image_path} to png ,error: {e}")
                     else:
                         # If it's a standard format (PNG/JPG), use the path directly
                         final_image_path = temp_image_path
-                        
+
                     image_paths.append(final_image_path)
         extracted_text = "\n".join(text_content).strip()
-        
+
         if not extracted_text and image_paths:
-            logger.warning(f"PPTX extaction did not contain text or image for :{full_path}.")
-            
+            logger.warning(
+                f"PPTX extaction did not contain text or image for :{full_path}.")
+
         return extracted_text, image_paths
     except Exception as e:
         logger.error(f"Error extracting text from {full_path} : {e}")
         return "", []
+
 
 def read_content_file(file_path_db):
     """
@@ -187,26 +205,34 @@ def read_content_file(file_path_db):
         elif file_path_db.lower().endswith(('.txt', '.csv', '.md')):
             with open(full_path, 'r', encoding='utf-8') as f:
                 return {'type': 'text', 'content': f.read()}
-            
+
         elif file_path_db.lower().endswith('.pdf'):
             text_content, image_paths = extract_content_from_pdf(full_path)
-            if not text_content and not image_paths :
+            if not text_content and not image_paths:
                 raise Exception("PDF extraction Failed")
-            
-            return {'type': 'multimodal', 'path':full_path, 'content': text_content,'image_paths':image_paths}
-        
+
+            return {'type': 'multimodal', 'path': full_path, 'content': text_content, 'image_paths': image_paths}
+
         elif file_path_db.lower().endswith('.pptx'):
             text_content, image_paths = extract_content_from_pptx(full_path)
             if not text_content and not image_paths:
                 raise Exception("PPTX extraction failed.")
-            return {'type': 'text', 'path': full_path, 'content': text_content, 'image_paths':image_paths}
-        
+            return {'type': 'text', 'path': full_path, 'content': text_content, 'image_paths': image_paths}
+
         else:
             return {'type': 'unknown', 'content': f"Unsupported file type: {os.path.basename(file_path_db)}"}
 
     except Exception as e:
         return {'type': 'error', 'content': f"Error processing file {full_path}: {e}"}
-  
+
+
+#######
+##
+# BELOW CODE : BELONGS TO THE LECTURE GENERATION PIPELINE
+##
+######
+
+
 def generate_lecture_script(prompt, file_data):
     """
     Calls Gemini API to Generate Script and Context in Json format
@@ -214,7 +240,7 @@ def generate_lecture_script(prompt, file_data):
     # 1. Prepare input Parts
     model_name = "gemini-2.5-flash"
     # model_name = "gemini-3-flash-preview"
-    
+
     system_instructions = (
         "You are an expert curriculum designer. Your task is to generate a comprehensive"
         "lecture script and brief chatbot context based on the user's prompt and provided content."
@@ -234,10 +260,10 @@ def generate_lecture_script(prompt, file_data):
         content_parts.append(f"content for lecture: {file_data['content']}")
     elif file_data['type'] == 'multimodal':
         # new file type to send both iamge data and text content to ai (handles both pdf and ppt)
-        
+
         # extracted text first
         content_parts.append(f"content for lecture: {file_data['content']}")
-        
+
         # add all extracted (temporary) images as separate parts
         for image_path in file_data['image_paths']:
             try:
@@ -245,8 +271,10 @@ def generate_lecture_script(prompt, file_data):
                 image_part = get_image_part(image_path)
                 content_parts.append(image_part)
             except Exception as e:
-                logger.warning(f"failed to process extracted image {image_path}: {e}")
-        content_parts.append("IMPORTANT: Use provided text and ALL attached images to generate the script." )
+                logger.warning(
+                    f"failed to process extracted image {image_path}: {e}")
+        content_parts.append(
+            "IMPORTANT: Use provided text and ALL attached images to generate the script.")
 
     try:
         response = client.models.generate_content(
@@ -281,3 +309,91 @@ def generate_video(script):
     video_url = "https://external.video.service/generated_" + str(hash(script))
     transcript = script
     return video_url, transcript
+
+#######
+##
+# BELOW CODE : BELONGS TO THE ASSESMENT GENERATION PIPELINE
+##
+######
+
+
+def generate_quiz_json(script, context, num_questions=5):
+    """
+    Generates a JSON object containing Multiple Choice Questions (MCQs) 
+    based on the provided lecture script and context.
+    """
+    # 1. Setup Model
+    model_name = "gemini-2.5-flash"
+
+    system_instructions = (
+        "You are an expert assessment creator. Your task is to generate a set of "
+        f"{num_questions} multiple-choice questions based strictly on the provided "
+        "Lecture Script and Context. \n"
+        "- Questions should test conceptual understanding, not just rote memorization.\n"
+        "- Provide exactly 4 options for each question.\n"
+        "- Indicate the correct answer using the zero-based index (0, 1, 2, or 3)."
+    )
+
+    # 2. Prepare the Prompt Content
+    user_prompt = (
+        f"CONTEXT SUMMARY:\n{context}\n\n"
+        f"FULL SCRIPT:\n{script}\n\n"
+        f"TASK: Generate {num_questions} MCQs."
+    )
+
+    contents = [system_instructions, user_prompt]
+
+    try:
+        # 3. Call Gemini with specific Schema
+        response = client.models.generate_content(
+            model=model_name,
+            contents=contents,
+            config={
+                "response_mime_type": "application/json",
+                "response_schema": {
+                    "type": "object",
+                    "properties": {
+                        "questions": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "question_text": {"type": "string"},
+                                    "options": {
+                                        "type": "array",
+                                        "items": {"type": "string"},
+                                        "description": "Array of 4 option strings"
+                                    },
+                                    "correct_index": {
+                                        "type": "integer",
+                                        "description": "0-based index of the correct option"
+                                    },
+                                    "explanation": {
+                                        "type": "string",
+                                        "description": "Short explanation of why the answer is correct"
+                                    }
+                                },
+                                "required": ["question_text", "options", "correct_index"]
+                            }
+                        }
+                    }
+                }
+            }
+        )
+
+        import json
+        data = json.loads(response.text)
+
+        # Return just the list of questions
+        return data.get("questions", [])
+
+    except Exception as e:
+        #log error in terminal
+        logger.error(f"Quiz Generation LLM Error: {e}")
+        # Re-raise the exception so the Celery task knows it failed
+        raise Exception(f"Failed to generate quiz: {e}")
+
+
+# future functionality
+def generate_assignment_json(script, context, num_questions=10):
+    return
