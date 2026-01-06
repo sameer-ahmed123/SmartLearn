@@ -1,158 +1,150 @@
 /* src/components/Dashboard/teacher/CourseContentTable.module.css */
 
 .tableContainer {
-    background-color: #ffffff;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-    padding: 20px;
-    color: #434343;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  padding: 20px;
+  color: #434343;
 }
 
 /* --- Filter Bar --- */
 .filterBar {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 20px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid #f0f0f0;
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #f0f0f0;
+  align-items: center; /* Ensures buttons align vertically */
 }
 
 .filterButton {
-    background-color: #ecf0f1; /* Light gray base */
-    color: #34495e;
-    padding: 8px 15px;
-    border: 1px solid #bdc3c7;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.2s, border-color 0.2s;
-    font-weight: 500;
+  background-color: #ecf0f1;
+  color: #34495e;
+  padding: 8px 15px;
+  border: 1px solid #bdc3c7;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s;
+  font-weight: 500;
 }
 
 .filterButton:hover {
-    background-color: #e0e0e0;
+  background-color: #e0e0e0;
 }
 
 .filterButton.active {
-    background-color: #3498db;
-    color: white;
-    border-color: #2980b9;
-    font-weight: 600;
+  background-color: #3498db;
+  color: white;
+  border-color: #2980b9;
+  font-weight: 600;
 }
 
-/* --- Table Styling --- */
+/* --- NEW: The Generate Button Style --- */
+.generateActionBtn {
+  margin-left: auto; /* This pushes the button to the far right */
+  padding: 8px 20px;
+  background-color: #2ecc71;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
 
+.generateActionBtn:hover {
+  background-color: #27ae60;
+}
+
+/* ... (Keep the rest of your table styling: .table, .statusPill, etc.) ... */
 .table {
-    width: 100%;
-    border-collapse: collapse;
+  width: 100%;
+  border-collapse: collapse;
 }
-
-.table th, .table td {
-    padding: 12px 15px;
-    text-align: left;
-    border-bottom: 1px solid #f2f2f2;
+.table th,
+.table td {
+  padding: 12px 15px;
+  text-align: left;
+  border-bottom: 1px solid #f2f2f2;
 }
-
 .table th {
-    background-color: #f8f9fa;
-    color: #34495e;
-    font-weight: 700;
-    text-transform: uppercase;
-    font-size: 0.9rem;
+  background-color: #f8f9fa;
+  color: #34495e;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.9rem;
 }
-
 .table tbody tr:hover {
-    background-color: #fefefe;
+  background-color: #fefefe;
 }
-
 .noData {
-    text-align: center;
-    padding: 30px;
-    color: #7f8c8d;
-    font-style: italic;
+  text-align: center;
+  padding: 30px;
+  color: #7f8c8d;
+  font-style: italic;
 }
-
-/* --- Column Widths --- */
 .topicCol {
-    width: 50%;
+  width: 50%;
 }
-
 .createdCol {
-    width: 15%;
-    font-size: 0.9rem;
-    color: #7f8c8d;
+  width: 15%;
+  font-size: 0.9rem;
+  color: #7f8c8d;
 }
-
 .actionCol {
-    width: 20%;
-    text-align: right;
+  width: 20%;
+  text-align: right;
 }
-
-/* --- Status Pills --- */
 .statusPill {
-    display: inline-block;
-    padding: 4px 10px;
-    border-radius: 15px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    text-transform: capitalize;
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 15px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: capitalize;
 }
-
 .statusPending {
-    color: #f39c12; /* Orange */
-    background-color: #fdebd0;
+  color: #f39c12;
+  background-color: #fdebd0;
 }
-
 .statusValidated {
-    color: #27ae60; /* Green */
-    background-color: #d4efdf;
+  color: #27ae60;
+  background-color: #d4efdf;
 }
-
 .statusRejected {
-    color: #e74c3c; /* Red */
-    background-color: #fcecec;
+  color: #e74c3c;
+  background-color: #fcecec;
 }
-
-.statusDraft {
-    color: #3498db; /* Blue */
-    background-color: #ebf5fb;
-}
-
-
-/* --- Action Links --- */
-
-.actionReview, .actionEdit, .actionView {
-    display: inline-block;
-    padding: 6px 12px;
-    border-radius: 4px;
-    text-decoration: none;
-    font-size: 0.9rem;
-    font-weight: 500;
-    transition: background-color 0.2s;
-}
-
-.actionReview {
-    background-color: #3498db;
-    color: white;
-}
-
-.actionReview:hover {
-    background-color: #2980b9;
-}
-
-.actionEdit {
-    background-color: #e67e22; /* Carrot Orange */
-    color: white;
-}
-
-.actionEdit:hover {
-    background-color: #d35400;
-}
-
+.actionReview,
+.actionEdit,
 .actionView {
-    background-color: #bdc3c7; /* Gray for viewing live */
-    color: #34495e;
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 4px;
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: background-color 0.2s;
 }
-
+.actionReview {
+  background-color: #3498db;
+  color: white;
+}
+.actionReview:hover {
+  background-color: #2980b9;
+}
+.actionEdit {
+  background-color: #e67e22;
+  color: white;
+}
+.actionEdit:hover {
+  background-color: #d35400;
+}
+.actionView {
+  background-color: #bdc3c7;
+  color: #34495e;
+}
 .actionView:hover {
-    background-color: #aeb6bf;
+  background-color: #aeb6bf;
 }

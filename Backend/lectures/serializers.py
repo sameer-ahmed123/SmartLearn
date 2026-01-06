@@ -83,10 +83,20 @@ class LectureSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'topic', 'video_url', 'summary_text',
             'validation_status', 'rejection_comment',
-            'generated_by', 'generated_by_email', 'created_at', 'content_source'
+            'generated_by', 'generated_by_email', 'created_at', 'content_source', 'quiz_data',
         ]
         read_only_fields = ('generated_by', 'validation_status',
                             'rejection_comment', 'content_source')
+
+    def get_quiz_data(self, obj):
+        """
+        Checks if a Quiz object is attached to this lecture.
+        Returns the quiz_data JSON if it exists, otherwise None.
+        """
+        # Because Quiz has a OneToOneField to Lecture, we can access it via obj.quiz
+        if hasattr(obj, 'quiz'):
+            return obj.quiz.quiz_data
+        return None
 
 
 # LECTURE_DETAIL_SERIALIZER DEDICATED FOR LECTURE REVIEW/STUDY PAGE
@@ -174,6 +184,7 @@ class CourseLectureListItem(serializers.ModelSerializer):
     course_topic = serializers.CharField(
         source='content_source.course.title', read_only=True)
     review_url = serializers.SerializerMethodField()
+    quiz_data = serializers.SerializerMethodField()
 
     class Meta:
         model = Lecture
@@ -184,8 +195,15 @@ class CourseLectureListItem(serializers.ModelSerializer):
             'course_topic',
             'created_at',
             'status_display',
-            'review_url'
+            'review_url',
+            'quiz_data',
         ]
+
+    def get_quiz_data(self, obj):
+        # Efficiently check for the reverse relationship
+        if hasattr(obj, 'quiz'):
+            return obj.quiz.quiz_data
+        return None
 
     def get_review_url(self, obj):
         return f"/teacher/lecture/{obj.id}/review"

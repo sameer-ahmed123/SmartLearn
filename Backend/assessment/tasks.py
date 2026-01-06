@@ -1,4 +1,4 @@
-# from smartlearn_project.celery import shared_task
+from celery import shared_task # type: ignore
 from django.core.exceptions import ObjectDoesNotExist
 from lectures.models import Lecture
 from .models import Quiz, Assignment # Import both models
@@ -8,7 +8,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-# @shared_task
+@shared_task
 def generate_assessment_task(lecture_id, assessment_type):
     """
     Unified task for generating assessments.
