@@ -1,5 +1,6 @@
 import { useState } from "react";
 import apiClient from "../../../api/apiClient";
+import QuizEditorModal from "./QuizEditorModal";
 import styles from "./AssessmentList.module.css";
 
 interface AssessmentProps {
@@ -10,6 +11,11 @@ interface AssessmentProps {
 
 const AssessmentList = ({ lectures, onRefresh }: AssessmentProps) => {
   const [generatingId, setGeneratingId] = useState<number | null>(null);
+  const [editingQuizId, setEditingQuizId] = useState<number | null>(null);
+
+  const ValidatedLectures = lectures.filter(
+    (l) => l.validation_status === "validated"
+  );
 
   const handleGenerateQuiz = async (lectureId: number) => {
     setGeneratingId(lectureId);
@@ -40,20 +46,26 @@ const AssessmentList = ({ lectures, onRefresh }: AssessmentProps) => {
           </tr>
         </thead>
         <tbody>
-          {lectures.map((lecture) => (
+          {ValidatedLectures.map((lecture) => (
             <tr key={lecture.id}>
               <td>{lecture.topic}</td>
               <td>
-                {/* Check if quiz_data exists (You might need to update your serializer to include 'has_quiz') */}
                 {lecture.quiz_data ? (
                   <span className={styles.badgeSuccess}>Generated</span>
+                ) : generatingId === lecture.id ? (
+                  <span className={styles.badgePending}>Processing...</span>
                 ) : (
                   <span className={styles.badgePending}>None</span>
                 )}
               </td>
               <td>
                 {lecture.quiz_data ? (
-                  <button className={styles.viewBtn}>View Quiz</button>
+                  <button
+                    className={styles.viewBtn}
+                    onClick={() => setEditingQuizId(lecture.quiz_id)}
+                  >
+                    View Quiz
+                  </button>
                 ) : (
                   <button
                     onClick={() => handleGenerateQuiz(lecture.id)}
@@ -70,6 +82,16 @@ const AssessmentList = ({ lectures, onRefresh }: AssessmentProps) => {
           ))}
         </tbody>
       </table>
+      {editingQuizId && (
+        <QuizEditorModal
+          isOpen={true} // <--- FIXED: Always true if the ID exists
+          quizId={editingQuizId}
+          onClose={() => setEditingQuizId(null)}
+          onSaveSuccess={() => {
+            onRefresh(); 
+          }}
+        />
+      )}
     </div>
   );
 };

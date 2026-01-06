@@ -185,6 +185,7 @@ class CourseLectureListItem(serializers.ModelSerializer):
         source='content_source.course.title', read_only=True)
     review_url = serializers.SerializerMethodField()
     quiz_data = serializers.SerializerMethodField()
+    quiz_id = serializers.SerializerMethodField()
 
     class Meta:
         model = Lecture
@@ -197,12 +198,17 @@ class CourseLectureListItem(serializers.ModelSerializer):
             'status_display',
             'review_url',
             'quiz_data',
+            'quiz_id',
         ]
 
     def get_quiz_data(self, obj):
-        # Efficiently check for the reverse relationship
         if hasattr(obj, 'quiz'):
             return obj.quiz.quiz_data
+        return None
+    
+    def get_quiz_id(self, obj):
+        if hasattr(obj, 'quiz'):
+            return obj.quiz.id 
         return None
 
     def get_review_url(self, obj):
