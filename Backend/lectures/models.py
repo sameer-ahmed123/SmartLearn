@@ -80,6 +80,9 @@ class Lecture(models.Model):
     validated_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
                                      null=True, blank=True, related_name='validated_lectures')
 
+    script = models.TextField(blank=True,null=True, help_text="Full Ai Generated Lecture Script")
+    context = models.TextField(blank=True, null=True,help_text="Ai-Generated context for chatbot/Quiz/Assignment")
+    
     video_url = models.URLField()
     summary_text = models.TextField()
 

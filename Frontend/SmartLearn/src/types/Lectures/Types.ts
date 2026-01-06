@@ -58,7 +58,8 @@ export interface CourseContentItem {
   status_display: string;
   course_topic: string; 
   created_at: string;
-  review_url :string
+  review_url :string,
+//   quiz_id?: number;
 }
 
 

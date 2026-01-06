@@ -1,14 +1,13 @@
-// src/pages/teacher/TeacherCourseDetailPage.tsx
-
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import DashboardLayout from "../../../src/Layout/DashboardLayout";
 import CourseContentTable from "../../components/Dashboard/teacher/CourseContentTable";
-import CourseManagementHeader from "../../components/Dashboard/teacher/CourseManagementHeader"; // New Import
+import CourseManagementHeader from "../../components/Dashboard/teacher/CourseManagementHeader";
 import apiClient from "../../api/apiClient";
-import type { CourseContentItem } from "../../types/Lectures/Types"; // Ensure this path is correct
+import type { CourseContentItem } from "../../types/Lectures/Types";
 import GenerateLectureModal from "@/components/Dashboard/teacher/GenerateLectureModal";
-// Define a local interface for the course detail if not in your types yet
+import AssessmentList from "@/components/Dashboard/teacher/AssessmentList";
+
 interface CourseDetail {
   id: number;
   title: string;
@@ -16,17 +15,33 @@ interface CourseDetail {
   status: "draft" | "published" | "archived";
 }
 
-const TeacherCourseDetailPage: React.FC = () => {
+const TeacherCourseDetailPage = () => {
   const { courseid } = useParams<{ courseid: string }>();
   const courseId = courseid;
 
-  // for Lectures (The Table)
   const [lectures, setLectures] = useState<CourseContentItem[]>([]);
-  // for Course Details (The Header)
   const [course, setCourse] = useState<CourseDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isGenerateOpen, setIsGenerateOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<"content" | "assessments">(
+    "content"
+  );
+
+  const refreshData = async () => {
+    if (!courseId) return;
+    try {
+      const [courseRes, lectureRes] = await Promise.all([
+        apiClient.get(`/lectures/courses/${courseId}/`),
+        apiClient.get(`/lectures/courses/${courseId}/content/`),
+      ]);
+      setCourse(courseRes.data);
+      setLectures(lectureRes.data);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      console.error("Failed to refresh data", err);
+    }
+  };
 
   useEffect(() => {
     if (!courseId) return;
@@ -34,13 +49,10 @@ const TeacherCourseDetailPage: React.FC = () => {
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        // Fetch both Course Details and Lectures in parallel
         const [courseRes, lectureRes] = await Promise.all([
-          apiClient.get(`/lectures/courses/${courseId}/`), // Hits the new course_detail view
-          apiClient.get(`/lectures/courses/${courseId}/content/`), // Hits the course_lecture_list view
+          apiClient.get(`/lectures/courses/${courseId}/`),
+          apiClient.get(`/lectures/courses/${courseId}/content/`),
         ]);
-        console.log(courseRes.data);
-        console.log(lectureRes.data);
         setCourse(courseRes.data);
         setLectures(lectureRes.data);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -59,7 +71,6 @@ const TeacherCourseDetailPage: React.FC = () => {
     fetchData();
   }, [courseId]);
 
-  // Handler to update local state when Header updates status
   const handleCourseUpdate = (updatedCourse: CourseDetail) => {
     setCourse(updatedCourse);
   };
@@ -79,42 +90,55 @@ const TeacherCourseDetailPage: React.FC = () => {
 
   return (
     <DashboardLayout userRole="teacher">
-      {/* 1. The New Header Component */}
       <CourseManagementHeader
         course={course}
         onCourseUpdate={handleCourseUpdate}
       />
 
-      {/* 2. Existing "Generate" Button & Table Section */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "15px",
-        }}
-      >
-        <h3 style={{ margin: 0, color: "#34495e" }}>
-          Content List ({lectures.length})
-        </h3>
+      {/* Tabs */}
+      <div style={{ marginBottom: "20px", borderBottom: "1px solid #eee" }}>
         <button
+          onClick={() => setActiveTab("content")}
           style={{
+            color: "#434343",
             padding: "10px 20px",
-            backgroundColor: "#2ecc71",
-            color: "white",
+            marginRight: "10px",
+            background: "none",
             border: "none",
-            borderRadius: "6px",
-            fontWeight: "bold",
+            borderBottom:
+              activeTab === "content" ? "3px solid #3498db" : "none",
+            fontWeight: activeTab === "content" ? "bold" : "normal",
             cursor: "pointer",
           }}
-          onClick={() => setIsGenerateOpen(true)}
         >
-          + Generate New Lecture
+          📚 Lecture Content
+        </button>
+        <button
+          onClick={() => setActiveTab("assessments")}
+          style={{
+            color: "#434343",
+            padding: "10px 20px",
+            background: "none",
+            border: "none",
+            borderBottom:
+              activeTab === "assessments" ? "3px solid #9b59b6" : "none",
+            fontWeight: activeTab === "assessments" ? "bold" : "normal",
+            cursor: "pointer",
+          }}
+        >
+          📝 Assessments (Quiz)
         </button>
       </div>
 
-      {/* 3. The Content Table */}
-      <CourseContentTable lectures={lectures} />
+      {activeTab === "content" ? (
+        <CourseContentTable
+          lectures={lectures}
+          onGenerateClick={() => setIsGenerateOpen(true)}
+        />
+      ) : (
+        <AssessmentList onRefresh={refreshData} lectures={lectures} />
+      )}
+
       {course && (
         <GenerateLectureModal
           isOpen={isGenerateOpen}
@@ -122,10 +146,7 @@ const TeacherCourseDetailPage: React.FC = () => {
           courseId={course.id}
           courseTitle={course.title}
           onSuccess={() => {
-            //  trigger re-fetch of lectures here
-            // or maybe a toast notification...
-            // as soon a lecture is generated then backend should send a notification
-            // that i can show as toast on frontend
+            refreshData(); // Re-fetch logic
           }}
         />
       )}

@@ -1,15 +1,17 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import type { CourseContentItem } from "../../../types/Lectures/Types";
 import styles from "./CourseContentTable.module.css";
 import { Link } from "react-router-dom";
 
 interface CourseContentTableProps {
   lectures: CourseContentItem[];
+  onGenerateClick: () => void;
 }
 
-const CourseContentTable: React.FC<CourseContentTableProps> = ({
+const CourseContentTable = ({
   lectures,
-}) => {
+  onGenerateClick,
+}: CourseContentTableProps) => {
   const [filter, setFilter] = useState<
     "all" | "pending" | "validated" | "rejected" | "draft"
   >("all");
@@ -31,7 +33,6 @@ const CourseContentTable: React.FC<CourseContentTableProps> = ({
         return styles.statusValidated;
       case "rejected":
         return styles.statusRejected;
-      //   case 'draft': return styles.statusDraft;
       default:
         return "";
     }
@@ -41,10 +42,7 @@ const CourseContentTable: React.FC<CourseContentTableProps> = ({
     switch (lecture.validation_status) {
       case "pending":
         return (
-          <Link
-            to={lecture.review_url}
-            className={styles.actionReview}
-          >
+          <Link to={lecture.review_url} className={styles.actionReview}>
             Review & Validate
           </Link>
         );
@@ -54,12 +52,6 @@ const CourseContentTable: React.FC<CourseContentTableProps> = ({
             View Rejection / Edit
           </Link>
         );
-      //   case 'draft':
-      //     return (
-      //       <Link to={`/teacher/lectures/${lecture.id}/edit`} className={styles.actionEdit}>
-      //         Continue Editing
-      //       </Link>
-      //     );
       case "validated":
         return (
           <Link to={lecture.review_url} className={styles.actionView}>
@@ -73,6 +65,7 @@ const CourseContentTable: React.FC<CourseContentTableProps> = ({
 
   return (
     <div className={styles.tableContainer}>
+      {/* Filter Bar with Inline Generate Button */}
       <div className={styles.filterBar}>
         <button
           onClick={() => setFilter("all")}
@@ -105,6 +98,11 @@ const CourseContentTable: React.FC<CourseContentTableProps> = ({
           }`}
         >
           Rejected
+        </button>
+
+        {/* --- MOVED: Generate Button into CourseContent Table  --- */}
+        <button onClick={onGenerateClick} className={styles.generateActionBtn}>
+          + Generate New Lecture
         </button>
       </div>
 

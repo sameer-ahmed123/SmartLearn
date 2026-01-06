@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import apiClient from '../../../api/apiClient';
 import styles from './CourseManagementHeader.module.css';
@@ -15,7 +15,7 @@ interface CourseManagementHeaderProps {
     onCourseUpdate: (updatedCourse: CourseData) => void;
 }
 
-const CourseManagementHeader: React.FC<CourseManagementHeaderProps> = ({ course, onCourseUpdate }) => {
+const CourseManagementHeader = ({ course, onCourseUpdate }:CourseManagementHeaderProps)  => {
     const navigate = useNavigate();
     const [isDeleting, setIsDeleting] = useState(false);
     const [isUpdating, setIsUpdating] = useState(false);

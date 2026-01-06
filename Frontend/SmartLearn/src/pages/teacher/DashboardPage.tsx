@@ -169,15 +169,6 @@ const TeacherDashboardPage: React.FC = () => {
       </div>
 
       <h2 className={styles.sectionTitle}>My Courses and Student Stats</h2>
-      {/* <div className={styles.courseGrid}>
-        {courses.length > 0 ? (
-          courses.map((course) => (
-            <CourseListCard key={course.id} course={course} />
-          ))
-        ) : (
-          <p>No Courses available. Create your first Course</p>
-        )}
-      </div> */}
       <div className={styles.dashboardSplitSection}>
         {/* LEFT SIDE: Course Grid (2 Columns) */}
         <div className={styles.courseGrid}>
