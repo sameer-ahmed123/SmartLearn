@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import DashboardLayout from "../../../src/Layout/DashboardLayout";
 import CourseContentTable from "../../components/Dashboard/teacher/CourseContentTable";
 import CourseManagementHeader from "../../components/Dashboard/teacher/CourseManagementHeader";
 import apiClient from "../../api/apiClient";
@@ -77,19 +76,19 @@ const TeacherCourseDetailPage = () => {
 
   if (isLoading)
     return (
-      <DashboardLayout userRole="teacher">
+      <p>
         <p style={{ color: "black" }}>Loading Course Management Hub...</p>
-      </DashboardLayout>
+      </p>
     );
   if (error || !course)
     return (
-      <DashboardLayout userRole="teacher">
+      <p>
         <p style={{ color: "black" }}>Error: {error || "Course not found"}</p>
-      </DashboardLayout>
+      </p>
     );
 
   return (
-    <DashboardLayout userRole="teacher">
+    <>
       <CourseManagementHeader
         course={course}
         onCourseUpdate={handleCourseUpdate}
@@ -150,7 +149,7 @@ const TeacherCourseDetailPage = () => {
           }}
         />
       )}
-    </DashboardLayout>
+    </>
   );
 };
 

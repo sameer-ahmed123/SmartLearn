@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import apiClient from '../../../api/apiClient'; // Assuming you have an axios instance setup
-import  type { CourseSummary } from '../../../types/Courses/Types'; // Or wherever you put CourseSummary
+import apiClient from '../../../api/apiClient'; 
+import  type { CourseSummary } from '../../../types/Courses/Types'; 
 import styles from './CreateCourseModal.module.css';
 
 interface CreateCourseModalProps {
@@ -29,7 +29,6 @@ const CreateCourseModal: React.FC<CreateCourseModalProps> = ({ isOpen, onClose, 
                 description: description
             });
 
-            // If successful, pass the new data up to the parent and close
             onSuccess(response.data);
             
             // Reset form

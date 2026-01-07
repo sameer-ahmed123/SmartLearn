@@ -1,13 +1,11 @@
 // OVERALL TEACHER_DASHBOARD
 // ASSEMBELS STATS --- UPLOAD FORM --- VALIDATION QUEUE
-import React, { useState, useEffect } from "react";
-import DashboardLayout from "../../Layout/DashboardLayout";
+import { useState, useEffect } from "react";
 import StatsCard from "../../components/Dashboard/shared/StatsCard";
 import LectureValidationQueueTable from "@/components/Dashboard/teacher/LectureValidationQueueTable";
 import CreateCourseModal from "../../components/Dashboard/teacher/CreateCourseModal";
 import CourseListCard from "@/components/Dashboard/teacher/CourseListCard";
 import styles from "./TeacherDashboard.module.css";
-import { useAuthStore } from "@/store/useAuthStore";
 import apiClient from "@/api/apiClient";
 import type { CourseSummary } from "@/types/Courses/Types";
 import { Link } from "react-router-dom";
@@ -62,13 +60,13 @@ const DummyChart = () => (
   </svg>
 );
 
-const TeacherDashboardPage: React.FC = () => {
+const TeacherDashboardPage = () => {
   const [metrics, setMetrics] = useState<MetricsData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [courses, setCourses] = useState<CourseSummary[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const role = useAuthStore((state) => state.role);
+  // const role = useAuthStore((state) => state.role);
 
   const handleCourseCreated = (newCourse: CourseSummary) => {
     // Add the new course to the top of the list
@@ -105,15 +103,11 @@ const TeacherDashboardPage: React.FC = () => {
     fetchMetrics();
   }, []);
 
-  if (isLoading)
-    return (
-      <DashboardLayout userRole={role}>Loading Dashboard...</DashboardLayout>
-    );
-  if (error)
-    return <DashboardLayout userRole={role}>Error: {error}</DashboardLayout>;
+  if (isLoading) return <p>Loading Dashboard...</p>;
+  if (error) return <p>Error: {error}</p>;
 
   return (
-    <DashboardLayout userRole={role}>
+    <>
       {/* Header can be added in future */}
       <div
         style={{
@@ -243,7 +237,7 @@ const TeacherDashboardPage: React.FC = () => {
         onClose={() => setIsModalOpen(false)}
         onSuccess={handleCourseCreated}
       />
-    </DashboardLayout>
+    </>
   );
 };
 

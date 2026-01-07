@@ -1,0 +1,140 @@
+.container {
+  padding: 20px;
+  color: #2c3e50;
+}
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+.createBtn {
+  background: #3498db;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Tabs */
+.tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 30px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+}
+.tab {
+  background: none;
+  border: none;
+  padding: 8px 16px;
+  color: #7f8c8d;
+  cursor: pointer;
+  font-weight: 500;
+}
+.tab.active {
+  color: #2c3e50;
+  border-bottom: 2px solid #3498db;
+  font-weight: 700;
+}
+
+/* Grid */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+.card {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s;
+}
+.card:hover {
+  transform: translateY(-3px);
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 15px;
+  font-size: 0.85rem;
+}
+.course {
+  color: #95a5a6;
+  font-weight: 500;
+}
+
+.status {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+}
+.active {
+  background: #d4efdf;
+  color: #27ae60;
+}
+.urgent {
+  background: #fadbd8;
+  color: #e74c3c;
+}
+.closed {
+  background: #ebf5fb;
+  color: #3498db;
+}
+.draft {
+  background: #f8f9fa;
+  color: #95a5a6;
+}
+
+.card h3 {
+  margin: 0 0 20px 0;
+  font-size: 1.1rem;
+}
+
+.meta {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  background: #f8f9fa;
+  padding: 10px;
+  border-radius: 6px;
+}
+.metaItem {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.85rem;
+}
+.metaItem span {
+  color: #7f8c8d;
+  margin-bottom: 4px;
+}
+
+.actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.btnPrimary {
+  background: #2c3e50;
+  color: white;
+  border: none;
+  padding: 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+}
+.btnSecondary {
+  background: white;
+  color: #2c3e50;
+  border: 1px solid #bdc3c7;
+  padding: 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+}

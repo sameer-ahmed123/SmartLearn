@@ -1,48 +1,71 @@
-// src/components/Layout/SideBar.tsx
+import { Link, useLocation } from "react-router-dom";
+import styles from "./Sidebar.module.css";
+import LogoutButton from "@/components/Auth/LogoutButton";
 
-import React from 'react';
-import styles from './SideBar.module.css';
-import { Link } from 'react-router-dom'; // Assuming you are using react-router-dom
-import LogoutButton from '@/components/Auth/LogoutButton';
-
-interface SideBarProps {
-  userRole: 'teacher' | 'student' | null;
+interface SidebarProps {
+  userRole: "teacher" | "student" | null;
+  isCollapsed: boolean;
+  toggleSidebar: () => void;
 }
 
+const Sidebar = ({ userRole, isCollapsed, toggleSidebar }: SidebarProps) => {
+  const location = useLocation();
 
-const teacherLinks = [
-  { path: '/teacher/dashboard', label: 'Dashboard', icon: '📊' },
-  { path: '/teacher/courses/create', label: 'Create Course', icon: '+' },
-  
+  const teacherLinks = [
+    { name: "Dashboard", path: "/teacher/dashboard", icon: "📊" },
+    // dummy
+    { name: "Assignments", path: "/assignments", icon: "📝" },
+    { name: "Gradebook", path: "/grades", icon: "🎓" },
+    { name: "Analytics", path: "/analytics", icon: "📈" },
+    { name: "Settings", path: "/settings", icon: "⚙️" },
+  ];
 
-];
+  const studentLinks = [
+    { name: "dashboard", path: "/student/dashboard", icon: "🎓" },
+    // dummy links
+    { name: "Assignments", path: "/assignments", icon: "📝" },
+    { name: "Gradebook", path: "/grades", icon: "🎓" },
+    { name: "Analytics", path: "/analytics", icon: "📈" },
+    { name: "Settings", path: "/settings", icon: "⚙️" },
+  ];
 
-const studentLinks = [
-  { path: '/student/dashboard', label: 'My Courses', icon: '📊' },
-  { path: '/student/catalog', label: 'Course Catalog', icon: '📚' },
-];
-
-const   SideBar: React.FC<SideBarProps> = ({ userRole }) => {
-  const links = userRole === 'teacher' ? teacherLinks : studentLinks;
+  const links = userRole === "teacher" ? teacherLinks : studentLinks;
 
   return (
-    <aside className={styles.sidebar}>
-      <div className={styles.logo}>SMARTLEARN</div>
+    <aside
+      className={`${styles.sidebar} ${isCollapsed ? styles.collapsed : ""}`}
+    >
+      <div className={styles.header}>
+        {!isCollapsed && <h2 className={styles.logo}>SmartLearn</h2>}
+        <button onClick={toggleSidebar} className={styles.toggleBtn}>
+          {isCollapsed ? "➡️" : "⬅️"}
+        </button>
+      </div>
+
       <nav className={styles.nav}>
-        <ul>
-          {links.map((link) => (
-            <li key={link.path}>
-              <Link to={link.path} className={styles.navLink}>
-                <span className={styles.icon}>{link.icon}</span>
-                {link.label}
-              </Link>
-            </li>
-          ))}
-        </ul>
+        {links.map((link) => (
+          <Link
+            key={link.name}
+            to={link.path}
+            className={`${styles.link} ${
+              location.pathname === link.path ? styles.active : ""
+            }`}
+            title={isCollapsed ? link.name : ""}
+          >
+            <span className={styles.icon}>{link.icon}</span>
+            {!isCollapsed && <span className={styles.text}>{link.name}</span>}
+          </Link>
+        ))}
       </nav>
-      <LogoutButton/>
+
+      <div className={styles.footer}>
+        <button className={styles.logoutBtn}>
+          <span className={styles.icon}>🚪</span>
+          {!isCollapsed && <LogoutButton />}
+        </button>
+      </div>
     </aside>
   );
 };
 
-export default SideBar;
+export default Sidebar;

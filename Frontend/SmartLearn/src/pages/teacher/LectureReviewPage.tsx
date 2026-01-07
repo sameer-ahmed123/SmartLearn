@@ -1,13 +1,11 @@
-import DashboardLayout from "@/Layout/DashboardLayout";
+
 import type { LectureDetails } from "@/types/Lectures/Types";
 import styles from "./LectureReviewPage.module.css";
 import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import apiClient from "@/api/apiClient";
-import { useAuthStore } from "@/store/useAuthStore";
 import ValidationActionPanel from "@/components/Dashboard/teacher/ValidationActionPanel";
 const LectureReviewPage = () => {
-  const role = useAuthStore((state) => state.role);
   const { id } = useParams<{ id: string }>();
   const lectureId = id;
   const [lecture, setlecture] = useState<LectureDetails | null>(null);
@@ -43,30 +41,30 @@ const LectureReviewPage = () => {
 
   if (isLoading) {
     return (
-      <DashboardLayout userRole={role}>
+      <p>
         {" "}
         Lecture is Loading....{" "}
-      </DashboardLayout>
+      </p>
     );
   }
 
   if (error) {
     return (
-      <DashboardLayout userRole={role}>
+      <p>
         <h2 className={styles.error}>{error}</h2>
-      </DashboardLayout>
+      </p>
     );
   }
 
   if (!lecture) {
     return (
-      <DashboardLayout userRole={role}>Lecture Not Found.</DashboardLayout>
+      <p>Lecture Not Found.</p>
     );
   }
 
   const isPending = lecture.validation_status === "pending";
   return (
-    <DashboardLayout userRole={role}>
+    <>
       <h1 className={styles.pageTitle}>Review: {lecture.topic}</h1>
       <p className={styles.courseTitle}>
         Course: {lecture.content_source.course.title}
@@ -124,7 +122,7 @@ const LectureReviewPage = () => {
           )}
         </div>
       </div>
-    </DashboardLayout>
+    </>
   );
 };
 

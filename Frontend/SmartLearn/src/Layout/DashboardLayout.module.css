@@ -1,27 +1,21 @@
-/* src/components/Layout/DashboardLayout.module.css */
-
-.dashboardContainer {
-  /* Use CSS Grid to define the main layout: Sidebar | Main Content */
-  display: grid;
-  /* Define columns: 250px for the sidebar, 1fr for the remaining main content */
-  grid-template-columns: 230px 1fr;
-  /* Ensure the container takes up the full viewport height */
-  height: 100vh;
-  width: 100vw;
-  overflow: hidden; /* Prevent body scroll, let individual areas scroll */
-  background-color: #f7f7f7; /* Light background for the overall app */
+.container {
+    display: flex;
+    min-height: 100vh;
+    background-color: #f5f6fa;
 }
 
 .mainContent {
-  /* The area next to the sidebar */
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto; /* Allows the main content area to scroll */
+    flex: 1;
+    margin-left: 260px; /* Default expanded width */
+    transition: margin-left 0.3s ease-in-out;
+    padding: 20px;
 }
 
-.pageContent {
-  /* Padding for the actual content of the dashboard pages */
-  padding: 30px;
-  flex-grow: 1; /* Ensures content area takes up remaining vertical space */
+.mainCollapsed {
+    margin-left: 80px; /* Collapsed width */
 }
 
+.contentWrapper {
+    max-width: 1200px;
+    margin: 0 auto;
+}
