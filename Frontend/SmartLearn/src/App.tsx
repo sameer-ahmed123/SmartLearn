@@ -20,6 +20,8 @@ const App: React.FC = () => {
   return (
     <>
       <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/signup" element={<SignupPage />} />
         <Route element={<DashboardLayout userRole={role} />}>
           {/* PUBLIC ROUTES */}
           {/* Agar user login hai to '/' par jane se wo Dashboard par redirect ho jaye */}
@@ -29,9 +31,6 @@ const App: React.FC = () => {
               user ? <Navigate to="/dashboard" /> : <Navigate to="/login" />
             }
           />
-
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/signup" element={<SignupPage />} />
 
           {/* PROTECTED DASHBOARD (Dono roles ke liye) */}
           <Route element={<ProtectedRoute />}>

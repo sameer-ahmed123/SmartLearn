@@ -2,8 +2,6 @@ from django.db import models
 from django.conf import settings
 
 # 1: COURSE MODEL ---Subject Container
-
-
 class Course(models.Model):
     """This represents the Highest Level Container for content
         Example: COMPUTER_SCIENCE
@@ -32,9 +30,7 @@ class Course(models.Model):
     class Meta:
         db_table = "course"
 
-# 2: CONTENT SOURCE MODEL ---(Teacher k Inptut Contain kare ga)
-
-
+# 2: CONTENT SOURCE MODEL ---(Teacher k Inptut Contain kare ga files)
 class ContentSource(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="content_sources",
                                help_text="the cource this content is intended for")
@@ -56,8 +52,6 @@ class ContentSource(models.Model):
         db_table = "content_source"
 
 # 3: LECTURE MODEL ---(AI's Structured Output)
-
-
 class Lecture(models.Model):
     content_source = models.ForeignKey(
         ContentSource,

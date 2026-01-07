@@ -30,9 +30,9 @@ class User(AbstractUser):
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)
     
-    # this line is need to connect the User(AbstractUser)  to our Custom UserManger
+    # this line is need to connect the User(AbstractUser)  to Custom UserManger
     # the Custom Manager Allows us to authenticate and create users based on 
-    # email field instead of username field
+    # email field instead of username field (USERNAME_FIELD = 'email') 
     objects = UserManager() #type: ignore
 
     USERNAME_FIELD = 'email'

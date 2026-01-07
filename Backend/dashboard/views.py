@@ -2,7 +2,6 @@ from rest_framework.permissions import IsAuthenticated
 from users.permissions import IsTeacher
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
-from django.db.models import Count
 from lectures.models import Lecture, Course
 # Create your views here.
 

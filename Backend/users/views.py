@@ -50,11 +50,11 @@ def login_user(request):
 @permission_classes([IsAuthenticated])
 def logout_user(request):
     try:
-        # React must send the refresh token in the body
+        #1. gets the refresh token from frontend 
         refresh_token = request.data.get("refresh")
         token = RefreshToken(refresh_token)
         
-        # This permanently invalidates the token
+        #2. permanently Blocks the token
         token.blacklist()
 
         return Response({"message": "Successfully logged out"}, status=status.HTTP_205_RESET_CONTENT)

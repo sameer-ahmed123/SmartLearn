@@ -1,14 +1,10 @@
 from django.urls import path
-from users.views import *
-
+from users.views import register_user,login_user,logout_user
 from rest_framework_simplejwt.views import (
-    TokenObtainPairView,
     TokenRefreshView,
-    TokenVerifyView,
 )
 
 app_name = "users"
-
 
 urlpatterns = [
     path('register/', register_user, name='register'),

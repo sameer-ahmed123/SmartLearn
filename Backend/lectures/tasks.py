@@ -3,83 +3,65 @@ import logging
 import os
 from ai_core.services import read_content_file, generate_lecture_script, generate_video
 from smartlearn_project import celery_app
+
 print("--- LECTURES TASKS MODULE LOADED ---")
-
-# ⚠️ Ensure you import all necessary models here!
-
 logger = logging.getLogger(__name__)
 
 
 @celery_app.task
 def generate_lecture_from_source(content_source_id):
     """
-    Long-running task to process raw content, generate the lecture script, 
-    and then trigger video generation via external APIs.
+    Long-running Celery task:
+    1. Parses raw file content (PDF/PPT/DOCX)
+    2. Uses Gemini AI to generate a lecture script and context
+    3. Triggers video generation (avatar/voiceover)
+    4. Saves the final Lecture object to the database
     """
 
-    # We retrieve the data as a dictionary to prevent ORM-level crashes on corrupted fields.
-    source_data = None
     image_paths = []
 
     try:
-        # 1. Retrieve the ContentSource data as a dictionary (safer than object)
-        #    only load specific Fields
-        source_data = ContentSource.objects.filter(id=content_source_id).values(
-            'id', 'course_id', 'raw_file', 'ai_prompt', 'uploaded_by_id'
-        ).first()
+        """
+        1. RETRIEVE SOURCE DATA
+        """
+        # Fetch the instance once; this object is used throughout the task lifecycle
+        source_instance = ContentSource.objects.get(id=content_source_id)
 
-        if not source_data:
-            raise ContentSource.DoesNotExist(
-                f"No ContentSource found for ID {content_source_id}")
-
-        # 2. SAFELY RESOLVE THE COURSE TITLE using the raw ID
-        #    Tries to find title of the Course linked to the Content Source
-        course_pk = source_data.get('course_id')
-        course_title = "[Course Not Linked/Found]"
-
-        if course_pk:
-            try:
-                # Manually fetch the Course title
-                course_title = Course.objects.only(
-                    'title').get(pk=course_pk).title
-            except Course.DoesNotExist:
-                course_title = "[Course Not Found]"
+        # Resolve Course title for use in the Lecture topic and logging
+        course_title = source_instance.course.title if source_instance.course else "[Course Not Linked/Found]"
 
         # Use the safe variable in logging
         logger.info(
             f"Processing content source ID: {content_source_id} for course: {course_title}")
 
-        # get the raw-file's file path and the Ai "ASSIST" prompt
-        file_path_db = source_data.get('raw_file')
-        ai_prompt = source_data.get('ai_prompt')
+        # Extract file path and the teacher's custom AI instructions
+        file_path_db = source_instance.raw_file.path if source_instance.raw_file else None
+        ai_prompt = source_instance.ai_prompt
         file_name = file_path_db if file_path_db else "[No File Uploaded]"
 
-        # 3. Read the File  -- Links to services.py (read_content_file)
-        #    converts the uploaded file into a format that ai can understand
+        """
+        2. FILE PROCESSING
+        """
+        # Convert uploaded binary file into text/image data for AI consumption
         file_data = read_content_file(file_path_db)
-        # print(file_data)
-        if isinstance(file_data, str):
+
+        # Validation: Check if file reading failed or returned an error structure
+        if isinstance(file_data, str) or (isinstance(file_data, dict) and file_data.get('type') == 'error'):
             logger.error(
-                f"Failed to process file for lecture Id {content_source_id} : file returned string error: {file_data}")
+                f"Failed to process file for lecture Id {content_source_id}: {file_data}")
             return
 
-        if file_data.get('type') == 'error':
-            logger.error(
-                f"Failed to process file for lecture Id{content_source_id} :file processing error: {file_data}")
-            return
-
+        # Track temporary images created during file extraction for later cleanup
         image_paths = file_data.get('image_paths', [])
 
-        print(f"--- DEBUG: ID from DB: {source_data['id']}")
+        print(f"--- DEBUG: ID from DB: {source_instance.id}")
         print(f"--- DEBUG: Course Title: {course_title}")
         print(f"--- DEBUG: Raw file path from DB: {file_name}")
 
-        #######
-        # 4.  Start External API CALLs ( GEMINI 'gemini-3-flash-preview' )
-        #######
-        # --- STEP 1: provide processed file and ai assist prompt to helper function ---
-        #             that calls external api  (gemini)
-        #             Generates Script and Context
+        """
+        3. AI CONTENT GENERATION
+        """
+        # Step 1: Generate the script and relevant context from the source file
         script, context = generate_lecture_script(
             ai_prompt,
             file_data
@@ -88,34 +70,23 @@ def generate_lecture_from_source(content_source_id):
         print(script)
         print(context)
 
-        # --- STEP 2: Generate Video and Transcript (External API Call) ---
-        #             (Takes in the Generated Script)
-        #             should spit out Video url and transcript
-        #             Currently a Placeholder (Genereic hardcoded output)
-
+        # Step 2: Trigger Video/Audio generation based on the script
+        # Note: video_url and transcript are currently placeholder returns until API integration is finalized
         video_url, transcript_text = generate_video(script)
 
-        # --- STEP 3: Create the final Lecture object and update the DB ---
-
-        # We need the actual ContentSource instance for the ForeignKey,
-        # so we fetch it again, only now that we know the basic fields are safe.(celery issue)
-        # Because of Celery ....Working on the Envionment Variable access to Celery
-        # Causes Error if celery does not recive correct ENV variables
-        # If the task succeeds up to this point, this final ORM retrieval should be safe,
-        # and allow DB Writes
-        source_instance = ContentSource.objects.get(id=content_source_id)
-
+        """
+        4. DATABASE PERSISTENCE
+        """
+        # Create the final Lecture object. Status is 'pending' until the teacher approves it.
         Lecture.objects.create(
             content_source=source_instance,
-            topic=f"Auto-Generated Lecture: {course_title} Part {source_data['id']}",
-            # (should be something else...maybe the transcript?  , gen_script should go to a video_gen ai )
-            # potentail DB schema change (to add transcript Feild)
+            topic=f"Auto-Generated Lecture: {course_title} Part {source_instance.id}",
+            # Temporary: script is stored in summary_text until dedicated schema update
             summary_text=script,
             video_url=video_url,
-            # Use the raw ID, we assume the user exists
-            generated_by_id=source_data.get('uploaded_by_id'),
+            # Associate lecture with the original teacher who uploaded the source
+            generated_by_id=source_instance.uploaded_by,
             validation_status='pending',
-
             script=script,
             context=context
         )
@@ -127,11 +98,14 @@ def generate_lecture_from_source(content_source_id):
         logger.error(f"ContentSource with ID {content_source_id} not found.")
 
     except Exception as e:
-        # Log the full traceback for better error diagnostics
+        # Catch-all for API timeouts, file system errors, or DB issues
         logger.exception(
             f"FATAL ERROR during lecture generation for ID {content_source_id}: {e}")
     finally:
-        # CLEANUP THE TEMPORARY IMAGE FILES
+        """
+        5. RESOURCE CLEANUP
+        """
+        # Remove any temporary image files extracted from PDFs/PPTs to save disk space
         if image_paths:
             logger.info(
                 f"cleaning up {len(image_paths)} temporary files form source ID {content_source_id}")

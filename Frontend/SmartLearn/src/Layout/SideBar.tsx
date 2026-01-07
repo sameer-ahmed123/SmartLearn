@@ -59,10 +59,10 @@ const Sidebar = ({ userRole, isCollapsed, toggleSidebar }: SidebarProps) => {
       </nav>
 
       <div className={styles.footer}>
-        <button className={styles.logoutBtn}>
+        <div className={styles.logoutBtn}>
           <span className={styles.icon}>🚪</span>
           {!isCollapsed && <LogoutButton />}
-        </button>
+        </div>
       </div>
     </aside>
   );

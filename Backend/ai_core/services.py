@@ -14,7 +14,8 @@
 
 import os
 import uuid
-import fitz #type:ignore  its a part of the pymupdf library (required for pdf processing)
+# type:ignore  its a part of the pymupdf library (required for pdf processing)
+import fitz  # type:ignore
 import logging  # type: ignore
 from django.conf import settings
 from PIL import Image  # type: ignore
@@ -217,7 +218,7 @@ def read_content_file(file_path_db):
             text_content, image_paths = extract_content_from_pptx(full_path)
             if not text_content and not image_paths:
                 raise Exception("PPTX extraction failed.")
-            return {'type': 'text', 'path': full_path, 'content': text_content, 'image_paths': image_paths}
+            return {'type': 'multimodal', 'path': full_path, 'content': text_content, 'image_paths': image_paths}
 
         else:
             return {'type': 'unknown', 'content': f"Unsupported file type: {os.path.basename(file_path_db)}"}
@@ -388,7 +389,7 @@ def generate_quiz_json(script, context, num_questions=5):
         return data.get("questions", [])
 
     except Exception as e:
-        #log error in terminal
+        # log error in terminal
         logger.error(f"Quiz Generation LLM Error: {e}")
         # Re-raise the exception so the Celery task knows it failed
         raise Exception(f"Failed to generate quiz: {e}")

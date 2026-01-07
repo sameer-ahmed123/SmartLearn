@@ -75,16 +75,10 @@ const TeacherCourseDetailPage = () => {
   };
 
   if (isLoading)
-    return (
-      <p>
-        <p style={{ color: "black" }}>Loading Course Management Hub...</p>
-      </p>
-    );
+    return <p style={{ color: "black" }}>Loading Course Management Hub...</p>;
   if (error || !course)
     return (
-      <p>
-        <p style={{ color: "black" }}>Error: {error || "Course not found"}</p>
-      </p>
+      <p style={{ color: "black" }}>Error: {error || "Course not found"}</p>
     );
 
   return (

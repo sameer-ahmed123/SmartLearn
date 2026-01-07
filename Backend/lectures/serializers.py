@@ -1,16 +1,35 @@
-from django.conf import settings
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from .models import Lecture, Course, ContentSource
-from users.serializers import UserSerializer
 
 User = get_user_model()
+
+######
+# HELPER SERIALIZERS
+######
 
 
 class TeacherDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'full_name', 'email']
+
+
+######
+# SERIALIZERS RELATED TO COURSE MODEL
+######
+
+class CourseBaseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Course
+        fields = ['title']
+
+
+class CourseCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Course
+        # Only allow the user to submit title and description
+        fields = ['title', 'description']
 
 
 class CourseSerializer(serializers.ModelSerializer):
@@ -32,18 +51,9 @@ class CourseSerializer(serializers.ModelSerializer):
         return Lecture.objects.filter(content_source__course=obj).count()
 
 
-class CourseCreateSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Course
-        # Only allow the user to submit title and description
-        fields = ['title', 'description']
-
-
-class CourseBaseSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Course
-        fields = ['title']
-
+######
+# SERIALIZERS RELATED TO CONTENT SOURCE MODEL
+######
 
 class ContentSourceBaseSerializer(serializers.ModelSerializer):
     """A minimal serializer for ContentSource, useful for nesting."""
@@ -69,10 +79,13 @@ class ContentSourceSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContentSource
         fields = ['id', 'course', 'uploaded_by',
-                  'raw_file', 'ai_prompt', 'created_at', 'course']
+                  'raw_file', 'ai_prompt', 'created_at']
         read_only_fields = ['uploaded_by']
 
 
+######
+# SERIALIZERS RELATED TO LECTURES MODEL
+######
 class LectureSerializer(serializers.ModelSerializer):
     # Shows the email of the creator instead of just an ID
     generated_by_email = serializers.ReadOnlyField(source='generated_by.email')
@@ -88,15 +101,15 @@ class LectureSerializer(serializers.ModelSerializer):
         read_only_fields = ('generated_by', 'validation_status',
                             'rejection_comment', 'content_source')
 
-    def get_quiz_data(self, obj):
-        """
-        Checks if a Quiz object is attached to this lecture.
-        Returns the quiz_data JSON if it exists, otherwise None.
-        """
-        # Because Quiz has a OneToOneField to Lecture, we can access it via obj.quiz
-        if hasattr(obj, 'quiz'):
-            return obj.quiz.quiz_data
-        return None
+    # def get_quiz_data(self, obj):
+    #     """
+    #     Checks if a Quiz object is attached to this lecture.
+    #     Returns the quiz_data JSON if it exists, otherwise None.
+    #     """
+    #     # Because Quiz has a OneToOneField to Lecture, we can access it via obj.quiz
+    #     if hasattr(obj, 'quiz'):
+    #         return obj.quiz.quiz_data
+    #     return None
 
 
 # LECTURE_DETAIL_SERIALIZER DEDICATED FOR LECTURE REVIEW/STUDY PAGE
@@ -179,6 +192,9 @@ class LectureValidationActionSerializer(serializers.ModelSerializer):
 
 
 class CourseLectureListItem(serializers.ModelSerializer):
+    """
+    Serializer specifically used to list Lectures related to a specifc Course 
+    """
     status_display = serializers.CharField(
         source='get_validation_status_display', read_only=True)
     course_topic = serializers.CharField(
@@ -205,10 +221,10 @@ class CourseLectureListItem(serializers.ModelSerializer):
         if hasattr(obj, 'quiz'):
             return obj.quiz.quiz_data
         return None
-    
+
     def get_quiz_id(self, obj):
         if hasattr(obj, 'quiz'):
-            return obj.quiz.id 
+            return obj.quiz.id
         return None
 
     def get_review_url(self, obj):

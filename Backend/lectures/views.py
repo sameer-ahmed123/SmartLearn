@@ -1,12 +1,12 @@
-from rest_framework import permissions, status
-from rest_framework.decorators import api_view, permission_classes  # NEW IMPORTS
+from rest_framework import status
+from rest_framework.decorators import api_view, permission_classes  
 from rest_framework.response import Response
-from django.shortcuts import get_object_or_404  # Useful for retrieving objects
-from .models import Course, ContentSource, Enrollment, Lecture
+from django.shortcuts import get_object_or_404  
+from .models import Course, ContentSource, Lecture
 from .serializers import (
     ContentSourceSerializer, ContentSourceCreateSerializer, CourseLectureListItem,
     CourseSerializer, CourseCreateSerializer,
-    ContentSourceSerializer, ContentSourceCreateSerializer, LectureDetailSerializer, LectureQuerySerializer, LectureValidationActionSerializer
+    LectureDetailSerializer, LectureQuerySerializer, LectureValidationActionSerializer
 )
 from users.permissions import CanViewLecture, IsCourseOwner, IsTeacher
 from rest_framework.permissions import IsAuthenticated
@@ -47,7 +47,7 @@ def course_list_create(request):
 # NEW FBV 2: COURSE - GET (Detail), PUT/PATCH (Update), DELETE (Destroy)
 # -----------------------------------------------------------
 @api_view(['GET', 'PUT', 'PATCH', 'DELETE'])
-@permission_classes([permissions.IsAuthenticated, IsTeacher])
+@permission_classes([IsAuthenticated, IsTeacher])
 def course_detail_actions(request, pk):
     """
     Handles detail, update, and deletion of a specific Course.
@@ -74,7 +74,7 @@ def course_detail_actions(request, pk):
         )
         if serializer.is_valid():
             serializer.save()
-            return Response(CourseSerializer(course).data)
+            return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # --- DELETE (Destroy) ---
@@ -89,7 +89,7 @@ def course_detail_actions(request, pk):
 # FBV 3: GET (List) and POST (Create)
 # -----------------------------------------------------------
 @api_view(['GET', 'POST'])
-@permission_classes([permissions.IsAuthenticated, IsTeacher])
+@permission_classes([IsAuthenticated, IsTeacher])
 def content_source_list_create(request):
     """
     Handles listing of all ContentSources belonging to the teacher 
@@ -151,7 +151,7 @@ def content_source_list_create(request):
 
 
 @api_view(['GET', 'PUT', 'PATCH', 'DELETE'])
-@permission_classes([permissions.IsAuthenticated, IsTeacher])
+@permission_classes([IsAuthenticated, IsTeacher])
 def content_source_detail_actions(request, pk):
     """
     Handles detail, update, and deletion of a specific ContentSource.
@@ -251,7 +251,7 @@ def lecture_validate_action(request, id):
         serializer.save(validated_by=request.user)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    return Response(serializer.data, status=status.HTTP_400_BAD_REQUEST)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(["GET"])
@@ -259,6 +259,6 @@ def lecture_validate_action(request, id):
 def course_lecture_list(request, course_id):
     # get list of Lectures that belong to the Current Course that belong to the current user (teacher)
     lecture_list = Lecture.objects.filter(content_source__course__id=course_id).select_related(
-        'content_source', 'content_source__course','quiz')
+        'content_source', 'content_source__course', 'quiz')
     serializer = CourseLectureListItem(lecture_list, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
