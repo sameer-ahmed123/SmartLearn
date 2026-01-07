@@ -85,7 +85,7 @@ def generate_lecture_from_source(content_source_id):
             summary_text=script,
             video_url=video_url,
             # Associate lecture with the original teacher who uploaded the source
-            generated_by_id=source_instance.uploaded_by,
+            generated_by=source_instance.uploaded_by,
             validation_status='pending',
             script=script,
             context=context
