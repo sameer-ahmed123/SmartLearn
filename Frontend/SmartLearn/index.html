@@ -2,11 +2,78 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>app</title>
+    <title>SmartLearn</title>
+
+    <style>
+      /* 1. Widget Container ko TOP-RIGHT corner mein fix karna */
+      #floating-translate-container {
+        position: fixed;
+        top: 20px;       /* Top se gap */
+        right: 20px;     /* Right se gap */
+        z-index: 10000;  /* Sabse upar show karne ke liye */
+        background: white;
+        padding: 4px 12px;
+        border-radius: 12px;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        border: 1px solid #e2e8f0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+      }
+
+      /* Google branding ko hide karna */
+      .goog-logo-link, .goog-te-gadget span, .goog-te-banner-frame {
+        display: none !important;
+      }
+      .goog-te-gadget {
+        color: transparent !important;
+        font-size: 0 !important;
+      }
+      
+      /* Select box styling */
+      .goog-te-combo {
+        padding: 4px 8px !important;
+        border-radius: 6px !important;
+        border: 1px solid #cbd5e1 !important;
+        background-color: #ffffff !important;
+        font-family: 'Plus Jakarta Sans', sans-serif !important;
+        font-size: 12px !important;
+        color: #1e293b !important;
+        outline: none !important;
+        cursor: pointer;
+      }
+
+      /* Body shift fix (Google aksar body ko niche dhakelta hai) */
+      body {
+        top: 0px !important;
+        position: static !important;
+      }
+      .skiptranslate iframe {
+        display: none !important;
+      }
+    </style>
+
+    <script type="text/javascript">
+      function googleTranslateElementInit() {
+        new google.translate.TranslateElement({
+          pageLanguage: 'en',
+          includedLanguages: 'en,fr,de',
+          layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+          autoDisplay: false
+        }, 'google_translate_element');
+      }
+    </script>
+    <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
   </head>
+
   <body>
+    <div id="floating-translate-container">
+       <span style="font-size: 16px;">🌐</span>
+       <div id="google_translate_element"></div>
+    </div>
+
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

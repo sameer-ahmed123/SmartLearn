@@ -3,21 +3,20 @@ import { persist } from 'zustand/middleware';
 
 // --- 1. INTERFACE DEFINITIONS ---
 interface User {
-  id: number;
   email: string;
-  name: string;
-  role: 'student' | 'teacher'; // Role based dashboard switch ke liye
+  full_name: string; // Django response mein 'full_name' hai
+  role: 'student' | 'teacher';
 }
 
 interface AuthState {
   isAuthenticated: boolean;
-  token: string | null;
+  accessToken: string | null; // Naming consistent ki gayi hai
   refreshToken: string | null;
   user: User | null;
   role: 'student' | 'teacher' | null;
 
   // Actions
-  login: (userData: User, token: string, refreshToken: string) => void;
+  login: (userData: User, access: string, refresh: string) => void;
   logout: () => void;
   setAccessToken: (token: string) => void;
   isRole: (role: 'student' | 'teacher') => boolean;
@@ -29,17 +28,17 @@ export const useAuthStore = create<AuthState>()(
     (set, get) => ({
       // INITIAL STATE
       isAuthenticated: false,
-      token: null,
+      accessToken: null,
       refreshToken: null,
       user: null,
       role: null,
 
-      // LOGIN ACTION (Theek kiya gaya hai)
-      login: (userData, token, refreshToken) => {
+      // LOGIN ACTION
+      login: (userData, access, refresh) => {
         set({
           isAuthenticated: true,
-          token: token,
-          refreshToken: refreshToken, // Refresh token ko bhi save karna zaroori hai
+          accessToken: access,
+          refreshToken: refresh,
           user: userData,
           role: userData.role,
         });
@@ -49,16 +48,17 @@ export const useAuthStore = create<AuthState>()(
       logout: () => {
         set({
           isAuthenticated: false,
-          token: null,
+          accessToken: null,
           refreshToken: null,
           user: null,
           role: null,
         });
-        localStorage.removeItem('smartlearn-auth-storage');
+        // Persist middleware khud handle kar leta hai, 
+        // lekin extra safety ke liye localStorage clear karna theek hai.
       },
 
       setAccessToken: (token: string) => {
-        set({ token });
+        set({ accessToken: token });
       },
 
       isRole: (requiredRole: 'student' | 'teacher') => {
@@ -68,8 +68,8 @@ export const useAuthStore = create<AuthState>()(
     {
       name: 'smartlearn-auth-storage',
       partialize: (state) => ({
-        token: state.token,
-        refreshToken: state.refreshToken, // Isay bhi persist karna zaroori hai
+        accessToken: state.accessToken,
+        refreshToken: state.refreshToken,
         user: state.user,
         role: state.role,
         isAuthenticated: state.isAuthenticated

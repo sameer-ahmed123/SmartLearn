@@ -1,7 +1,7 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
-import Dashboard from "./pages/Dashboard"; // Naya Dashboard import karein
+import Dashboard from "./pages/Dashboard";
 import ProtectedRoute from "./components/Auth/ProtectedRoute";
 import { useAuthStore } from "./store/useAuthStore";
 import TeacherDashboardPage from "./pages/teacher/DashboardPage";
@@ -13,6 +13,15 @@ import DummySettings from "./pages/dummy/DummySettings";
 import DummyAssignments from "./pages/dummy/DummyAssignments";
 import DummyGradebook from "./pages/dummy/DummyGradebook";
 import DashboardLayout from "./Layout/DashboardLayout";
+
+// --- FIX: TypeScript interface for Google Translate ---
+declare global {
+  interface Window {
+    google: any;
+    googleTranslateElementInit: () => void;
+  }
+}
+
 const App: React.FC = () => {
   const { user } = useAuthStore();
   const role = useAuthStore((s) => s.role);
@@ -22,9 +31,9 @@ const App: React.FC = () => {
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
+
         <Route element={<DashboardLayout userRole={role} />}>
-          {/* PUBLIC ROUTES */}
-          {/* Agar user login hai to '/' par jane se wo Dashboard par redirect ho jaye */}
+          {/* PUBLIC REDIRECT */}
           <Route
             path="/"
             element={
@@ -32,12 +41,12 @@ const App: React.FC = () => {
             }
           />
 
-          {/* PROTECTED DASHBOARD (Dono roles ke liye) */}
+          {/* PROTECTED DASHBOARD */}
           <Route element={<ProtectedRoute />}>
             <Route path="/dashboard" element={<Dashboard />} />
           </Route>
 
-          {/* STUDENT SPECIFIC ROUTES */}
+          {/* STUDENT ROUTES */}
           <Route element={<ProtectedRoute allowedRole={["student"]} />}>
             <Route
               path="/student/dashboard"
@@ -45,7 +54,7 @@ const App: React.FC = () => {
             />
           </Route>
 
-          {/* TEACHER SPECIFIC ROUTES */}
+          {/* TEACHER ROUTES */}
           <Route element={<ProtectedRoute allowedRole={["teacher"]} />}>
             <Route
               path="/teacher/dashboard"
@@ -54,14 +63,19 @@ const App: React.FC = () => {
             <Route
               path="/teacher/lecture/:id/review"
               element={<LectureReviewPage />}
-            ></Route>
+            />
             <Route
               path="/teacher/course/:courseid"
               element={<TeacherCourseDetailPage />}
             />
           </Route>
 
-          {/* ERROR ROUTES */}
+          {/* DUMMY & ERROR ROUTES */}
+          <Route path="/assignments" element={<DummyAssignments />} />
+          <Route path="/grades" element={<DummyGradebook />} />
+          <Route path="/analytics" element={<DummyAnalytics />} />
+          <Route path="/settings" element={<DummySettings />} />
+
           <Route
             path="/unauthorized"
             element={
@@ -72,14 +86,6 @@ const App: React.FC = () => {
             }
           />
 
-          {/* DUMMY ROUTES */}
-
-          <Route path="/assignments" element={<DummyAssignments />} />
-          <Route path="/grades" element={<DummyGradebook />} />
-          <Route path="/analytics" element={<DummyAnalytics />} />
-          <Route path="/settings" element={<DummySettings />} />
-
-          {/* 404 - Not Found */}
           <Route path="*" element={<Navigate to="/" />} />
         </Route>
       </Routes>

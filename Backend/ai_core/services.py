@@ -398,3 +398,57 @@ def generate_quiz_json(script, context, num_questions=5):
 # future functionality
 def generate_assignment_json(script, context, num_questions=10):
     return
+
+
+#######
+##
+# BELOW CODE : BELONGS TO THE AI STUDY BUDDY (Q&A) PIPELINE
+##
+######
+
+def get_study_buddy_response(user_query, lecture_context=""):
+    """
+    Student ke sawalon ka jawab deta hai based on the lecture context.
+    Hum Gemini 2.5 Flash use kar rahe hain detailed explanations ke liye,
+    kyunki Gemini 3 Flash Preview tokens kam generate karta hai.
+    """
+    # model_name = "gemini-3-flash-preview" # For speed
+    model_name = "gemini-2.5-flash" # For detailed output tokens
+
+    system_instructions = (
+        "You are 'SmartLearn AI Study Buddy'. Your goal is to help students understand "
+        "their lecture materials better. \n"
+        "- Use the provided LECTURE CONTEXT to answer the student's question.\n"
+        "- If the answer is not in the context, use your general knowledge but mention it.\n"
+        "- Keep the tone supportive, academic, and clear.\n"
+        "- Use bullet points for complex explanations to make them readable."
+    )
+
+    # Prompt ko structured banaya gaya hai
+    user_prompt = (
+        f"LECTURE CONTEXT FOR REFERENCE:\n{lecture_context}\n\n"
+        f"STUDENT'S QUESTION:\n{user_query}"
+    )
+
+    try:
+        # Client initialization aapke file ke top par pehle se mojood hai
+        response = client.models.generate_content(
+            model=model_name,
+            contents=[system_instructions, user_prompt],
+            config={
+                "temperature": 0.7, 
+                "max_output_tokens": 800, # Sufficient for detailed study help
+            }
+        )
+        
+        if response and response.text:
+            return response.text
+        return "I processed your question but couldn't generate a text response."
+
+    except Exception as e:
+        logger.error(f"Study Buddy API Error: {e}")
+        return "I'm sorry, I'm having trouble connecting to my brain right now. Please try again in a moment!"
+
+# future functionality
+def generate_assignment_json(script, context, num_questions=10):
+    return
