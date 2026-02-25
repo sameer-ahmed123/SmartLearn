@@ -6,8 +6,8 @@ app_name = "dashboard"
 
 urlpatterns = [
     # Teacher dashboard ke liye original path
-    path('metrics/', teacher_dashboard_metric, name="teacher_dashboard_metrics"),
+    path('metrics/teacher/', teacher_dashboard_metric, name="teacher_dashboard_metrics"),
     
     # Student dashboard ke liye naya path
-    path('student-metrics/', student_dashboard_metric, name="student_dashboard_metrics"),
+    path('metrics/student/', student_dashboard_metric, name="student_dashboard_metrics"),
 ]

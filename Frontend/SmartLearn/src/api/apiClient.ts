@@ -3,7 +3,7 @@ import { useAuthStore } from '../store/useAuthStore';
 
 const apiClient = axios.create({
   // Backend ka Base URL (Django default port 8000)
-  baseURL: 'http://127.0.0.1:8000', 
+  baseURL: 'http://127.0.0.1:8000/api/v1/', 
 });
 
 apiClient.interceptors.request.use((config) => {
