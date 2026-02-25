@@ -29,7 +29,7 @@ apiClient.interceptors.response.use(
         const refresh = useAuthStore.getState().refreshToken;
         
         // Aapka backend path: /users/token/refresh/
-        const response = await axios.post('http://127.0.0.1:8000/users/token/refresh/', { 
+        const response = await axios.post('http://127.0.0.1:8000/api/v1/users/token/refresh/', { 
             refresh: refresh 
         });
         
