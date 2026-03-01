@@ -10,9 +10,14 @@ import TeacherCourseDetailPage from "./pages/teacher/TeacherCourseDetailPage";
 import DummyAnalytics from "./pages/dummy/DummyAnalytics";
 import DummyStudentDashboard from "./pages/dummy/DummyStudentDashboard";
 import DummySettings from "./pages/dummy/DummySettings";
-import DummyAssignments from "./pages/dummy/DummyAssignments";
 import DummyGradebook from "./pages/dummy/DummyGradebook";
 import DashboardLayout from "./Layout/DashboardLayout";
+import TeacherLecturePage from "./pages/teacher/TeacherLecturePage";
+import StudentLecturePage from "./pages/student/StudentLecturePage";
+import TeacherQuiz from "./pages/teacher/TeacherQuiz";
+import TeacherAssignment from "./pages/teacher/TeacherAssignment";
+import StudentQuiz from "./pages/student/StudentQuiz";
+import StudentAssignment from "./pages/student/StudentAssignment";
 
 // --- FIX: TypeScript interface for Google Translate ---
 declare global {
@@ -52,6 +57,19 @@ const App: React.FC = () => {
               path="/student/dashboard"
               element={<DummyStudentDashboard />}
             />
+            <Route
+              path="/student/lecture"
+              element={<StudentLecturePage />}
+            />
+            <Route
+              path="/student/quiz"
+              element={<StudentQuiz />}
+            />
+            <Route
+              path="/student/assignments"
+              element={<StudentAssignment />}
+            />
+            
           </Route>
 
           {/* TEACHER ROUTES */}
@@ -61,6 +79,18 @@ const App: React.FC = () => {
               element={<TeacherDashboardPage />}
             />
             <Route
+              path="/teacher/lecture"
+              element={<TeacherLecturePage />}
+            />
+            <Route
+              path="/teacher/quiz"
+              element={<TeacherQuiz />}
+            />
+            <Route
+              path="/teacher/assignments"
+              element={<TeacherAssignment />}
+            />
+            <Route
               path="/teacher/lecture/:id/review"
               element={<LectureReviewPage />}
             />
@@ -68,10 +98,16 @@ const App: React.FC = () => {
               path="/teacher/course/:courseid"
               element={<TeacherCourseDetailPage />}
             />
+            <Route
+              path="/teacher/teacherlecturepage/:id/review"
+              element={<TeacherLecturePage />}
+            />
           </Route>
 
+          /* App.tsx mein routes wala hissa */
+
           {/* DUMMY & ERROR ROUTES */}
-          <Route path="/assignments" element={<DummyAssignments />} />
+          
           <Route path="/grades" element={<DummyGradebook />} />
           <Route path="/analytics" element={<DummyAnalytics />} />
           <Route path="/settings" element={<DummySettings />} />

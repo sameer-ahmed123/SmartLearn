@@ -1,26 +1,23 @@
-/* src/components/Dashboard/teacher/CourseListCard.module.css */
-
 .card {
-  background-color: #ffffff;
-  color: #434343;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  padding: 20px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  /* Is line ko dhyan se dekhein: var use karne se Light mode mein white rahega */
+  background: var(--card); 
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
   display: flex;
   flex-direction: column;
-  height: 100%; /* Ensures cards in a grid row are same height */
+  height: 100%;
   justify-content: space-between;
 }
 
 .card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-  border-color: #3498db;
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
 }
 
-/* --- Header Section --- */
+/* Header Section */
 .header {
   display: flex;
   justify-content: space-between;
@@ -31,64 +28,37 @@
 .title {
   margin: 0;
   font-size: 1.1rem;
-  color: #2c3e50;
+  color: var(--foreground);
   font-weight: 700;
-  line-height: 1.4;
-  flex: 1; /* Allows title to take up available space */
-  margin-right: 10px;
+  flex: 1;
 }
 
+/* Status Badges */
 .status {
-  font-size: 0.75rem;
-  padding: 3px 8px;
+  font-size: 0.7rem;
+  padding: 4px 10px;
   border-radius: 12px;
-  background-color: #ecf0f1;
-  color: #7f8c8d;
-  text-transform: uppercase;
   font-weight: 700;
-  white-space: nowrap;
-  letter-spacing: 0.5px;
+  text-transform: uppercase;
 }
 
 .statusPublished {
-  padding: 3px 8px;
-  border-radius: 12px;
-  background-color: #81ffbe;
-  color: #03513b;
-  border: 1px solid #a7f3d0;
+  background-color: rgba(16, 185, 129, 0.1);
+  color: #10b981;
 }
 
 .statusDraft {
-  padding: 3px 8px;
-  border-radius: 12px;
-  background-color: #ffd8a5;
-  color: #c2410c;
-  border: 1px solid #fed7aa;
+  background-color: rgba(245, 158, 11, 0.1);
+  color: #f59e0b;
 }
 
-.statusArchived {
-  padding: 3px 8px;
-  border-radius: 12px;
-  background-color: #c7c8cb;
-  color: #555b64;
-  border: 1px solid #e5e7eb;
-}
-
-.statusRejected {
-  padding: 3px 8px;
-  border-radius: 12px;
-  background-color: #fee2e2;
-  color: #b91c1c;
-  border: 1px solid #fecaca;
-}
-
-/* --- Content Section --- */
+/* Content Section */
 .description {
-  color: #7f8c8d;
+  color: var(--muted-foreground);
   font-size: 0.9rem;
   line-height: 1.5;
   margin-bottom: 20px;
-  flex-grow: 1; /* Pushes the stats/actions to the bottom */
+  min-height: 40px;
 }
 
 .statsRow {
@@ -96,31 +66,26 @@
   gap: 15px;
   margin-bottom: 20px;
   padding-top: 15px;
-  border-top: 1px solid #f0f0f0;
+  border-top: 1px solid var(--border);
   font-size: 0.85rem;
-  color: #34495e;
-  font-weight: 500;
+  color: var(--muted-foreground);
 }
 
-/* --- Actions Section --- */
-.actions {
-  display: flex;
-}
-
+/* Actions */
 .manageBtn {
   display: block;
   width: 100%;
   text-align: center;
-  background-color: #3498db;
-  color: white;
-  text-decoration: none;
+  background-color: #3b82f6; /* Image jaisa blue button color */
+  color: white !important;
   padding: 10px 0;
-  border-radius: 6px;
+  border-radius: 8px;
   font-weight: 600;
-  font-size: 0.95rem;
-  transition: background-color 0.2s;
+  font-size: 0.9rem;
+  text-decoration: none;
+  transition: background 0.2s;
 }
 
 .manageBtn:hover {
-  background-color: #2980b9;
+  background-color: #2563eb;
 }

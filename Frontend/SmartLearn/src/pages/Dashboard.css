@@ -3,24 +3,29 @@
 .dashboard-container {
     display: flex;
     min-height: 100vh;
-    background-color: #f8fafc;
+    /* Fixed: Ab ye dark mode mein navy ho jayega */
+    background-color: var(--background); 
     font-family: 'Plus Jakarta Sans', sans-serif;
+    transition: background-color 0.3s ease;
 }
 
 /* Sidebar Styling */
 .sidebar {
     width: 260px;
-    background: #1e40af;
-    color: white;
+    /* Fixed: Sidebar variable use karega */
+    background: var(--sidebar);
+    color: var(--sidebar-foreground);
     padding: 30px 20px;
     display: flex;
     flex-direction: column;
+    border-right: 1px solid var(--sidebar-border);
+    transition: background 0.3s ease;
 }
 
 .sidebar h1 {
     font-size: 22px;
     margin-bottom: 40px;
-    color: #f8fafc;
+    color: var(--sidebar-foreground);
 }
 
 .nav-item {
@@ -32,11 +37,15 @@
     display: flex;
     align-items: center;
     gap: 10px;
+    color: var(--sidebar-foreground);
+    opacity: 0.8;
 }
 
 .nav-item:hover,
 .nav-item.active {
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--sidebar-accent);
+    color: var(--sidebar-accent-foreground);
+    opacity: 1;
 }
 
 /* Main Content Area */
@@ -44,6 +53,7 @@
     flex: 1;
     padding: 40px;
     overflow-y: auto;
+    background-color: var(--background);
 }
 
 .welcome-section {
@@ -52,7 +62,8 @@
 
 .welcome-section h2 {
     font-size: 28px;
-    color: #0f172a;
+    /* Fixed: Text ab dark mode mein white ho jayega */
+    color: var(--foreground);
 }
 
 /* Stats Cards */
@@ -64,23 +75,26 @@
 }
 
 .stat-card {
-    background: white;
+    /* Fixed: Card dark mode mein navy slate ho jayega */
+    background: var(--card);
     padding: 25px;
     border-radius: 16px;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-    border: 1px solid #f1f5f9;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--border);
+    transition: all 0.3s ease;
 }
 
 .stat-card h3 {
     font-size: 14px;
-    color: #64748b;
+    color: var(--muted-foreground);
     margin-bottom: 10px;
 }
 
 .stat-card p {
     font-size: 24px;
     font-weight: 700;
-    color: #1e40af;
+    /* Primary color like Indigo */
+    color: var(--primary);
 }
 
 /* Content Cards */
@@ -91,18 +105,26 @@
 }
 
 .card {
-    background: white;
+    /* Fixed: Card color background se different nazar ayega */
+    background: var(--card);
     padding: 25px;
     border-radius: 16px;
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--border);
+    color: var(--card-foreground);
 }
 
 .btn-primary {
-    background: #2563eb;
-    color: white;
+    background: var(--primary);
+    color: var(--primary-foreground);
     padding: 10px 20px;
     border: none;
     border-radius: 8px;
     cursor: pointer;
     font-weight: 600;
+    transition: opacity 0.2s;
+}
+
+.btn-primary:hover {
+    opacity: 0.9;
 }

@@ -1,21 +1,26 @@
 .container {
     display: flex;
+    width: 100%;
     min-height: 100vh;
-    background-color: #f5f6fa;
+    background-color: var(--background); /* Full page dark navy */
 }
 
 .mainContent {
     flex: 1;
-    margin-left: 260px; /* Default expanded width */
-    transition: margin-left 0.3s ease-in-out;
-    padding: 20px;
+    margin-left: 260px; 
+    display: flex;
+    flex-direction: column;
+    transition: margin-left 0.3s ease;
+    /* Fixed: Content area background */
+    background-color: var(--background);
 }
 
 .mainCollapsed {
-    margin-left: 80px; /* Collapsed width */
+    margin-left: 80px;
 }
 
 .contentWrapper {
-    max-width: 1200px;
-    margin: 0 auto;
+    padding: 20px;
+    flex: 1;
+    background-color: var(--background);
 }

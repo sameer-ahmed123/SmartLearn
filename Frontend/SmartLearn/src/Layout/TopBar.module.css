@@ -1,0 +1,143 @@
+.topbar {
+    height: 70px;
+    background: var(--card); /* Light mein white, dark mein dark grey */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 24px;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    transition: background 0.3s ease;
+}
+
+.leftSide, .rightSide {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.searchBar {
+    background: var(--muted); /* Auto adjust colors */
+    border-radius: 10px;
+    padding: 8px 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 280px;
+}
+
+.searchBar input {
+    border: none;
+    background: transparent;
+    outline: none;
+    width: 100%;
+    font-size: 14px;
+    color: var(--foreground);
+}
+
+.actionButtons {
+    display: flex;
+    gap: 8px;
+}
+
+.iconBtn {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted-foreground);
+    transition: 0.2s;
+}
+
+.iconBtn:hover {
+    background: var(--secondary);
+}
+
+.notificationWrapper {
+    position: relative;
+}
+
+.countBadge {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: #ef4444;
+    color: white;
+    font-size: 10px;
+    padding: 2px 5px;
+    border-radius: 10px;
+    font-weight: bold;
+}
+
+/* Language Styles */
+.langPicker {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    color: var(--foreground);
+}
+
+.flagEmoji { font-size: 18px; }
+.langTxt { font-weight: 600; font-size: 13px; color: var(--foreground); }
+
+.langBox {
+    position: absolute;
+    top: 55px;
+    right: 150px;
+    background: var(--popover);
+    border-radius: 10px;
+    box-shadow: 0 10px 15px rgba(0,0,0,0.1);
+    border: 1px solid var(--border);
+    width: 140px;
+    padding: 5px;
+}
+
+.langRow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--foreground);
+}
+
+.langRow:hover { background: var(--accent); }
+
+.activeRow {
+    background: var(--accent);
+    font-weight: bold;
+}
+
+/* Profile Styles */
+.profileSection {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.profileInfo { text-align: right; }
+.name { margin: 0; font-weight: 700; font-size: 14px; color: var(--foreground); line-height: 1; }
+.role { font-size: 10px; color: var(--muted-foreground); font-weight: 600; }
+
+.avatarCircle img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+}
+
+.rotated { transform: rotate(180deg); transition: transform 0.2s; }

@@ -1,6 +1,12 @@
 import { Link, useLocation } from "react-router-dom";
 import styles from "./Sidebar.module.css";
 import LogoutButton from "@/components/Auth/LogoutButton";
+// Icons import kar rahe hain emojis ki jagah professional look ke liye
+import { 
+  LayoutDashboard, BookOpen, PenTool, ClipboardList, 
+  GraduationCap, BarChart3, Settings, ChevronLeft, 
+  ChevronRight, LogOut, Video 
+} from "lucide-react";
 
 interface SidebarProps {
   userRole: "teacher" | "student" | null;
@@ -11,42 +17,49 @@ interface SidebarProps {
 const Sidebar = ({ userRole, isCollapsed, toggleSidebar }: SidebarProps) => {
   const location = useLocation();
 
+  // // Links aur Path wahi hain jo aapne diye thay (No change in names)
   const teacherLinks = [
-    { name: "Dashboard", path: "/teacher/dashboard", icon: "📊" },
-    // dummy
-    { name: "Assignments", path: "/assignments", icon: "📝" },
-    { name: "Gradebook", path: "/grades", icon: "🎓" },
-    { name: "Analytics", path: "/analytics", icon: "📈" },
-    { name: "Settings", path: "/settings", icon: "⚙️" },
+    { name: "Dashboard", path: "/teacher/dashboard", icon: <LayoutDashboard size={20}/> },
+    { name: "Lecture", path: "/teacher/lecture", icon: <BookOpen size={20}/> },
+    { name: "Assignments", path: "/teacher/assignments", icon: <PenTool size={20}/> },
+    { name: "Quiz", path: "/teacher/quiz", icon: <ClipboardList size={20}/> },
+    { name: "Gradebook", path: "/grades", icon: <GraduationCap size={20}/> },
+    { name: "Analytics", path: "/analytics", icon: <BarChart3 size={20}/> },
+    { name: "Settings", path: "/settings", icon: <Settings size={20}/> },
   ];
 
   const studentLinks = [
-    { name: "dashboard", path: "/student/dashboard", icon: "🎓" },
-    // dummy links
-    { name: "Assignments", path: "/assignments", icon: "📝" },
-    { name: "Gradebook", path: "/grades", icon: "🎓" },
-    { name: "Analytics", path: "/analytics", icon: "📈" },
-    { name: "Settings", path: "/settings", icon: "⚙️" },
+    { name: "Dashboard", path: "/student/dashboard", icon: <LayoutDashboard size={20}/> },
+    { name: "Lecture", path: "/student/lecture", icon: <BookOpen size={20}/> },
+    { name: "Assignments", path: "/student/assignments", icon: <PenTool size={20}/> },
+    { name: "Quiz", path: "/student/quiz", icon: <ClipboardList size={20}/> },
+    { name: "Gradebook", path: "/grades", icon: <GraduationCap size={20}/> },
+    { name: "Analytics", path: "/analytics", icon: <BarChart3 size={20}/> },
+    { name: "Virtual Room", path: "/virtualroom", icon: <Video size={20}/> },
+    { name: "Settings", path: "/settings", icon: <Settings size={20}/> },
   ];
 
+  // // Role base selection (Aapka original logic)
   const links = userRole === "teacher" ? teacherLinks : studentLinks;
 
   return (
-    <aside
-      className={`${styles.sidebar} ${isCollapsed ? styles.collapsed : ""}`}
-    >
+    <aside className={`${styles.sidebar} ${isCollapsed ? styles.collapsed : ""}`}>
+      
+      {/* // --- HEADER: Logo aur Toggle Button --- */}
       <div className={styles.header}>
         {!isCollapsed && <h2 className={styles.logo}>SmartLearn</h2>}
         <button onClick={toggleSidebar} className={styles.toggleBtn}>
-          {isCollapsed ? "➡️" : "⬅️"}
+          {isCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
         </button>
       </div>
 
+      {/* // --- NAVIGATION: Role base links --- */}
       <nav className={styles.nav}>
         {links.map((link) => (
           <Link
             key={link.name}
             to={link.path}
+            // // Active link ko highlight karne ki logic (No change)
             className={`${styles.link} ${
               location.pathname === link.path ? styles.active : ""
             }`}
@@ -58,9 +71,10 @@ const Sidebar = ({ userRole, isCollapsed, toggleSidebar }: SidebarProps) => {
         ))}
       </nav>
 
+      {/* // --- FOOTER: Logout Button --- */}
       <div className={styles.footer}>
         <div className={styles.logoutBtn}>
-          <span className={styles.icon}>🚪</span>
+          <span className={styles.icon}><LogOut size={20} /></span>
           {!isCollapsed && <LogoutButton />}
         </div>
       </div>
