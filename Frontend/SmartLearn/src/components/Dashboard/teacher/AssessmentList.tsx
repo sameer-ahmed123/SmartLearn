@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Sparkles, FileCheck, PlayCircle, Eye, Loader2, BookOpen } from "lucide-react";
 import apiClient from "../../../api/apiClient";
 import QuizEditorModal from "./QuizEditorModal";
 import styles from "./AssessmentList.module.css";
@@ -6,7 +7,7 @@ import styles from "./AssessmentList.module.css";
 interface AssessmentProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   lectures: any[];
-  onRefresh: () => void; // Callback to refresh data after generation
+  onRefresh: () => void; 
 }
 
 const AssessmentList = ({ lectures, onRefresh }: AssessmentProps) => {
@@ -20,71 +21,90 @@ const AssessmentList = ({ lectures, onRefresh }: AssessmentProps) => {
   const handleGenerateQuiz = async (lectureId: number) => {
     setGeneratingId(lectureId);
     try {
-      // CALL YOUR NEW ENDPOINT
       await apiClient.post("/assessments/generate/", {
         lecture_id: lectureId,
         type: "quiz",
       });
-      console.log("Quiz Generation Started! Check back in a moment.");
+      console.log("Quiz Generation Started!");
       onRefresh();
     } catch (error) {
       console.error("Gen failed", error);
-      console.log("Failed to start generation.");
     } finally {
       setGeneratingId(null);
     }
   };
 
   return (
-    <div className={styles.container}>
-      <table className={styles.table}>
-        <thead>
-          <tr>
-            <th>Lecture Topic</th>
-            <th>Quiz Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {ValidatedLectures.map((lecture) => (
-            <tr key={lecture.id}>
-              <td>{lecture.topic}</td>
-              <td>
-                {lecture.quiz_data ? (
-                  <span className={styles.badgeSuccess}>Generated</span>
-                ) : generatingId === lecture.id ? (
-                  <span className={styles.badgePending}>Processing...</span>
-                ) : (
-                  <span className={styles.badgePending}>None</span>
-                )}
-              </td>
-              <td>
-                {lecture.quiz_data ? (
-                  <button
-                    className={styles.viewBtn}
-                    onClick={() => setEditingQuizId(lecture.quiz_id)}
-                  >
-                    View Quiz
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => handleGenerateQuiz(lecture.id)}
-                    disabled={generatingId === lecture.id}
-                    className={styles.generateBtn}
-                  >
-                    {generatingId === lecture.id
-                      ? "Generating..."
-                      : "✨ Create Quiz"}
-                  </button>
-                )}
-              </td>
+    <div className={styles.assessmentWrapper}>
+      <div className={styles.tableCard}>
+        <table className={styles.modernTable}>
+          <thead>
+            <tr>
+              <th><BookOpen size={16} className={styles.headerIcon} /> Lecture Topic</th>
+              <th>Status</th>
+              <th className={styles.centerAlign}>Actions</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {ValidatedLectures.length === 0 ? (
+              <tr>
+                <td colSpan={3} className={styles.emptyRow}>
+                  No validated lectures available for quiz generation.
+                </td>
+              </tr>
+            ) : (
+              ValidatedLectures.map((lecture) => (
+                <tr key={lecture.id}>
+                  <td className={styles.topicCell}>
+                    <span className={styles.topicName}>{lecture.topic}</span>
+                  </td>
+                  <td>
+                    {lecture.quiz_data ? (
+                      <span className={styles.badgeSuccess}>
+                        <FileCheck size={14} /> Ready
+                      </span>
+                    ) : generatingId === lecture.id ? (
+                      <span className={styles.badgeProcessing}>
+                        <Loader2 size={14} className={styles.spin} /> AI Generating...
+                      </span>
+                    ) : (
+                      <span className={styles.badgeNone}>No Quiz Yet</span>
+                    )}
+                  </td>
+                  <td className={styles.centerAlign}>
+                    {lecture.quiz_data ? (
+                      <button
+                        className={styles.viewBtn}
+                        onClick={() => setEditingQuizId(lecture.quiz_id)}
+                      >
+                        <Eye size={16} /> View & Edit
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handleGenerateQuiz(lecture.id)}
+                        disabled={generatingId === lecture.id}
+                        className={styles.generateBtn}
+                      >
+                        {generatingId === lecture.id ? (
+                          "Processing..."
+                        ) : (
+                          <>
+                            <Sparkles size={16} />  Create AI Quiz
+                          </>
+                        )}
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+
       {editingQuizId && (
         <QuizEditorModal
-          isOpen={true} // <--- FIXED: Always true if the ID exists
+          isOpen={true}
           quizId={editingQuizId}
           onClose={() => setEditingQuizId(null)}
           onSaveSuccess={() => {

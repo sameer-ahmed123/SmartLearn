@@ -2,6 +2,10 @@ import { useState } from "react";
 import type { CourseContentItem } from "../../../types/Lectures/Types";
 import styles from "./CourseContentTable.module.css";
 import { Link } from "react-router-dom";
+import { 
+  FileText, Calendar, CheckCircle2, Clock, AlertCircle, 
+  ExternalLink, Eye, Edit3, Plus, Filter 
+} from "lucide-react";
 
 interface CourseContentTableProps {
   lectures: CourseContentItem[];
@@ -38,24 +42,33 @@ const CourseContentTable = ({
     }
   };
 
+  const getStatusIcon = (status: CourseContentItem["validation_status"]) => {
+    switch (status) {
+      case "pending": return <Clock size={14} />;
+      case "validated": return <CheckCircle2 size={14} />;
+      case "rejected": return <AlertCircle size={14} />;
+      default: return null;
+    }
+  };
+
   const renderActions = (lecture: CourseContentItem) => {
     switch (lecture.validation_status) {
       case "pending":
         return (
           <Link to={lecture.review_url} className={styles.actionReview}>
-            Review & Validate
+            <Edit3 size={14} /> Review
           </Link>
         );
       case "rejected":
         return (
           <Link to={lecture.review_url} className={styles.actionEdit}>
-            View Rejection / Edit
+            <AlertCircle size={14} /> Fix
           </Link>
         );
       case "validated":
         return (
           <Link to={lecture.review_url} className={styles.actionView}>
-            View Live
+            <Eye size={14} /> View
           </Link>
         );
       default:
@@ -64,86 +77,95 @@ const CourseContentTable = ({
   };
 
   return (
-    <div className={styles.tableContainer}>
-      {/* Filter Bar with Inline Generate Button */}
+    <div className={styles.tableCard}>
+      {/* HEADER AREA */}
+      <div className={styles.tableHeader}>
+        <div className={styles.titleGroup}>
+          <Filter size={18} className={styles.filterIcon} />
+          <h3>Course Content</h3>
+        </div>
+        
+        <button onClick={onGenerateClick} className={styles.generateActionBtn}>
+          <Plus size={18} /> Generate New Lecture
+        </button>
+      </div>
+
+      {/* FILTER TABS */}
       <div className={styles.filterBar}>
         <button
           onClick={() => setFilter("all")}
-          className={`${styles.filterButton} ${
-            filter === "all" ? styles.active : ""
-          }`}
+          className={`${styles.filterButton} ${filter === "all" ? styles.active : ""}`}
         >
           All ({lectures.length})
         </button>
         <button
           onClick={() => setFilter("pending")}
-          className={`${styles.filterButton} ${
-            filter === "pending" ? styles.active : ""
-          }`}
+          className={`${styles.filterButton} ${filter === "pending" ? styles.active : ""}`}
         >
           Pending
         </button>
         <button
           onClick={() => setFilter("validated")}
-          className={`${styles.filterButton} ${
-            filter === "validated" ? styles.active : ""
-          }`}
+          className={`${styles.filterButton} ${filter === "validated" ? styles.active : ""}`}
         >
           Validated
         </button>
         <button
           onClick={() => setFilter("rejected")}
-          className={`${styles.filterButton} ${
-            filter === "rejected" ? styles.active : ""
-          }`}
+          className={`${styles.filterButton} ${filter === "rejected" ? styles.active : ""}`}
         >
           Rejected
         </button>
-
-        {/* --- MOVED: Generate Button into CourseContent Table  --- */}
-        <button onClick={onGenerateClick} className={styles.generateActionBtn}>
-          + Generate New Lecture
-        </button>
       </div>
 
-      <table className={styles.table}>
-        <thead>
-          <tr>
-            <th>Topic</th>
-            <th className={styles.createdCol}>Generated On</th>
-            <th>Status</th>
-            <th className={styles.actionCol}>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filteredLectures.length === 0 ? (
+      {/* TABLE */}
+      <div className={styles.tableWrapper}>
+        <table className={styles.table}>
+          <thead>
             <tr>
-              <td colSpan={4} className={styles.noData}>
-                No {filter} lectures found for this course.
-              </td>
+              <th><FileText size={16} style={{marginRight: '8px'}} /> Topic</th>
+              <th className={styles.createdCol}><Calendar size={16} style={{marginRight: '8px'}} /> Date</th>
+              <th>Status</th>
+              <th className={styles.actionCol}>Actions</th>
             </tr>
-          ) : (
-            filteredLectures.map((item) => (
-              <tr key={item.id}>
-                <td className={styles.topicCol}>{item.topic}</td>
-                <td className={styles.createdCol}>
-                  {new Date(item.created_at).toLocaleDateString()}
+          </thead>
+          <tbody>
+            {filteredLectures.length === 0 ? (
+              <tr>
+                <td colSpan={4} className={styles.noData}>
+                  <div className={styles.emptyState}>
+                    <p>No {filter} lectures found for this course.</p>
+                  </div>
                 </td>
-                <td>
-                  <span
-                    className={`${styles.statusPill} ${getStatusPillClass(
-                      item.validation_status
-                    )}`}
-                  >
-                    {item.status_display}
-                  </span>
-                </td>
-                <td className={styles.actionCol}>{renderActions(item)}</td>
               </tr>
-            ))
-          )}
-        </tbody>
-      </table>
+            ) : (
+              filteredLectures.map((item) => (
+                <tr key={item.id}>
+                  <td className={styles.topicCol}>
+                    <span className={styles.topicText}>{item.topic}</span>
+                  </td>
+                  <td className={styles.createdCol}>
+                    {new Date(item.created_at).toLocaleDateString(undefined, {
+                      month: 'short', day: 'numeric', year: 'numeric'
+                    })}
+                  </td>
+                  <td>
+                    <span className={`${styles.statusPill} ${getStatusPillClass(item.validation_status)}`}>
+                      {getStatusIcon(item.validation_status)}
+                      {item.status_display}
+                    </span>
+                  </td>
+                  <td className={styles.actionCol}>
+                    <div className={styles.actionFlex}>
+                      {renderActions(item)}
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };

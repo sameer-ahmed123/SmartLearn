@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Trash2, ChevronDown, BookOpen, Globe, Archive, AlertTriangle, Info } from 'lucide-react';
 import apiClient from '../../../api/apiClient';
 import styles from './CourseManagementHeader.module.css';
 
@@ -15,19 +16,18 @@ interface CourseManagementHeaderProps {
     onCourseUpdate: (updatedCourse: CourseData) => void;
 }
 
-const CourseManagementHeader = ({ course, onCourseUpdate }:CourseManagementHeaderProps)  => {
+const CourseManagementHeader = ({ course, onCourseUpdate }: CourseManagementHeaderProps) => {
     const navigate = useNavigate();
     const [isDeleting, setIsDeleting] = useState(false);
     const [isUpdating, setIsUpdating] = useState(false);
 
-    // Handle Status Change (Draft <-> Published)
     const handleStatusChange = async (newStatus: string) => {
         setIsUpdating(true);
         try {
             const response = await apiClient.patch(`/lectures/courses/${course.id}/`, {
                 status: newStatus
             });
-            onCourseUpdate(response.data); // Update parent state
+            onCourseUpdate(response.data);
         } catch (error) {
             console.error("Failed to update status:", error);
             alert("Failed to update course status.");
@@ -36,7 +36,6 @@ const CourseManagementHeader = ({ course, onCourseUpdate }:CourseManagementHeade
         }
     };
 
-    // Handle Delete
     const handleDelete = async () => {
         if (!window.confirm("Are you sure? This will delete the course and ALL its lectures. This cannot be undone.")) {
             return;
@@ -45,7 +44,6 @@ const CourseManagementHeader = ({ course, onCourseUpdate }:CourseManagementHeade
         setIsDeleting(true);
         try {
             await apiClient.delete(`/lectures/courses/${course.id}/`);
-            // Redirect back to dashboard on success
             navigate('/teacher/dashboard');
         } catch (error) {
             console.error("Failed to delete course:", error);
@@ -54,39 +52,77 @@ const CourseManagementHeader = ({ course, onCourseUpdate }:CourseManagementHeade
         }
     };
 
-    return (
-        <div className={styles.headerContainer}>
-            <div className={styles.infoSection}>
-                <h1 className={styles.title}>{course.title}</h1>
-                <p className={styles.description}>{course.description || "No description provided."}</p>
-            </div>
+    // Helper to get status icon
+    const getStatusIcon = (status: string) => {
+        switch (status) {
+            case 'published': return <Globe size={16} />;
+            case 'archived': return <Archive size={16} />;
+            default: return <Info size={16} />;
+        }
+    };
 
-            <div className={styles.controlSection}>
-                <div className={styles.statusGroup}>
-                    <label>Course Status:</label>
-                    <select 
-                        value={course.status} 
-                        onChange={(e) => handleStatusChange(e.target.value)}
-                        disabled={isUpdating}
-                        className={`${styles.statusSelect} ${styles[course.status]}`}
-                    >
-                        <option value="draft">Draft (Hidden)</option>
-                        <option value="published">Published (Live)</option>
-                        <option value="archived">Archived</option>
-                    </select>
+    return (
+        <div className={styles.headerWrapper}>
+            {/* GRADIENT BANNER SECTION */}
+            <div className={styles.banner}>
+                <div className={styles.courseIdentity}>
+                    <div className={styles.iconCircle}>
+                        <BookOpen size={28} color="white" />
+                    </div>
+                    <div className={styles.textDetails}>
+                        <h1 className={styles.title}>{course.title}</h1>
+                        <p className={styles.description}>
+                            {course.description || "No description provided."}
+                        </p>
+                    </div>
                 </div>
 
-                <div className={styles.actionGroup}>
+                <div className={styles.statusBadgeRow}>
+                    <span className={`${styles.statusBadge} ${styles[course.status]}`}>
+                        {getStatusIcon(course.status)}
+                        {course.status.toUpperCase()}
+                    </span>
+                </div>
+            </div>
+
+            {/* CONTROLS SECTION */}
+            <div className={styles.controlsBar}>
+                <div className={styles.statusPicker}>
+                    <label>Course Status</label>
+                    <div className={styles.selectWrapper}>
+                        <select 
+                            value={course.status} 
+                            onChange={(e) => handleStatusChange(e.target.value)}
+                            disabled={isUpdating}
+                            className={styles.styledSelect}
+                        >
+                            <option value="draft">Draft (Private)</option>
+                            <option value="published">Published (Live)</option>
+                            <option value="archived">Archived</option>
+                        </select>
+                        <ChevronDown className={styles.selectArrow} size={16} />
+                    </div>
+                </div>
+
+                <div className={styles.actionButtons}>
                     <button 
                         onClick={handleDelete} 
                         className={styles.deleteBtn}
                         disabled={isDeleting}
                     >
-                        {isDeleting ? 'Deleting...' : 'Delete Course'}
+                        {isDeleting ? (
+                            "Deleting..."
+                        ) : (
+                            <>
+                                <Trash2 size={16} />
+                                Delete Course
+                            </>
+                        )}
                     </button>
-                    {/* You could add an "Edit Details" button here later for Title/Desc editing */}
                 </div>
             </div>
+            
+            {isUpdating && <div className={styles.loadingLine}></div>}
         </div>
     );
 };

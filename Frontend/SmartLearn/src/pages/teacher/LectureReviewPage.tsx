@@ -1,12 +1,17 @@
-
 import type { LectureDetails } from "@/types/Lectures/Types";
 import styles from "./LectureReviewPage.module.css";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import apiClient from "@/api/apiClient";
 import ValidationActionPanel from "@/components/Dashboard/teacher/ValidationActionPanel";
+import { 
+  Video, FileText, Info, ArrowLeft, Clock, 
+  CheckCircle, AlertCircle, Bot, MessageSquare 
+} from "lucide-react";
+
 const LectureReviewPage = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const lectureId = id;
   const [lecture, setlecture] = useState<LectureDetails | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -17,20 +22,10 @@ const LectureReviewPage = () => {
     const fetchLectureDetails = async () => {
       try {
         const response = await apiClient.get(`/lectures/${lectureId}/`);
-
-        if (response.status === 403) {
-          throw new Error("Permission Denied You do not Own this Course.");
-        }
-
-        if (response.status !== 200) {
-          throw new Error(`Http Error! ${response.status}`);
-        }
-
-        const data: LectureDetails = response.data;
-        console.log(data);
-        setlecture(data);
+        if (response.status === 403) throw new Error("Permission Denied");
+        if (response.status !== 200) throw new Error(`Error! ${response.status}`);
+        setlecture(response.data);
       } catch (err) {
-        console.error(`Failed to load lecture. Error: ${err}`);
         setError("Failed to fetch Lecture Details");
       } finally {
         setIsLoading(false);
@@ -39,90 +34,102 @@ const LectureReviewPage = () => {
     fetchLectureDetails();
   }, [lectureId]);
 
-  if (isLoading) {
-    return (
-      <p>
-        {" "}
-        Lecture is Loading....{" "}
-      </p>
-    );
-  }
+  if (isLoading) return <div className={styles.loader}>Loading...</div>;
 
-  if (error) {
-    return (
-      <p>
-        <h2 className={styles.error}>{error}</h2>
-      </p>
-    );
-  }
-
-  if (!lecture) {
-    return (
-      <p>Lecture Not Found.</p>
-    );
+  if (error || !lecture) {
+    return <div className={styles.error}>{error || "Course not found"}</div>;
   }
 
   const isPending = lecture.validation_status === "pending";
+
   return (
-    <>
-      <h1 className={styles.pageTitle}>Review: {lecture.topic}</h1>
-      <p className={styles.courseTitle}>
-        Course: {lecture.content_source.course.title}
-      </p>
+    <div className={styles.pageWrapper}>
+      {/* Top Title Section - Image 1 Style */}
+      <div className={styles.header}>
+        <button onClick={() => navigate(-1)} className={styles.backBtn}>
+          <ArrowLeft size={20} />
+        </button>
+        <div className={styles.titleInfo}>
+          <h1>Review: {lecture.topic}</h1>
+          <p>Course: <span>{lecture.content_source.course.title}</span></p>
+        </div>
+        <div className={styles.statusBadgeWrapper}>
+           <span className={`${styles.statusBadge} ${styles[lecture.validation_status]}`}>
+              {lecture.status_display}
+           </span>
+        </div>
+      </div>
 
       <div className={styles.reviewGrid}>
-        {/* -------------------- LEFT COLUMN: Content Review -------------------- */}
+        {/* Left: Video & Summary */}
         <div className={styles.contentColumn}>
-          <h2>Video Content</h2>
-          {/* Placeholder for the video player. In a real app, this would be an embedded iframe */}
-          <div className={styles.videoPlayer}>
-            <p>Video Player Placeholder (URL: {lecture.video_url || "N/A"})</p>
+          <div className={styles.sectionCard}>
+            <div className={styles.sectionHeader}>
+              <Video size={18} />
+              <h2>Video Content</h2>
+            </div>
+            <div className={styles.videoBox}>
+               <div className={styles.videoPlaceholder}>
+                  <p>Video Preview (URL: {lecture.video_url || "N/A"})</p>
+               </div>
+            </div>
           </div>
 
-          <h2>Summary Text</h2>
-          <div className={styles.summaryBox}>
-            <p>{lecture.summary_text}</p>
+          <div className={styles.sectionCard}>
+            <div className={styles.sectionHeader}>
+              <FileText size={18} />
+              <h2>Summary & Transcription</h2>
+            </div>
+            <div className={styles.summaryContent}>
+              <p>{lecture.summary_text}</p>
+            </div>
           </div>
         </div>
 
-        {/* -------------------- RIGHT COLUMN: Actions & Metadata -------------------- */}
+        {/* Right: Metadata Card - Image 1 Style */}
         <div className={styles.actionColumn}>
-          <div className={styles.metadataBox}>
-            <h3>Metadata</h3>
-            <p>
-              <strong>Generated By:</strong> AI Bot (
-              {new Date(lecture.created_at).toLocaleDateString()})
-            </p>
-            <p>
-              <strong>Status:</strong>{" "}
-              <span className={styles.statusPill}>
-                {lecture.status_display}
-              </span>
-            </p>
-            <p>
-              <strong>Original Prompt:</strong>
-              <span className={styles.promptText}>
-                {lecture.content_source.ai_prompt}
-              </span>
-            </p>
+          <div className={styles.metadataCard}>
+            <div className={styles.metaHeader}>
+               <Info size={16} /> <span>AI Metadata</span>
+            </div>
+            
+            <div className={styles.metaGroup}>
+              <label><Bot size={14} /> GENERATED BY</label>
+              <p>SmartLearn AI Bot</p>
+            </div>
+
+            <div className={styles.metaGroup}>
+              <label><Clock size={14} /> CREATED ON</label>
+              <p>{new Date(lecture.created_at).toLocaleDateString()}</p>
+            </div>
+
+            <div className={styles.metaGroup}>
+              <label><MessageSquare size={14} /> ORIGINAL PROMPT</label>
+              <div className={styles.promptBox}>"{lecture.content_source.ai_prompt}"</div>
+            </div>
+
             {lecture.rejection_comment && (
-              <p className={styles.rejectionComment}>
-                <strong>Rejection Reason:</strong> {lecture.rejection_comment}
-              </p>
+              <div className={styles.rejectionBox}>
+                <label>REJECTION REASON</label>
+                <p>{lecture.rejection_comment}</p>
+              </div>
             )}
           </div>
 
-          {/* Validation/Rejection Panel (Only show if pending) */}
-          {isPending && <ValidationActionPanel lectureId={lecture.id} />}
-
-          {!isPending && (
-            <div className={styles.validatedNotice}>
-              <p>This lecture has already been **{lecture.status_display}**.</p>
+          {isPending ? (
+            <ValidationActionPanel lectureId={lecture.id} />
+          ) : (
+            <div className={styles.successNotice}>
+              <div className={styles.successIcon}><CheckCircle size={24} /></div>
+              <div className={styles.successText}>
+                <h3>Validation Complete</h3>
+                <p>This lecture is marked as <strong>Validated</strong>.</p>
+              </div>
             </div>
           )}
         </div>
       </div>
-    </>
+    </div>
   );
 };
 
