@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { Menu, Search, Bell, Moon, Sun, Maximize2, ChevronDown } from 'lucide-react'; 
+import React, { useState, useEffect, useRef } from 'react';
+import { Menu, Search, Bell, Moon, Sun, Maximize2, ChevronDown, Clock } from 'lucide-react'; 
 import styles from "./TopBar.module.css";
+import { useAuthStore } from "@/store/useAuthStore"; 
 
 interface TopBarProps {
   toggleSidebar: () => void;
@@ -9,30 +10,47 @@ interface TopBarProps {
 const TopBar = ({ toggleSidebar }: TopBarProps) => {
   const [isDark, setIsDark] = useState(false);
   const [showLangMenu, setShowLangMenu] = useState(false);
+  const [showNotifMenu, setShowNotifMenu] = useState(false);
   
-  // State for Current Language with Real Flag URL
+  const user = useAuthStore((state) => state.user);
+  const logout = useAuthStore((state) => state.logout);
+  
+  const langRef = useRef<HTMLDivElement>(null);
+  const notifRef = useRef<HTMLDivElement>(null);
+
   const [currentLang, setCurrentLang] = useState({ 
     code: 'en', 
     name: 'English', 
     flag: 'https://flagcdn.com/w40/us.png' 
   });
 
-  // Reverted to your original languages: English, French, German
   const languages = [
     { code: 'en', name: 'English', flag: 'https://flagcdn.com/w40/us.png' },
     { code: 'fr', name: 'French', flag: 'https://flagcdn.com/w40/fr.png' },
     { code: 'de', name: 'German', flag: 'https://flagcdn.com/w40/de.png' }
   ];
 
-  // Logic: Dark Mode Toggle for Tailwind v4
+  const notifications = [
+    { id: 1, title: 'New Lecture Generated', time: '5 min ago', status: 'unread' },
+    { id: 2, title: 'Course "Parallel" Validated', time: '1 hour ago', status: 'unread' },
+    { id: 3, title: 'System Update Completed', time: '2 hours ago', status: 'read' },
+  ];
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (langRef.current && !langRef.current.contains(event.target as Node)) setShowLangMenu(false);
+      if (notifRef.current && !notifRef.current.contains(event.target as Node)) setShowNotifMenu(false);
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   useEffect(() => {
     const root = window.document.documentElement;
     if (isDark) {
       root.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
     } else {
       root.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
     }
   }, [isDark]);
 
@@ -40,7 +58,6 @@ const TopBar = ({ toggleSidebar }: TopBarProps) => {
     setCurrentLang(lang);
     setShowLangMenu(false);
     
-    // Google Translate integration functionality (Same as before)
     const googleCombo = document.querySelector('.goog-te-combo') as HTMLSelectElement;
     if (googleCombo) {
       googleCombo.value = lang.code;
@@ -48,9 +65,13 @@ const TopBar = ({ toggleSidebar }: TopBarProps) => {
     }
   };
 
+  const displayName = user?.full_name || "User";
+  const displayRole = user?.role ? user.role.toUpperCase() : "GUEST";
+
+  const avatarUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${displayName}&backgroundColor=b6e3f4,c0aede,d1d4f9`;
+
   return (
     <header className={styles.topbar}>
-      {/* Left Section: Menu & Search */}
       <div className={styles.leftSide}>
         <button onClick={toggleSidebar} className={styles.iconBtn}>
            <Menu size={20} />
@@ -61,30 +82,52 @@ const TopBar = ({ toggleSidebar }: TopBarProps) => {
         </div>
       </div>
 
-      {/* Right Section: Actions & Profile */}
       <div className={styles.rightSide}>
         <div className={styles.actionButtons}>
           <button className={styles.iconBtn} onClick={() => document.documentElement.requestFullscreen()}>
             <Maximize2 size={18} />
           </button>
           
-          {/* Dark Mode Toggle Button */}
           <button onClick={() => setIsDark(!isDark)} className={styles.iconBtn}>
             {isDark ? <Sun size={20} color="#fbbf24" /> : <Moon size={20} />}
           </button>
 
-          <div className={styles.notificationWrapper}>
-            <button className={styles.iconBtn}>
+          <div className={styles.relativeWrapper} ref={notifRef}>
+            <button 
+              className={`${styles.iconBtn} ${showNotifMenu ? styles.activeIcon : ''}`} 
+              onClick={() => { setShowNotifMenu(!showNotifMenu); setShowLangMenu(false); }}
+            >
               <Bell size={20} />
+              <span className={styles.countBadge}>3</span>
             </button>
-            <span className={styles.countBadge}>3</span>
+
+            {showNotifMenu && (
+              <div className={styles.notifBox}>
+                <div className={styles.notifHeader}>
+                  <span>Notifications</span>
+                  <button className={styles.markAll}>Mark all</button>
+                </div>
+                <div className={styles.notifList}>
+                  {notifications.map((notif) => (
+                    <div key={notif.id} className={styles.notifItem} onClick={() => setShowNotifMenu(false)}>
+                      <div>
+                        <p className={styles.notifTitle}>{notif.title}</p>
+                        <span className={styles.notifTime}><Clock size={10} /> {notif.time}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Language Selector (Flags Functionality Fixed) */}
-        <div className={styles.langContainer} onMouseLeave={() => setShowLangMenu(false)}>
-          <button className={styles.langPicker} onClick={() => setShowLangMenu(!showLangMenu)}>
-            <img src={currentLang.flag} alt={currentLang.name} style={{ width: '20px', borderRadius: '2px' }} />
+        <div className={styles.relativeWrapper} ref={langRef}>
+          <button 
+            className={styles.langPicker} 
+            onClick={() => { setShowLangMenu(!showLangMenu); setShowNotifMenu(false); }}
+          >
+            <img src={currentLang.flag} alt={currentLang.name} className={styles.flagImg} />
             <span className={styles.langTxt}>{currentLang.code.toUpperCase()}</span>
             <ChevronDown size={14} className={showLangMenu ? styles.rotated : ""} />
           </button>
@@ -97,22 +140,29 @@ const TopBar = ({ toggleSidebar }: TopBarProps) => {
                   className={`${styles.langRow} ${currentLang.code === lang.code ? styles.activeRow : ""}`}
                   onClick={() => changeLanguage(lang)}
                 >
-                  <img src={lang.flag} alt={lang.name} style={{ width: '20px', marginRight: '10px', borderRadius: '2px' }} />
-                  <span className={styles.rowName}>{lang.name}</span>
+                  <img src={lang.flag} alt={lang.name} className={styles.flagImg} />
+                  <span>{lang.name}</span>
                 </div>
               ))}
             </div>
           )}
         </div>
 
-        {/* User Profile (Reverted to Nil Yeager / ADMIN) */}
         <div className={styles.profileSection}>
           <div className={styles.profileInfo}>
-             <p className={styles.name}>NAME</p>
-             <span className={styles.role}>ADMIN</span>
+             <p className={styles.name}>{displayName}</p>
+             <span className={styles.role}>{displayRole}</span>
           </div>
           <div className={styles.avatarCircle}>
-             <img src="https://ui-avatars.com/api/?name=Nil+Yeager&background=4f46e5&color=fff" alt="User" />
+             <img 
+               src={avatarUrl} 
+               alt="User Profile" 
+               className={styles.profileImg}
+               onError={(e) => {
+                 (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${displayName}&background=4f46e5&color=fff`;
+               }}
+             />
+             <div className={styles.onlineStatus}></div>
           </div>
         </div>
       </div>
