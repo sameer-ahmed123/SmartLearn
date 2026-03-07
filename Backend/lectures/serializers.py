@@ -91,25 +91,45 @@ class LectureSerializer(serializers.ModelSerializer):
     generated_by_email = serializers.ReadOnlyField(source='generated_by.email')
     content_source = ContentSourceBaseSerializer(read_only=True)
 
+    # 1. Define the dynamic fields explicitly
+    quiz_data = serializers.SerializerMethodField()
+    quiz_id = serializers.SerializerMethodField()
+    assignment_data = serializers.SerializerMethodField()
+    assignment_id = serializers.SerializerMethodField()
+
     class Meta:
         model = Lecture
         fields = [
             'id', 'topic', 'video_url', 'summary_text',
             'validation_status', 'rejection_comment',
-            'generated_by', 'generated_by_email', 'created_at', 'content_source', 'quiz_data',
+            'generated_by', 'generated_by_email', 'created_at', 'content_source', 
+            'quiz_data', 'quiz_id',                 # <-- Included Quiz fields
+            'assignment_data', 'assignment_id',     # <-- Included Assignment fields
         ]
         read_only_fields = ('generated_by', 'validation_status',
                             'rejection_comment', 'content_source')
 
-    # def get_quiz_data(self, obj):
-    #     """
-    #     Checks if a Quiz object is attached to this lecture.
-    #     Returns the quiz_data JSON if it exists, otherwise None.
-    #     """
-    #     # Because Quiz has a OneToOneField to Lecture, we can access it via obj.quiz
-    #     if hasattr(obj, 'quiz'):
-    #         return obj.quiz.quiz_data
-    #     return None
+    # 2. Quiz Logic
+    def get_quiz_data(self, obj):
+        if hasattr(obj, 'quiz'):
+            return obj.quiz.quiz_data
+        return None
+
+    def get_quiz_id(self, obj):
+        if hasattr(obj, 'quiz'):
+            return obj.quiz.id
+        return None
+
+    # 3. Assignment Logic
+    def get_assignment_data(self, obj):
+        if hasattr(obj, 'assignment'):
+            return obj.assignment.assignment_data
+        return None
+
+    def get_assignment_id(self, obj):
+        if hasattr(obj, 'assignment'):
+            return obj.assignment.id
+        return None
 
 
 # LECTURE_DETAIL_SERIALIZER DEDICATED FOR LECTURE REVIEW/STUDY PAGE
@@ -202,6 +222,8 @@ class CourseLectureListItem(serializers.ModelSerializer):
     review_url = serializers.SerializerMethodField()
     quiz_data = serializers.SerializerMethodField()
     quiz_id = serializers.SerializerMethodField()
+    assignment_data = serializers.SerializerMethodField()
+    assignment_id = serializers.SerializerMethodField()
 
     class Meta:
         model = Lecture
@@ -215,6 +237,8 @@ class CourseLectureListItem(serializers.ModelSerializer):
             'review_url',
             'quiz_data',
             'quiz_id',
+            'assignment_data',
+            'assignment_id',
         ]
 
     def get_quiz_data(self, obj):
@@ -229,3 +253,13 @@ class CourseLectureListItem(serializers.ModelSerializer):
 
     def get_review_url(self, obj):
         return f"/teacher/lecture/{obj.id}/review"
+    
+    def get_assignment_data(self, obj):
+        if hasattr(obj, 'assignment'):
+            return obj.assignment.assignment_data
+        return None
+
+    def get_assignment_id(self, obj):
+        if hasattr(obj, 'assignment'):
+            return obj.assignment.id
+        return None
