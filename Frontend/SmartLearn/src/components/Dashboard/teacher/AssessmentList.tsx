@@ -1,38 +1,49 @@
+// src/components/Dashboard/teacher/AssessmentList.tsx
+
 import { useState } from "react";
 import apiClient from "../../../api/apiClient";
 import QuizEditorModal from "./QuizEditorModal";
+import AssignmentEditorModal from "./AssignmentEditorModal";
 import styles from "./AssessmentList.module.css";
 
 interface AssessmentProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   lectures: any[];
-  onRefresh: () => void; // Callback to refresh data after generation
+  onRefresh: () => void;
 }
 
 const AssessmentList = ({ lectures, onRefresh }: AssessmentProps) => {
-  const [generatingId, setGeneratingId] = useState<number | null>(null);
+  // We only track this to disable the button right after they click it
+  const [generatingQuizId, setGeneratingQuizId] = useState<number | null>(null);
+  const [generatingAssignmentId, setGeneratingAssignmentId] = useState<number | null>(null);
+  
   const [editingQuizId, setEditingQuizId] = useState<number | null>(null);
+  const [editingAssignmentId, setEditingAssignmentId] = useState<number | null>(null);
 
   const ValidatedLectures = lectures.filter(
     (l) => l.validation_status === "validated"
   );
 
-  const handleGenerateQuiz = async (lectureId: number) => {
-    setGeneratingId(lectureId);
+  // --- SUPER SIMPLE TRIGGER (NO POLLING) ---
+  const handleGenerateAssessment = async (lectureId: number, type: 'quiz' | 'assignment') => {
+    // 1. Instantly lock the button so they don't click it twice
+    if (type === 'quiz') setGeneratingQuizId(lectureId);
+    if (type === 'assignment') setGeneratingAssignmentId(lectureId);
+    
     try {
-      // CALL YOUR NEW ENDPOINT
+      // 2. Tell the backend to start the Celery worker
       await apiClient.post("/assessments/generate/", {
         lecture_id: lectureId,
-        type: "quiz",
+        type: type, 
       });
-      console.log("Quiz Generation Started! Check back in a moment.");
-      onRefresh();
+      // 3. Just let it run in the background! The user can refresh later.
+      alert(`${type} generation started! It takes about 1-2 minutes. Refresh the page later to view it.`);
     } catch (error) {
       console.error("Gen failed", error);
-      console.log("Failed to start generation.");
-    } finally {
-      setGeneratingId(null);
-    }
+      alert(`Failed to start ${type} generation.`);
+      if (type === 'quiz') setGeneratingQuizId(null);
+      if (type === 'assignment') setGeneratingAssignmentId(null);
+    } 
   };
 
   return (
@@ -41,23 +52,16 @@ const AssessmentList = ({ lectures, onRefresh }: AssessmentProps) => {
         <thead>
           <tr>
             <th>Lecture Topic</th>
-            <th>Quiz Status</th>
-            <th>Actions</th>
+            <th>Quiz</th>
+            <th>Assignment</th>
           </tr>
         </thead>
         <tbody>
           {ValidatedLectures.map((lecture) => (
             <tr key={lecture.id}>
               <td>{lecture.topic}</td>
-              <td>
-                {lecture.quiz_data ? (
-                  <span className={styles.badgeSuccess}>Generated</span>
-                ) : generatingId === lecture.id ? (
-                  <span className={styles.badgePending}>Processing...</span>
-                ) : (
-                  <span className={styles.badgePending}>None</span>
-                )}
-              </td>
+
+              {/* QUIZ ACTIONS */}
               <td>
                 {lecture.quiz_data ? (
                   <button
@@ -68,13 +72,39 @@ const AssessmentList = ({ lectures, onRefresh }: AssessmentProps) => {
                   </button>
                 ) : (
                   <button
-                    onClick={() => handleGenerateQuiz(lecture.id)}
-                    disabled={generatingId === lecture.id}
+                    onClick={() => handleGenerateAssessment(lecture.id, 'quiz')}
+                    disabled={generatingQuizId === lecture.id}
                     className={styles.generateBtn}
                   >
-                    {generatingId === lecture.id
-                      ? "Generating..."
-                      : "✨ Create Quiz"}
+                    {generatingQuizId === lecture.id ? "Started! (Refresh later)" : "✨ Create Quiz"}
+                  </button>
+                )}
+              </td>
+
+              {/* ASSIGNMENT ACTIONS */}
+              <td>
+                {lecture.assignment_data ? (
+                  <button
+                    className={styles.viewBtn}
+                    style={{ backgroundColor: '#8e44ad', borderColor: '#8e44ad', color: 'white' }}
+                    onClick={() => {
+                      if (!lecture.assignment_id) {
+                          alert("Backend Error: assignment_id is missing from the API response!");
+                      } else {
+                          setEditingAssignmentId(lecture.assignment_id);
+                      }
+                    }}
+                  >
+                    View Assignment
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => handleGenerateAssessment(lecture.id, 'assignment')}
+                    disabled={generatingAssignmentId === lecture.id}
+                    className={styles.generateBtn}
+                    style={{ backgroundColor: '#8e44ad', color: 'white' }} 
+                  >
+                    {generatingAssignmentId === lecture.id ? "Started! (Refresh later)" : "✨ Create Assignment"}
                   </button>
                 )}
               </td>
@@ -82,14 +112,23 @@ const AssessmentList = ({ lectures, onRefresh }: AssessmentProps) => {
           ))}
         </tbody>
       </table>
+      
+      {/* Modals */}
       {editingQuizId && (
         <QuizEditorModal
-          isOpen={true} // <--- FIXED: Always true if the ID exists
+          isOpen={true} 
           quizId={editingQuizId}
           onClose={() => setEditingQuizId(null)}
-          onSaveSuccess={() => {
-            onRefresh(); 
-          }}
+          onSaveSuccess={() => onRefresh()}
+        />
+      )}
+
+      {editingAssignmentId && (
+        <AssignmentEditorModal
+          isOpen={true}
+          assignmentId={editingAssignmentId}
+          onClose={() => setEditingAssignmentId(null)}
+          onSaveSuccess={() => onRefresh()}
         />
       )}
     </div>

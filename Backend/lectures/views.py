@@ -259,6 +259,6 @@ def lecture_validate_action(request, id):
 def course_lecture_list(request, course_id):
     # get list of Lectures that belong to the Current Course that belong to the current user (teacher)
     lecture_list = Lecture.objects.filter(content_source__course__id=course_id).select_related(
-        'content_source', 'content_source__course', 'quiz')
+        'content_source', 'content_source__course', 'quiz','assignment')
     serializer = CourseLectureListItem(lecture_list, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
