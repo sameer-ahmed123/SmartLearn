@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { 
   Plus, FileText, Users, Calendar, 
-  Search, ArrowRight, Filter,
+  Search, ArrowRight, 
   CheckCircle, Clock, AlertCircle, BarChart
 } from "lucide-react"; 
 import styles from "./TeacherAssignment.module.css";
@@ -18,7 +18,6 @@ const TeacherAssignment = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Mock Data for Assignments
         const assignData = [
           { id: 1, title: "Quantum Mechanics Essay", course: "Physics II", submissions: 28, total: 30, status: 'Open', due: "20 Mar" },
           { id: 2, title: "UI Case Study", course: "Design Systems", submissions: 15, total: 45, status: 'Open', due: "25 Mar" },
@@ -40,6 +39,8 @@ const TeacherAssignment = () => {
 
   const filteredData = assignments.filter(a => a.title.toLowerCase().includes(search.toLowerCase()));
 
+  if (loading) return <div style={{padding: '50px', textAlign: 'center'}}>Loading...</div>;
+
   return (
     <div className={styles.pageWrapper}>
       
@@ -48,9 +49,6 @@ const TeacherAssignment = () => {
         <div>
           <h2 className={styles.bannerTitle}>Assignments</h2>
           <p style={{ opacity: 0.9, marginBottom: '20px' }}>Track student submissions and grade their work.</p>
-          <button className={styles.createBtn}>
-            <Plus size={18} /> New Assignment
-          </button>
         </div>
         <FileText size={130} className={styles.bgIcon} />
       </div>
@@ -117,14 +115,14 @@ const TeacherAssignment = () => {
               {item.status}
             </span>
             <h3 className={styles.cardTitle}>{item.title}</h3>
-            <p style={{ fontSize: '0.85rem', color: '#64748b', margin: 0 }}>{item.course}</p>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary, #64748b)', margin: 0 }}>{item.course}</p>
             
             <div style={{ marginTop: '20px', display: 'flex', gap: '15px' }}>
-              <div style={{ fontSize: '0.85rem', color: '#64748b' }}>
+              <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary, #64748b)' }}>
                 <Users size={14} style={{ marginRight: '5px' }} /> 
                 {item.submissions}/{item.total} Done
               </div>
-              <div style={{ fontSize: '0.85rem', color: '#64748b' }}>
+              <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary, #64748b)' }}>
                 <Calendar size={14} style={{ marginRight: '5px' }} /> 
                 Due: {item.due}
               </div>

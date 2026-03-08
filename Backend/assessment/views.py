@@ -1,8 +1,8 @@
 from django.shortcuts import get_object_or_404
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
-from assessment.models import Quiz
-from assessment.serialzers import QuizSerializer
+from assessment.models import Assignment, Quiz
+from assessment.serialzers import AssignmentSerializer, QuizSerializer
 from users.permissions import IsCourseOwner
 from rest_framework.response import Response
 from rest_framework import status
@@ -54,6 +54,27 @@ def quiz_detail_update(request, quiz_id):
     # --- PUT REQUEST (Save Changes) ---
     elif request.method == 'PUT':
         serializer = QuizSerializer(quiz, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+
+@api_view(['GET', 'PUT'])
+@permission_classes([IsAuthenticated])
+def assignment_detail_update(request, assignment_id):
+    assignment = get_object_or_404(Assignment, id=assignment_id)
+
+    # Security check (ensure they own the course)
+    if assignment.lecture.content_source.course.teacher != request.user:
+        return Response({"error": "Permission denied."}, status=403)
+
+    if request.method == 'GET':
+        serializer = AssignmentSerializer(assignment)
+        return Response(serializer.data)
+
+    elif request.method == 'PUT':
+        serializer = AssignmentSerializer(assignment, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)

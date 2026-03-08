@@ -9,6 +9,7 @@ interface CourseData {
     title: string;
     description: string;
     status: 'draft' | 'published' | 'archived';
+    image_url?: string; 
 }
 
 interface CourseManagementHeaderProps {
@@ -52,7 +53,6 @@ const CourseManagementHeader = ({ course, onCourseUpdate }: CourseManagementHead
         }
     };
 
-    // Helper to get status icon
     const getStatusIcon = (status: string) => {
         switch (status) {
             case 'published': return <Globe size={16} />;
@@ -61,10 +61,25 @@ const CourseManagementHeader = ({ course, onCourseUpdate }: CourseManagementHead
         }
     };
 
+    // --- DYNAMIC BACKGROUND LOGIC ---
+    const fallbacks = [
+        "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=1600",
+        "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=1600",
+        "https://images.unsplash.com/photo-1555949963-ff9fe0c870eb?w=1600",
+        "https://images.unsplash.com/photo-1501504905252-473c47e087f8?w=1600",
+        "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=1600"
+    ];
+    const selectedFallback = fallbacks[course.id % fallbacks.length];
+    
+    // Yahan se solid colors hata diye hain, sirf dark overlay hai taake text par koi asar na paray
+    const headerBackground = `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.6)), url(${course.image_url || selectedFallback})`;
+
     return (
         <div className={styles.headerWrapper}>
-            {/* GRADIENT BANNER SECTION */}
-            <div className={styles.banner}>
+            <div 
+                className={styles.banner} 
+                style={{ backgroundImage: headerBackground, backgroundSize: 'cover', backgroundPosition: 'center' }}
+            >
                 <div className={styles.courseIdentity}>
                     <div className={styles.iconCircle}>
                         <BookOpen size={28} color="white" />
@@ -85,7 +100,6 @@ const CourseManagementHeader = ({ course, onCourseUpdate }: CourseManagementHead
                 </div>
             </div>
 
-            {/* CONTROLS SECTION */}
             <div className={styles.controlsBar}>
                 <div className={styles.statusPicker}>
                     <label>Course Status</label>
@@ -110,9 +124,7 @@ const CourseManagementHeader = ({ course, onCourseUpdate }: CourseManagementHead
                         className={styles.deleteBtn}
                         disabled={isDeleting}
                     >
-                        {isDeleting ? (
-                            "Deleting..."
-                        ) : (
+                        {isDeleting ? "Deleting..." : (
                             <>
                                 <Trash2 size={16} />
                                 Delete Course
@@ -121,7 +133,6 @@ const CourseManagementHeader = ({ course, onCourseUpdate }: CourseManagementHead
                     </button>
                 </div>
             </div>
-            
             {isUpdating && <div className={styles.loadingLine}></div>}
         </div>
     );

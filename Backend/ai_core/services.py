@@ -395,6 +395,72 @@ def generate_quiz_json(script, context, num_questions=5):
         raise Exception(f"Failed to generate quiz: {e}")
 
 
-# future functionality
-def generate_assignment_json(script, context, num_questions=10):
-    return
+def generate_assignment_json(script, context,num_questions=5):
+    """
+    Generates a structured practical assignment based on the lecture script.
+    """
+    model_name = "gemini-2.5-flash"
+
+    system_instructions = (
+        "You are an expert university professor. Your task is to generate a practical, "
+        "project-based assignment based strictly on the provided Lecture Script and Context.\n"
+        "- The assignment should test application of knowledge, not just memorization.\n"
+        f"- Define exactly {num_questions} actionable tasks for the student.\n"
+        "- Provide a clear grading rubric mapped to these tasks.\n"
+        "- Decide if the submission should be 'softcopy' (file upload/code) or 'hardcopy' (presentation/physical)."
+    )
+
+    user_prompt = (
+        f"CONTEXT SUMMARY:\n{context}\n\n"
+        f"FULL SCRIPT:\n{script}\n\n"
+        f"TASK: Generate a practical assignment JSON."
+    )
+
+    contents = [system_instructions, user_prompt]
+
+    try:
+        response = client.models.generate_content(
+            model=model_name,
+            contents=contents,
+            config={
+                "response_mime_type": "application/json",
+                "response_schema": {
+                    "type": "object",
+                    "properties": {
+                        "title": {
+                            "type": "string",
+                            "description": "A professional title for the assignment"
+                        },
+                        "submission_type": {
+                            "type": "string",
+                            "description": "Either 'softcopy' or 'hardcopy'"
+                        },
+                        "tasks": {
+                            "type": "array",
+                            "items": {"type": "string"},
+                            "description": "List of 3-4 specific tasks the student must complete"
+                        },
+                        "rubric": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "criterion": {"type": "string", "description": "What is being graded"},
+                                    "points": {"type": "integer", "description": "Points out of 100 total for this criterion"}
+                                }
+                            }
+                        }
+                    },
+                    "required": ["title", "submission_type", "tasks", "rubric"]
+                }
+            }
+        )
+
+        import json
+        data = json.loads(response.text)
+        return data
+
+    except Exception as e:
+        logger.error(f"Assignment Generation LLM Error: {e}")
+        raise Exception(f"Failed to generate assignment: {e}")
+

@@ -21,7 +21,6 @@ const QuizEditorModal = ({
   const [saving, setSaving] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
 
-  // 1. Fetch Data when modal opens
   useEffect(() => {
     if (isOpen && quizId) {
       setLoading(true);
@@ -39,11 +38,9 @@ const QuizEditorModal = ({
     }
   }, [isOpen, quizId, onClose]);
 
-  // 2. Handle Text Changes (Question or Option)
   const handleQuestionChange = (
     index: number,
     field: string,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     value: any,
     optionIndex?: number
   ) => {
@@ -58,7 +55,6 @@ const QuizEditorModal = ({
     setQuestions(updated);
   };
 
-  // 3. Save Changes
   const handleSave = async () => {
     if (!quizId) return;
     setSaving(true);
@@ -86,7 +82,6 @@ const QuizEditorModal = ({
   return (
     <div className={styles.overlay}>
       <div className={styles.modal}>
-        {/* Header */}
         <div className={styles.header}>
           <h2>Edit Quiz Content</h2>
           <button className={styles.closeBtn} onClick={onClose}>
@@ -97,7 +92,6 @@ const QuizEditorModal = ({
           <div className={styles.successMessage}>{successMessage}</div>
         )}
 
-        {/* Content */}
         <div className={styles.content}>
           {loading ? (
             <p>Loading questions...</p>
@@ -106,7 +100,6 @@ const QuizEditorModal = ({
               <div key={qIndex} className={styles.questionCard}>
                 <div className={styles.cardHeader}>Question {qIndex + 1}</div>
 
-                {/* Question Text */}
                 <div className={styles.inputGroup}>
                   <label className={styles.label}>Question Text</label>
                   <textarea
@@ -118,7 +111,6 @@ const QuizEditorModal = ({
                   />
                 </div>
 
-                {/* Options */}
                 <label className={styles.label}>
                   Options (Select the correct answer)
                 </label>
@@ -158,7 +150,6 @@ const QuizEditorModal = ({
           )}
         </div>
 
-        {/* Footer */}
         <div className={styles.footer}>
           <button className={styles.cancelBtn} onClick={onClose}>
             Cancel

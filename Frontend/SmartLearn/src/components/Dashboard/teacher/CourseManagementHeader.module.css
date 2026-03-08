@@ -1,11 +1,10 @@
 .headerWrapper {
-    background: white;
+    background: var(--card, white);
     border-radius: 24px;
     overflow: hidden;
     box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
     margin-bottom: 30px;
-    border: 1px solid #f1f5f9;
-    transition: background 0.3s ease;
+    border: 1px solid var(--border, #f1f5f9);
 }
 
 :global(.dark) .headerWrapper {
@@ -13,14 +12,14 @@
     border-color: #334155;
 }
 
-/* BANNER WITH GRADIENT */
 .banner {
-    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-    padding: 35px;
+    /* Solid background color ya gradient yahan se hata diya gaya hai */
+    padding: 45px 35px; /* Thoda padding badhaya hai taake image aur khul kar dikhe */
     display: flex;
     justify-content: space-between;
     align-items: center;
     color: white;
+    position: relative;
 }
 
 .courseIdentity {
@@ -34,24 +33,24 @@
     background: rgba(255, 255, 255, 0.2);
     padding: 15px;
     border-radius: 18px;
-    backdrop-filter: blur(10px);
+    backdrop-filter: blur(8px);
 }
 
 .textDetails h1 {
     margin: 0;
-    font-size: 1.8rem;
+    font-size: 2rem; /* Thoda bara kiya hai prominent look ke liye */
     font-weight: 800;
-    letter-spacing: -0.5px;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3); /* Text ko image ke upar uthane ke liye shadow */
 }
 
 .description {
     margin: 5px 0 0 0;
-    opacity: 0.85;
-    font-size: 0.95rem;
-    max-width: 600px;
+    opacity: 0.95;
+    font-size: 1rem;
+    max-width: 650px;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.3);
 }
 
-/* STATUS BADGE */
 .statusBadge {
     display: flex;
     align-items: center;
@@ -60,26 +59,21 @@
     border-radius: 100px;
     font-size: 0.75rem;
     font-weight: 700;
-    background: rgba(255, 255, 255, 0.15);
+    background: rgba(0, 0, 0, 0.3); /* Dark mode badge for image contrast */
     backdrop-filter: blur(5px);
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-.published { color: #ccfbf1; border-color: #5eead4; }
-.draft { color: #fef3c7; border-color: #fcd34d; }
-.archived { color: #f1f5f9; border-color: #cbd5e1; }
+.published { color: #5eead4; border-color: #5eead4; }
+.draft { color: #fcd34d; border-color: #fcd34d; }
+.archived { color: #cbd5e1; border-color: #cbd5e1; }
 
-/* CONTROLS BAR */
 .controlsBar {
     padding: 20px 35px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: white;
-}
-
-:global(.dark) .controlsBar {
-    background: #1e293b;
+    background: var(--card, white);
 }
 
 .statusPicker {
@@ -91,7 +85,7 @@
 .statusPicker label {
     font-size: 0.85rem;
     font-weight: 700;
-    color: #64748b;
+    color: var(--muted-foreground, #64748b);
     text-transform: uppercase;
 }
 
@@ -104,26 +98,18 @@
     width: 100%;
     appearance: none;
     padding: 10px 15px;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
+    background: var(--muted, #f8fafc);
+    border: 1px solid var(--border, #e2e8f0);
     border-radius: 12px;
     font-weight: 600;
     font-size: 0.9rem;
-    color: #1e293b;
+    color: var(--foreground, #1e293b);
     cursor: pointer;
-    transition: 0.2s;
 }
 
 :global(.dark) .styledSelect {
     background: #0f172a;
-    border-color: #334155;
     color: white;
-}
-
-.styledSelect:focus {
-    outline: none;
-    border-color: #6366f1;
-    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
 }
 
 .selectArrow {
@@ -135,7 +121,6 @@
     color: #94a3b8;
 }
 
-/* DELETE BUTTON */
 .deleteBtn {
     display: flex;
     align-items: center;
@@ -146,7 +131,6 @@
     padding: 10px 20px;
     border-radius: 12px;
     font-weight: 700;
-    font-size: 0.85rem;
     cursor: pointer;
     transition: 0.2s;
 }
@@ -156,12 +140,6 @@
     color: white;
 }
 
-.deleteBtn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-/* LOADING LINE */
 .loadingLine {
     height: 3px;
     width: 100%;

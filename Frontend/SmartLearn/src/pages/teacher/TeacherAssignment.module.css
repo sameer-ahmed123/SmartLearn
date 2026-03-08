@@ -1,12 +1,7 @@
 .pageWrapper {
-    background-color: #f8fafc;
+    /* Background remove kar diya taake dashboard background ke sath match kare */
     min-height: 100vh;
     padding: 30px;
-    transition: background-color 0.3s ease;
-}
-
-:global(.dark) .pageWrapper {
-    background-color: #0f172a;
 }
 
 /* GRADIENT BANNER */
@@ -41,7 +36,6 @@
     align-items: center;
     gap: 8px;
     cursor: pointer;
-    transition: 0.2s;
 }
 
 .bgIcon {
@@ -52,7 +46,7 @@
     transform: rotate(-10deg);
 }
 
-/* STATS BOXES (MATCHING YOUR DASHBOARD) */
+/* STATS BOXES */
 .statsRow {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -61,51 +55,38 @@
 }
 
 .statCardBox {
-    background: white;
+    background: var(--card, white);
     padding: 20px;
     border-radius: 16px;
     display: flex;
     align-items: center;
     gap: 15px;
-    border: 1px solid #eef2f6;
-    transition: 0.3s;
-}
-
-:global(.dark) .statCardBox {
-    background-color: #1e293b;
-    border-color: #334155;
+    border: 1px solid var(--border, #eef2f6);
 }
 
 .statTextContainer p {
     margin: 0;
     font-size: 0.7rem;
     font-weight: 700;
-    color: #64748b;
+    color: #94a3b8;
     text-transform: uppercase;
 }
 
 .statTextContainer h3 {
     margin: 2px 0 0 0;
     font-size: 1.3rem;
-    color: #1e293b;
+    color: var(--foreground, #1e293b);
 }
-
-:global(.dark) .statTextContainer h3 { color: white; }
 
 /* SEARCH INPUT */
 .searchInput {
     width: 100%;
     padding: 12px 12px 12px 45px;
     border-radius: 12px;
-    border: 1px solid #e2e8f0;
-    background: white;
+    border: 1px solid var(--border, #e2e8f0);
+    background: var(--card, white);
+    color: var(--foreground);
     outline: none;
-}
-
-:global(.dark) .searchInput {
-    background: #1e293b;
-    border-color: #334155;
-    color: white;
 }
 
 /* CARDS GRID */
@@ -116,24 +97,16 @@
 }
 
 .assignCard {
-    background: white;
+    background: var(--card, white);
     padding: 24px;
     border-radius: 20px;
-    border: 1px solid #e2e8f0;
-    transition: 0.3s;
-}
-
-:global(.dark) .assignCard {
-    background: #1e293b;
-    border-color: #334155;
+    border: 1px solid var(--border, #e2e8f0);
 }
 
 .cardTitle {
-    color: #1e293b;
+    color: var(--foreground, #1e293b);
     margin: 10px 0 5px 0;
 }
-
-:global(.dark) .cardTitle { color: white; }
 
 .statusBadge {
     font-size: 0.75rem;
@@ -148,10 +121,8 @@
 .cardFooter {
     margin-top: 20px;
     padding-top: 15px;
-    border-top: 1px solid #f1f5f9;
+    border-top: 1px solid var(--border, #f1f5f9);
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
-
-:global(.dark) .cardFooter { border-color: #334155; }

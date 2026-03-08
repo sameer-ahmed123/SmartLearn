@@ -1,12 +1,12 @@
 import type { LectureDetails } from "@/types/Lectures/Types";
 import styles from "./LectureReviewPage.module.css";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import apiClient from "@/api/apiClient";
 import ValidationActionPanel from "@/components/Dashboard/teacher/ValidationActionPanel";
 import { 
   Video, FileText, Info, ArrowLeft, Clock, 
-  CheckCircle, AlertCircle, Bot, MessageSquare 
+  CheckCircle, Bot, MessageSquare 
 } from "lucide-react";
 
 const LectureReviewPage = () => {
@@ -44,7 +44,6 @@ const LectureReviewPage = () => {
 
   return (
     <div className={styles.pageWrapper}>
-      {/* Top Title Section - Image 1 Style */}
       <div className={styles.header}>
         <button onClick={() => navigate(-1)} className={styles.backBtn}>
           <ArrowLeft size={20} />
@@ -61,7 +60,6 @@ const LectureReviewPage = () => {
       </div>
 
       <div className={styles.reviewGrid}>
-        {/* Left: Video & Summary */}
         <div className={styles.contentColumn}>
           <div className={styles.sectionCard}>
             <div className={styles.sectionHeader}>
@@ -86,7 +84,6 @@ const LectureReviewPage = () => {
           </div>
         </div>
 
-        {/* Right: Metadata Card - Image 1 Style */}
         <div className={styles.actionColumn}>
           <div className={styles.metadataCard}>
             <div className={styles.metaHeader}>

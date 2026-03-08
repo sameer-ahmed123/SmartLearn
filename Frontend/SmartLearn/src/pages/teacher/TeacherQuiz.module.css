@@ -1,13 +1,7 @@
 .pageWrapper {
-    background-color: #f8fafc;
+    /* Background remove kiya taake double dark shade na aye */
     min-height: 100vh;
     padding: 30px;
-    transition: background-color 0.3s ease;
-}
-
-/* DARK MODE OVERRIDES */
-:global(.dark) .pageWrapper {
-    background-color: #0f172a;
 }
 
 /* GRADIENT BANNER */
@@ -48,11 +42,6 @@
     align-items: center;
     gap: 8px;
     cursor: pointer;
-    transition: transform 0.2s;
-}
-
-.createBtn:hover {
-    transform: translateY(-2px);
 }
 
 .bgIcon {
@@ -72,19 +61,13 @@
 }
 
 .statCardBox {
-    background: white;
+    background: var(--card, white);
     padding: 20px;
     border-radius: 16px;
     display: flex;
     align-items: center;
     gap: 15px;
-    border: 1px solid #eef2f6;
-    transition: all 0.3s ease;
-}
-
-:global(.dark) .statCardBox {
-    background-color: #1e293b;
-    border-color: #334155;
+    border: 1px solid var(--border, #eef2f6);
 }
 
 .statIconContainer {
@@ -100,7 +83,7 @@
     margin: 0;
     font-size: 0.7rem;
     font-weight: 700;
-    color: #64748b;
+    color: #94a3b8;
     text-transform: uppercase;
 }
 
@@ -108,11 +91,7 @@
     margin: 2px 0 0 0;
     font-size: 1.3rem;
     font-weight: 700;
-    color: #1e293b;
-}
-
-:global(.dark) .statTextContainer h3 {
-    color: #f8fafc;
+    color: var(--foreground, #1e293b);
 }
 
 /* SEARCH & FILTERS */
@@ -126,16 +105,22 @@
     width: 100%;
     padding: 12px 12px 12px 45px;
     border-radius: 12px;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--border, #e2e8f0);
     outline: none;
-    background: white;
-    transition: 0.3s;
+    background: var(--card, white);
+    color: var(--foreground);
 }
 
-:global(.dark) .searchInput {
-    background: #1e293b;
-    border-color: #334155;
-    color: white;
+.filterBtn {
+    background: transparent;
+    border: 1px solid var(--border, #e2e8f0);
+    padding: 0 20px;
+    border-radius: 12px;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
 }
 
 /* QUIZ GRID & CARDS */
@@ -146,25 +131,23 @@
 }
 
 .quizCard {
-    background: white;
+    background: var(--card, white);
     padding: 24px;
     border-radius: 20px;
-    border: 1px solid #e2e8f0;
-    transition: all 0.3s ease;
-}
-
-:global(.dark) .quizCard {
-    background: #1e293b;
-    border-color: #334155;
+    border: 1px solid var(--border, #e2e8f0);
 }
 
 .quizInfo h3 {
     margin: 0;
     font-size: 1.15rem;
-    color: #1e293b;
+    color: var(--foreground, #1e293b);
 }
 
-:global(.dark) .quizInfo h3 { color: #f8fafc; }
+.quizInfo p {
+    font-size: 0.85rem;
+    color: #64748b;
+    margin: 5px 0 0 0;
+}
 
 .statusBadge {
     font-size: 0.75rem;
@@ -178,16 +161,14 @@
 .active { background: #ecfdf5; color: #10b981; }
 .draft { background: #fef3c7; color: #f59e0b; }
 
-.statsGrid {
+.quizStatsGrid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 15px;
+    grid-template-columns: 1fr;
+    gap: 10px;
     margin-top: 20px;
     padding-top: 15px;
-    border-top: 1px solid #f1f5f9;
+    border-top: 1px solid var(--border, #f1f5f9);
 }
-
-:global(.dark) .statsGrid { border-color: #334155; }
 
 .statItem {
     display: flex;
@@ -197,11 +178,19 @@
     color: #64748b;
 }
 
+.viewResults {
+    margin-top: 20px;
+    color: #6366f1;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
 .sectionTitle {
     margin: 50px 0 20px 0;
     font-size: 1.5rem;
     font-weight: 700;
-    color: #1e293b;
+    color: var(--foreground, #1e293b);
 }
-
-:global(.dark) .sectionTitle { color: #f8fafc; }

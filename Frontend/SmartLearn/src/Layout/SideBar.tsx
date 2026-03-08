@@ -23,9 +23,9 @@ const Sidebar = ({ userRole, isCollapsed, toggleSidebar }: SidebarProps) => {
     { name: "Lecture", path: "/teacher/lecture", icon: <BookOpen size={20}/> },
     { name: "Assignments", path: "/teacher/assignments", icon: <PenTool size={20}/> },
     { name: "Quiz", path: "/teacher/quiz", icon: <ClipboardList size={20}/> },
-    { name: "Gradebook", path: "/grades", icon: <GraduationCap size={20}/> },
-    { name: "Analytics", path: "/analytics", icon: <BarChart3 size={20}/> },
-    { name: "Settings", path: "/settings", icon: <Settings size={20}/> },
+    { name: "Gradebook", path: "/teacher/grades", icon: <GraduationCap size={20}/> },
+    { name: "Analytics", path: "/teacher/analytics", icon: <BarChart3 size={20}/> },
+    { name: "Settings", path: "/teacher/settings", icon: <Settings size={20}/> },
   ];
 
   const studentLinks = [
@@ -33,10 +33,10 @@ const Sidebar = ({ userRole, isCollapsed, toggleSidebar }: SidebarProps) => {
     { name: "Lecture", path: "/student/lecture", icon: <BookOpen size={20}/> },
     { name: "Assignments", path: "/student/assignments", icon: <PenTool size={20}/> },
     { name: "Quiz", path: "/student/quiz", icon: <ClipboardList size={20}/> },
-    { name: "Gradebook", path: "/grades", icon: <GraduationCap size={20}/> },
-    { name: "Analytics", path: "/analytics", icon: <BarChart3 size={20}/> },
-    { name: "Virtual Room", path: "/virtualroom", icon: <Video size={20}/> },
-    { name: "Settings", path: "/settings", icon: <Settings size={20}/> },
+    { name: "Gradebook", path: "/student/grades", icon: <GraduationCap size={20}/> },
+    { name: "Analytics", path: "/student/analytics", icon: <BarChart3 size={20}/> },
+    { name: "Virtual Room", path: "/student/virtualroom", icon: <Video size={20}/> },
+    { name: "Settings", path: "/student/settings", icon: <Settings size={20}/> },
   ];
 
   // // Role base selection (Aapka original logic)
@@ -48,9 +48,6 @@ const Sidebar = ({ userRole, isCollapsed, toggleSidebar }: SidebarProps) => {
       {/* // --- HEADER: Logo aur Toggle Button --- */}
       <div className={styles.header}>
         {!isCollapsed && <h2 className={styles.logo}>SmartLearn</h2>}
-        <button onClick={toggleSidebar} className={styles.toggleBtn}>
-          {isCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
-        </button>
       </div>
 
       {/* // --- NAVIGATION: Role base links --- */}

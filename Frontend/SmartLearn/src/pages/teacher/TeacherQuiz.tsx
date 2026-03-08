@@ -51,9 +51,6 @@ const TeacherQuiz = () => {
         <div className={styles.bannerLeft}>
           <h2 className={styles.bannerTitle}>Quiz Assessments</h2>
           <p className={styles.bannerSub}>Create and manage your quizzes to track student progress.</p>
-          <button className={styles.createBtn}>
-            <Plus size={18} /> Create New Quiz
-          </button>
         </div>
         <ClipboardList size={140} className={styles.bgIcon} />
       </div>
@@ -112,7 +109,7 @@ const TeacherQuiz = () => {
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <button style={{ background: 'transparent', border: '1px solid #e2e8f0', padding: '0 20px', borderRadius: '12px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <button className={styles.filterBtn}>
           <Filter size={18} /> Filters
         </button>
       </div>
@@ -128,12 +125,12 @@ const TeacherQuiz = () => {
               <h3>{quiz.title}</h3>
               <p>{quiz.course}</p>
             </div>
-            <div className={styles.statsGrid}>
+            <div className={styles.quizStatsGrid}>
               <div className={styles.statItem}><HelpCircle size={16} /><span>Qs: <b>{quiz.questions}</b></span></div>
               <div className={styles.statItem}><Users size={16} /><span>Atms: <b>{quiz.attempts}</b></span></div>
               <div className={styles.statItem}><Calendar size={16} /><span>Due: <b>{quiz.due}</b></span></div>
             </div>
-            <div className={styles.viewResults} style={{ marginTop: '20px', color: '#6366f1', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}>
+            <div className={styles.viewResults}>
               View Results <ArrowRight size={14} />
             </div>
           </div>

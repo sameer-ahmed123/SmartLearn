@@ -36,9 +36,20 @@ class QuizSubmission(models.Model):
 
 
 class Assignment(models.Model):
-    lecture = models.ForeignKey('lectures.Lecture', on_delete=models.CASCADE)
-    description = models.TextField()
-    deadline = models.DateTimeField()
+    status_choices = (
+        ('generating', 'Generating'),
+        ('ready', 'Ready'),
+        ('failed', 'Failed')
+    )
+    #  OneToOneField to match Quiz logic (1 AI assignment per lecture)
+    lecture = models.OneToOneField('lectures.Lecture', on_delete=models.CASCADE)
+    
+    #Structured data from Gemini
+    assignment_data = models.JSONField(null=True, blank=True)
+    status = models.CharField(max_length=100, default='generating', choices=status_choices)
+    
+    description = models.TextField(blank=True, null=True) 
+    deadline = models.DateTimeField(null=True, blank=True) 
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

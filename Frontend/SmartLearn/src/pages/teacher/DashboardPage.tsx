@@ -10,6 +10,7 @@ import {
   AreaChart, Area 
 } from 'recharts';
 import apiClient from "@/api/apiClient";
+import { useAuthStore } from "@/store/useAuthStore";
 
 // Mock Data
 const assignmentRecord = [
@@ -43,7 +44,8 @@ const TeacherDashboardPage = () => {
   const [loading, setLoading] = useState(true);
   const [viewDate, setViewDate] = useState(new Date());
 
-  const avatarUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=Teacher&backgroundColor=b6e3f4`;
+  const user = useAuthStore((state) => state.user);
+  const displayName = user?.full_name || "User";
 
   const handlePrevMonth = () => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() - 1, 1));
   const handleNextMonth = () => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1));
@@ -66,10 +68,10 @@ const TeacherDashboardPage = () => {
 
   const getLectureStatsData = () => {
     return [
-      { name: 'Courses', value: metrics?.total_courses ?? 0, fill: '#f59e0b' },
-      { name: 'Lectures', value: metrics?.total_lectures_generated ?? 0, fill: '#4f46e5' },
-      { name: 'Pending', value: metrics?.pending_validation_count ?? 0, fill: '#ef4444' },
-      { name: 'Validated', value: metrics?.total_validated_lectures ?? 0, fill: '#10b981' },
+      { name: 'Total Courses', count: metrics?.total_courses ?? 0, fill: '#f59e0b' },
+      { name: 'Generated', count: metrics?.total_lectures_generated ?? 0, fill: '#4f46e5' },
+      { name: 'Pending', count: metrics?.pending_validation_count ?? 0, fill: '#ef4444' },
+      { name: 'Validated', count: metrics?.total_validated_lectures ?? 0, fill: '#10b981' },
     ];
   };
 
@@ -100,7 +102,7 @@ const TeacherDashboardPage = () => {
         {/* Welcome Banner */}
         <div className={styles.welcomeBanner}>
           <div className={styles.bannerLeft}>
-              <h2 className={styles.bannerTitle}>Welcome back, Prof. <span className={styles.highlight}>Johen!</span></h2>
+              <h2 className={styles.bannerTitle}>Welcome back, Prof. <span className={styles.highlight}>{displayName}!</span></h2>
               <p className={styles.bannerSub}>
                 Your students completed <span className={styles.boldText}>80%</span> of the tasks. 
                 Progress is <span className={styles.successText}>very good!</span>
@@ -153,17 +155,21 @@ const TeacherDashboardPage = () => {
         </div>
 
         {/* ROW 2: Lecture Progress & Calendar */}
-        <div className={styles.twoColumnGrid}>
+        <div className={styles.unevenGrid}>
           <div className={styles.card}>
             <h3 className={styles.cardTitle}>Lecture Progress Analysis</h3>
-            <div style={{ height: '250px', marginTop: '20px' }}>
+            <div style={{ height: '250px', marginTop: '10px' }}>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={getLectureStatsData()}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eee" />
                   <XAxis dataKey="name" fontSize={11} axisLine={false} tickLine={false} />
                   <YAxis axisLine={false} tickLine={false} />
-                  <Tooltip cursor={{fill: '#f1f5f9'}} contentStyle={{borderRadius: '8px', border:'none'}} />
-                  <Bar dataKey="value" radius={[4, 4, 0, 0]} barSize={50} />
+                  <Tooltip 
+                    cursor={{fill: '#f1f5f9'}} 
+                    contentStyle={{borderRadius: '8px', border:'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)'}} 
+                  />
+                  {/* Legend removed here to hide "count" */}
+                  <Bar dataKey="count" radius={[6, 6, 0, 0]} barSize={60} animationDuration={1500} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -209,9 +215,8 @@ const TeacherDashboardPage = () => {
            </div>
         </div>
 
-        {/* ROW 4: Weekly Hours + Student Progress (Side by Side) */}
+        {/* ROW 4: Weekly Hours + Student Progress */}
         <div className={styles.twoColumnGrid} style={{marginTop: '24px'}}>
-           {/* Weekly Active Hours */}
            <div className={styles.card}>
               <h3 className={styles.cardTitle}>Weekly Active Hours</h3>
               <div style={{ height: '250px' }}>
@@ -226,7 +231,6 @@ const TeacherDashboardPage = () => {
               </div>
            </div>
 
-           {/* Student Progress (Placed Next to Hours) */}
            <div className={styles.card}>
             <h3 className={styles.cardTitle}>Students Progress</h3>
             <div className={styles.studentList}>
