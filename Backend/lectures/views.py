@@ -2,10 +2,10 @@ from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes  
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404  
-from .models import Course, ContentSource, Lecture
+from .models import Course, ContentSource, Lecture, Enrollment # Enrollment add kiya
 from .serializers import (
     ContentSourceSerializer, ContentSourceCreateSerializer, CourseLectureListItem,
-    CourseSerializer, CourseCreateSerializer,
+    CourseSerializer, CourseCreateSerializer, EnrollmentSerializer, # EnrollmentSerializer add kiya
     LectureDetailSerializer, LectureQuerySerializer, LectureValidationActionSerializer
 )
 from users.permissions import CanViewLecture, IsCourseOwner, IsTeacher
@@ -14,110 +14,122 @@ from .tasks import generate_lecture_from_source
 
 
 # -----------------------------------------------------------
-# NEW FBV 1: COURSE - GET (List) and POST (Create)
+# NEW FBV 1: COURSE - GET (List) and POST (Create/Enroll)
 # -----------------------------------------------------------
 @api_view(['GET', 'POST'])
-@permission_classes([IsAuthenticated, IsTeacher])
+@permission_classes([IsAuthenticated]) # Relaxed to allow Students to enter
 def course_list_create(request):
     """
-    Handles listing all courses created by the teacher and creation of a new course.
+    Handles listing all courses and either creation (Teacher) or enrollment (Student).
     """
     user = request.user
 
     # --- GET (List) ---
     if request.method == 'GET':
-        # Filter: Only courses owned by the logged-in teacher
-        queryset = Course.objects.filter(teacher=user).order_by('-created_at')
-        # Optimize with prefetch/select_related for better performance
-        # (CourseSerializer uses related object counts)
-        serializer = CourseSerializer(queryset, many=True)
+        if user.role == "teacher":
+            # Teacher sees their own courses
+            queryset = Course.objects.filter(teacher=user).order_by('-created_at')
+        else:
+            # Student sees only published courses
+            queryset = Course.objects.filter(status='published').order_by('-created_at')
+            
+        serializer = CourseSerializer(queryset, many=True, context={'request': request})
         return Response(serializer.data)
 
-    # --- POST (Create) ---
+    # --- POST (Create or Enroll) ---
     elif request.method == 'POST':
-        serializer = CourseCreateSerializer(data=request.data)
-        if serializer.is_valid():
-            # Automatically assign the logged-in user as the 'teacher'
-            instance = serializer.save(teacher=user)
-            return Response(CourseSerializer(instance).data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        # logic for STUDENT ENROLLMENT
+        if user.role == "student" and 'course' in request.data:
+            serializer = EnrollmentSerializer(data=request.data, context={'request': request})
+            if serializer.is_valid():
+                serializer.save(student=user)
+                return Response({"detail": "Successfully enrolled!"}, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        # logic for TEACHER COURSE CREATION
+        elif user.role == "teacher":
+            serializer = CourseCreateSerializer(data=request.data)
+            if serializer.is_valid():
+                instance = serializer.save(teacher=user)
+                # Returns full CourseSerializer data as before for frontend
+                return Response(CourseSerializer(instance, context={'request': request}).data, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+        return Response({"detail": "Not authorized for this action."}, status=status.HTTP_403_FORBIDDEN)
 
 
 # -----------------------------------------------------------
 # NEW FBV 2: COURSE - GET (Detail), PUT/PATCH (Update), DELETE (Destroy)
 # -----------------------------------------------------------
 @api_view(['GET', 'PUT', 'PATCH', 'DELETE'])
-@permission_classes([IsAuthenticated, IsTeacher])
+@permission_classes([IsAuthenticated]) # Teacher only permission hata di taake student GET kar sakay
 def course_detail_actions(request, pk):
     """
     Handles detail, update, and deletion of a specific Course.
     """
-    # Check ownership and retrieve the object
-    course = get_object_or_404(
-        Course,
-        pk=pk,
-        teacher=request.user  # Ensures the course belongs to the current user
-    )
+    user = request.user
+    
+    # Check if course exists first
+    course = get_object_or_404(Course, pk=pk)
 
     # --- GET (Detail) ---
     if request.method == 'GET':
-        serializer = CourseSerializer(course)
-        return Response(serializer.data)
+        # Permission Logic:
+        # 1. Agar Teacher hai, to uska apna course hona chahiye
+        # 2. Agar Student hai, to uska ENROLLED hona zaroori hai
+        if user.role == "teacher" and course.teacher == user:
+            serializer = CourseSerializer(course, context={'request': request})
+            return Response(serializer.data)
+        
+        elif user.role == "student":
+            is_enrolled = Enrollment.objects.filter(course=course, student=user).exists()
+            if is_enrolled:
+                serializer = CourseSerializer(course, context={'request': request})
+                return Response(serializer.data)
+        
+        return Response({"detail": "You do not have permission to view this course detail."}, status=status.HTTP_403_FORBIDDEN)
 
-    # --- PUT / PATCH (Update) ---
-    elif request.method in ['PUT', 'PATCH']:
-        # Use the CourseCreateSerializer for updates (allows changing title/description/status)
+    # --- PUT/PATCH/DELETE (Sirf Teacher ke liye) ---
+    if user.role != "teacher" or course.teacher != user:
+        return Response({"detail": "Only the course owner can modify or delete this course."}, status=status.HTTP_403_FORBIDDEN)
+
+    if request.method in ['PUT', 'PATCH']:
         serializer = CourseSerializer(
             course,
             data=request.data,
-            partial=(request.method == 'PATCH')
+            partial=(request.method == 'PATCH'),
+            context={'request': request}
         )
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    # --- DELETE (Destroy) ---
     elif request.method == 'DELETE':
         course.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-# lectures/views.py (Function-Based Views for ContentSource)
-
 # -----------------------------------------------------------
-# FBV 3: GET (List) and POST (Create)
+# FBV 3: ContentSource List/Create
 # -----------------------------------------------------------
 @api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated, IsTeacher])
 def content_source_list_create(request):
-    """
-    Handles listing of all ContentSources belonging to the teacher 
-    and the creation (upload) of a new ContentSource.
-    """
-
     user = request.user
 
-    # --- GET (List) ---
     if request.method == 'GET':
-        # Filter queryset: Only show content sources related to the logged-in teacher's courses
         queryset = ContentSource.objects.filter(
             course__teacher=user
         ).order_by('-created_at')
-
         serializer = ContentSourceSerializer(queryset, many=True)
         return Response(serializer.data)
 
-    # --- POST (Create/Upload) ---
     elif request.method == 'POST':
-        # Use the Create Serializer which handles file upload
         serializer = ContentSourceCreateSerializer(data=request.data)
-
         if serializer.is_valid():
-            # 1. Permission Check: Ensure the specified Course belongs to the teacher
             course_id = serializer.validated_data.get('course').id
             try:
-                # We fetch the course instance to ensure ownership
                 course = Course.objects.get(id=course_id, teacher=user)
             except Course.DoesNotExist:
                 return Response(
@@ -125,14 +137,9 @@ def content_source_list_create(request):
                     status=status.HTTP_403_FORBIDDEN
                 )
 
-            # 2. Save the ContentSource, automatically setting the uploader
             instance = serializer.save(uploaded_by=user)
-
-            # 3. Trigger the AI processing function here
-            # the delay hands over the function to Celery
             generate_lecture_from_source.delay(instance.id)
 
-            # return 202 Accepted Status to show ==> content accepted and lecture generation started in background
             return Response(
                 {
                     "id": instance.id,
@@ -140,39 +147,28 @@ def content_source_list_create(request):
                     "message": "Content uploaded successfully. AI lecture generation is starting in the background.",
                     "status_check_url": f"/api/v1/lectures/content-sources/{instance.id}/"
                 },
-                status=status.HTTP_202_ACCEPTED  # Key Change: 202 Accepted
+                status=status.HTTP_202_ACCEPTED
             )
-
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-# -----------------------------------------------------------
-# FBV 4: GET (Detail), PUT/PATCH (Update), DELETE (Destroy)
-# -----------------------------------------------------------
 
-
+# -----------------------------------------------------------
+# FBV 4: ContentSource Detail Actions
+# -----------------------------------------------------------
 @api_view(['GET', 'PUT', 'PATCH', 'DELETE'])
 @permission_classes([IsAuthenticated, IsTeacher])
 def content_source_detail_actions(request, pk):
-    """
-    Handles detail, update, and deletion of a specific ContentSource.
-    """
-
-    # Check ownership and retrieve the object
     content_source = get_object_or_404(
         ContentSource,
         pk=pk,
-        # Ensures the content source belongs to the user's course
         course__teacher=request.user
     )
 
-    # --- GET (Detail) ---
     if request.method == 'GET':
         serializer = ContentSourceSerializer(content_source)
         return Response(serializer.data)
 
-    # --- PUT / PATCH (Update) ---
     elif request.method in ['PUT', 'PATCH']:
-        # Use the CreateSerializer for update to allow changing prompt/file
         serializer = ContentSourceCreateSerializer(
             content_source,
             data=request.data,
@@ -183,7 +179,6 @@ def content_source_detail_actions(request, pk):
             return Response(ContentSourceSerializer(content_source).data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    # --- DELETE (Destroy) ---
     elif request.method == 'DELETE':
         content_source.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
@@ -192,10 +187,6 @@ def content_source_detail_actions(request, pk):
 @api_view(["GET"])
 @permission_classes([IsAuthenticated, IsTeacher])
 def lecture_validation_queue(request):
-    """
-    Retrieve a list of lectures that require Teachers review,
-    ONLY for courses that are currently 'published'.
-    """
     user = request.user
     queryset = Lecture.objects.filter(
         generated_by=user,
@@ -213,16 +204,12 @@ def lecture_validation_queue(request):
 @api_view(["GET"])
 @permission_classes([IsAuthenticated, CanViewLecture])
 def lecture_detail(request, id):
-    """
-    GET FULL DETAILS OF A LECTURE
-    """
     lecture = get_object_or_404(
         Lecture.objects.select_related(
             'content_source',
             'content_source__course'
         ),
         id=id)
-
     serializer = LectureDetailSerializer(lecture)
     return Response(serializer.data)
 
@@ -230,10 +217,6 @@ def lecture_detail(request, id):
 @api_view(["PATCH"])
 @permission_classes([IsAuthenticated, IsCourseOwner])
 def lecture_validate_action(request, id):
-    """
-    Handle the validation and rejection for Lectures
-    """
-
     lecture = get_object_or_404(Lecture, id=id)
     if lecture.validation_status != 'pending':
         return Response(
@@ -246,18 +229,15 @@ def lecture_validate_action(request, id):
         data=request.data,
         partial=True
     )
-
     if serializer.is_valid():
         serializer.save(validated_by=request.user)
         return Response(serializer.data, status=status.HTTP_200_OK)
-
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated, IsCourseOwner])
 def course_lecture_list(request, course_id):
-    # get list of Lectures that belong to the Current Course that belong to the current user (teacher)
     lecture_list = Lecture.objects.filter(content_source__course__id=course_id).select_related(
         'content_source', 'content_source__course', 'quiz','assignment')
     serializer = CourseLectureListItem(lecture_list, many=True)

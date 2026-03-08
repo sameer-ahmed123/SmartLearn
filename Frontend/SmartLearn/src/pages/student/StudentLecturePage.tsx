@@ -3,20 +3,64 @@ import {
   PlayCircle, Clock, CheckCircle, 
   BookOpen, Lock, MessageCircle, Star, GraduationCap, Plus, X, Users 
 } from "lucide-react"; 
-import { useNavigate, useParams } from "react-router-dom"; 
+import { useNavigate } from "react-router-dom"; // Added navigate for routing
 import "./StudentLecturePage.css"; 
 import apiClient from "@/api/apiClient";
 
 const StudentLecturePage = () => {
+  const navigate = useNavigate(); // Hook initialize kiya
   const [selectedLecture, setSelectedLecture] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [availableCourses, setAvailableCourses] = useState<any[]>([]); 
+  const [courses, setCourses] = useState<any[]>([]); 
+  const [loading, setLoading] = useState(false);
 
-  // My Enrolled Courses
-  const [courses, setCourses] = useState([
-    { id: 1, title: "Quantum Physics Masterclass", instructor: "Dr. Sarah", students: 120, rating: 4.8, price: "Enrolled", img: "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=800" },
-    { id: 2, title: "Advanced Web Development", instructor: "Alex Rivera", students: 850, rating: 4.9, price: "Enrolled", img: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800" },
-    { id: 3, title: "AI & Machine Learning", instructor: "Prof. Zaid", students: 430, rating: 4.7, price: "Enrolled", img: "https://images.unsplash.com/photo-1555949963-ff9fe0c870eb?w=800" },
-  ]);
+  // 1. Static Images for Courses (Different Placeholder images)
+  const courseImages = [
+    "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=500&q=80", // Tech
+    "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=500&q=80", // Laptop
+    "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=500&q=80", // Robot
+    "https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?w=500&q=80", // Developer
+    "https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=500&q=80", // Team
+    "https://images.unsplash.com/photo-1518770660439-4636190af475?w=500&q=80", // Electronics
+  ];
+
+  // 2. Logic to generate a different image for each course based on its ID
+  const getCourseImage = (courseId: number) => {
+    if (!courseId) return courseImages[0];
+    const index = courseId % courseImages.length;
+    return courseImages[index];
+  };
+
+  const fetchCoursesData = async () => {
+    try {
+      const response = await apiClient.get("lectures/courses/"); 
+      const allData = response.data || [];
+      setAvailableCourses(allData.filter((c: any) => !c.is_enrolled));
+      setCourses(allData.filter((c: any) => c.is_enrolled));
+    } catch (err) {
+      console.error("Failed to fetch courses", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchCoursesData();
+  }, []);
+
+  const handleRegister = async (course: any) => {
+    try {
+      setLoading(true);
+      // Enrollment check: Matching serializer logic
+      await apiClient.post("lectures/courses/", { course: course.id }); 
+      await fetchCoursesData(); 
+      setIsModalOpen(false);
+      alert("Successfully enrolled!");
+    } catch (err) {
+      alert("Enrollment failed.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const lectures = [
     { id: 1, title: "01. Introduction to Quantum Mechanics", duration: "12:45", status: "completed", progress: 100 },
@@ -30,21 +74,6 @@ const StudentLecturePage = () => {
     return "#ef4444"; 
   };
 
-  const handleRegister = (course: any) => {
-    const newCourse = {
-      id: Date.now(),
-      title: course.title,
-      instructor: course.instructor,
-      students: 1,
-      rating: 5,
-      price: "Enrolled",
-      img: course.img
-    };
-    setCourses([...courses, newCourse]);
-    setIsModalOpen(false);
-  };
-
-  // Common Dynamic Style for Cards
   const cardStyle = {
     backgroundColor: 'var(--card, #ffffff)',
     color: 'var(--foreground, #1e293b)',
@@ -58,8 +87,8 @@ const StudentLecturePage = () => {
         {/* BANNER */}
         <div className="student-banner">
           <div className="banner-content">
-            <h1 style={{ color: 'white',fontSize: '2rem', margin: 0 }}>Learning Portal</h1>
-            <p style={{ color: 'white', opacity: 0.9 }}>Review your course materials and track your daily learning goals.</p>
+            <h1 style={{ color: 'white', fontSize: '2rem', margin: 0 }}>Learning Portal</h1>
+            <p style={{ color: 'white', opacity: 0.9 }}>Review your course materials and track your goals.</p>
             <button className="enroll-trigger-btn" onClick={() => setIsModalOpen(true)}>
               <Plus size={20} /> Enroll in New Course
             </button>
@@ -85,7 +114,7 @@ const StudentLecturePage = () => {
           ))}
         </div>
 
-        {/* VIDEO & PLAYLIST */}
+        {/* VIDEO & PLAYLIST SECTION */}
         <div className="main-layout-grid">
           <div className="video-box-card" style={cardStyle}>
             <div className="video-player-area">
@@ -128,48 +157,64 @@ const StudentLecturePage = () => {
           </aside>
         </div>
 
-        {/* MY COURSES */}
+        {/* MY ENROLLED COURSES */}
         <h2 className="section-heading" style={{ color: 'var(--foreground)' }}>My Enrolled Courses</h2>
         <div className="courses-grid">
-          {courses.map((course) => (
-            <div key={course.id} className="course-card" style={cardStyle}>
-              <div className="course-thumb">
-                <img src={course.img} alt={course.title} />
-                <span className="badge">{course.price}</span>
-              </div>
-              <div className="course-body">
-                <h3 className="course-title" style={{ color: 'var(--foreground)', margin: '0 0 10px 0' }}>{course.title}</h3>
-                <p className="course-instructor" style={{ color: 'var(--muted-foreground)' }}>By {course.instructor}</p>
-                <div className="course-meta" style={{ color: 'var(--muted-foreground)' }}>
-                  <span><Users size={14} /> {course.students}</span>
-                  <span><Star size={14} color="#f59e0b" fill="#f59e0b" /> {course.rating}</span>
+          {courses.length > 0 ? (
+            courses.map((course) => (
+              <div key={course.id} className="course-card" style={cardStyle}>
+                <div className="course-thumb">
+                  <img src={getCourseImage(course.id)} alt={course.title} style={{ width: '100%', height: '180px', objectFit: 'cover' }} />
+                  <span className="badge">Enrolled</span>
                 </div>
-                <button className="view-btn">Continue Learning</button>
+                <div className="course-body" style={{ padding: '15px' }}>
+                  {/* Fixed Title Display */}
+                  <h3 className="course-title" style={{ color: 'var(--foreground)', fontSize: '1.2rem', fontWeight: 'bold', margin: '0 0 8px 0' }}>
+                    {course.title}
+                  </h3>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                     <Users size={16} color="#6366f1" />
+                     <p style={{ color: 'var(--muted-foreground)', fontSize: '14px', margin: 0 }}>
+                       Instructor: {course.teacher_name || "Teacher"}
+                     </p>
+                  </div>
+                  <button 
+                    className="view-btn" 
+                    onClick={() => navigate(`/student/course/${course.id}`)}
+                    style={{ width: '100%', backgroundColor: '#6366f1', color: 'white', padding: '10px', borderRadius: '8px', border: 'none', cursor: 'pointer' }}
+                  >
+                    Continue Learning
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
+            ))
+          ) : (
+            <p style={{ color: 'var(--muted-foreground)' }}>No enrolled courses.</p>
+          )}
         </div>
       </div>
 
-      {/* MODAL */}
+      {/* ENROLL MODAL */}
       {isModalOpen && (
         <div className="modal-overlay">
-          <div className="enroll-modal" style={cardStyle}>
-            <div className="modal-header">
-              <h3 style={{ margin: 0, color: 'var(--foreground)' }}>Available Courses</h3>
-              <button onClick={() => setIsModalOpen(false)} className="close-btn" style={{ color: 'var(--foreground)' }}><X size={24} /></button>
+          <div className="enroll-modal" style={{ ...cardStyle, width: '90%', maxWidth: '600px', borderRadius: '16px' }}>
+            <div className="modal-header" style={{ padding: '20px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between' }}>
+              <h3 style={{ margin: 0 }}>Available Courses</h3>
+              <button onClick={() => setIsModalOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--foreground)' }}><X size={24} /></button>
             </div>
-            <div className="modal-body">
-              {[
-                { title: "Ethical Hacking", instructor: "Cyber Expert", img: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=400" },
-                { title: "Graphic Design", instructor: "Emma G.", img: "https://images.unsplash.com/photo-1572044162444-ad60f128bde2?w=400" }
-              ].map((item, idx) => (
-                <div key={idx} className="enroll-item" style={{ backgroundColor: 'var(--muted)', borderColor: 'var(--border)' }}>
-                  <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                    <img src={item.img} alt="" style={{ width: '50px', height: '40px', borderRadius: '8px', objectFit: 'cover' }} />
-                    <p style={{ margin: 0, fontWeight: 700, color: 'var(--foreground)' }}>{item.title}</p>
+            <div className="modal-body" style={{ maxHeight: '450px', overflowY: 'auto', padding: '20px' }}>
+              {availableCourses.map((item) => (
+                <div key={item.id} className="enroll-item" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px', padding: '10px', background: 'var(--muted)', borderRadius: '12px' }}>
+                  <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+                    <img src={getCourseImage(item.id)} alt="" style={{ width: '80px', height: '60px', borderRadius: '8px', objectFit: 'cover' }} />
+                    <div>
+                      <p style={{ margin: 0, fontWeight: 'bold', color: 'var(--foreground)' }}>{item.title}</p>
+                      <p style={{ margin: 0, fontSize: '13px', color: '#6366f1' }}>{item.teacher_name || "Instructor"}</p>
+                    </div>
                   </div>
-                  <button className="register-btn" onClick={() => handleRegister(item)}>Register</button>
+                  <button className="register-btn" onClick={() => handleRegister(item)} disabled={loading} style={{ backgroundColor: '#10b981', color: 'white', padding: '8px 16px', borderRadius: '6px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>
+                    {loading ? "..." : "Enroll"}
+                  </button>
                 </div>
               ))}
             </div>

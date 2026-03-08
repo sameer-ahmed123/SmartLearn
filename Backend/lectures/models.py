@@ -14,6 +14,8 @@ class Course(models.Model):
     )
     title = models.CharField(max_length=225)
     description = models.TextField(blank=True)
+    # ADDED THUMBNAIL FIELD HERE
+    thumbnail = models.ImageField(upload_to='course_thumbnails/', null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     STATUS_CHOICES = [

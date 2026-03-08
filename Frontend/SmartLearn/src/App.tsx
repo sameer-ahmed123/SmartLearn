@@ -26,7 +26,9 @@ import StudentGradebook from "./pages/student/StudentGradebook";
 import StudentAnalytics from "./pages/student/StudentAnalytics";
 import StudentVirtual from "./pages/student/StudentVirtual";
 import StudentSetting from "./pages/student/StudentSetting";
-import SmartChat from './components/Chatbot/Smartchat';
+import SmartChat from './components/Chatbot/SmartChat';
+import StudentCourseDetailPage from "./pages/student/StudentCourseDetailPage";
+import StudentLectureReviewPage from "./pages/student/StudentLectureViewPage";
 
 // --- FIX: TypeScript interface for Google Translate ---
 declare global {
@@ -94,6 +96,14 @@ const App: React.FC = () => {
               path="/student/settings"
               element={<StudentSetting />}
             />
+            <Route
+              path="/student/course/:courseid"
+              element={<StudentCourseDetailPage />}
+            />
+            <Route
+              path="/student/lecture/:id/review"
+              element={<StudentLectureReviewPage />}
+            />
             
           </Route>
 
@@ -159,7 +169,7 @@ const App: React.FC = () => {
       </Routes>
 
       {/* CHATBOT INTEGRATED HERE - Sab pages par show hoga */}
-      <SmartChat />
+      {<SmartChat />}
     </>
   );
 };
