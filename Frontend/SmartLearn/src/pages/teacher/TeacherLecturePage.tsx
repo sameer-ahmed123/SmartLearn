@@ -164,13 +164,14 @@ const TeacherLecturePage = () => {
         <h2 style={{ margin: '30px 0 20px 0', color: 'var(--foreground)' }}>My Courses</h2>
         <div className="courses-grid">
           {courses.map((course) => (
+            /* Yahan CourseListCard ko handle karna hoga */
             <CourseListCard key={course.id} course={course} />
           ))}
         </div>
 
         <div style={{ marginTop: '40px' }}>
-           <h2 style={{ marginBottom: '20px', color: 'var(--foreground)' }}>Lecture Validation Queue</h2>
-           <LectureValidationQueueTable />
+            <h2 style={{ marginBottom: '20px', color: 'var(--foreground)' }}>Lecture Validation Queue</h2>
+            <LectureValidationQueueTable />
         </div>
       </div>
       <CreateCourseModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSuccess={(nc) => setCourses([nc, ...courses])} />

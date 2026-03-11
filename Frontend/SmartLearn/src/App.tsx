@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
 import Dashboard from "./pages/Dashboard";
@@ -29,6 +29,11 @@ import StudentSetting from "./pages/student/StudentSetting";
 import SmartChat from './components/Chatbot/SmartChat';
 import StudentCourseDetailPage from "./pages/student/StudentCourseDetailPage";
 import StudentLectureReviewPage from "./pages/student/StudentLectureViewPage";
+import StudentQuizPage from "./pages/student/StudentQuizPage";
+import StudentAssignmentPage from "./pages/student/StudentAssignmentPage";
+import AssignmentSubmission from "./pages/teacher/AssignmentSubmissions";
+import QuizDetailView from "./pages/teacher/QuizDetailView";
+
 
 // --- FIX: TypeScript interface for Google Translate ---
 declare global {
@@ -41,6 +46,10 @@ declare global {
 const App: React.FC = () => {
   const { user } = useAuthStore();
   const role = useAuthStore((s) => s.role);
+  const location = useLocation();
+
+  // --- Logic to check if current route is for teacher ---
+  const isTeacherPage = location.pathname.startsWith('/teacher');
 
   return (
     <>
@@ -104,6 +113,14 @@ const App: React.FC = () => {
               path="/student/lecture/:id/review"
               element={<StudentLectureReviewPage />}
             />
+            <Route
+              path="/student/lecture/:id/quiz"
+              element={<StudentQuizPage />}
+            />
+            <Route
+              path="/student/lecture/:id/assignment"
+              element={<StudentAssignmentPage />}
+            />
             
           </Route>
 
@@ -145,6 +162,14 @@ const App: React.FC = () => {
               path="/teacher/course/:courseid"
               element={<TeacherCourseDetailPage />}
             />
+            <Route
+              path="/teacher/lecture/:id/assignment"
+              element={<AssignmentSubmission />}
+            />
+            <Route
+              path="/teacher/lecture/:id/quiz"
+              element={<QuizDetailView />}
+            />
             
           </Route>
 
@@ -168,8 +193,8 @@ const App: React.FC = () => {
         </Route>
       </Routes>
 
-      {/* CHATBOT INTEGRATED HERE - Sab pages par show hoga */}
-      {<SmartChat />}
+      {/* CHATBOT INTEGRATED HERE - Only shows on Teacher pages */}
+      {isTeacherPage && <SmartChat />}
     </>
   );
 };

@@ -1,5 +1,4 @@
 .pageWrapper {
-    /* Background remove kiya taake double dark shade na aye */
     min-height: 100vh;
     padding: 30px;
 }
@@ -16,6 +15,10 @@
     position: relative;
     overflow: hidden;
     margin-bottom: 30px;
+}
+
+.bannerLeft {
+    z-index: 2;
 }
 
 .bannerTitle {
@@ -42,6 +45,12 @@
     align-items: center;
     gap: 8px;
     cursor: pointer;
+    transition: all 0.2s;
+}
+
+.createBtn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
 .bgIcon {
@@ -135,6 +144,12 @@
     padding: 24px;
     border-radius: 20px;
     border: 1px solid var(--border, #e2e8f0);
+    transition: transform 0.2s;
+}
+
+.quizCard:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.05);
 }
 
 .quizInfo h3 {
@@ -159,11 +174,11 @@
 }
 
 .active { background: #ecfdf5; color: #10b981; }
-.draft { background: #fef3c7; color: #f59e0b; }
+.draft { background: #fff7ed; color: #f97316; }
 
 .quizStatsGrid {
     display: grid;
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 1fr;
     gap: 10px;
     margin-top: 20px;
     padding-top: 15px;
@@ -186,6 +201,11 @@
     display: flex;
     align-items: center;
     gap: 5px;
+    font-size: 0.9rem;
+}
+
+.viewResults:hover {
+    text-decoration: underline;
 }
 
 .sectionTitle {
@@ -193,4 +213,90 @@
     font-size: 1.5rem;
     font-weight: 700;
     color: var(--foreground, #1e293b);
+}
+
+/* MODAL STYLES */
+.modalOverlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    backdrop-filter: blur(4px);
+}
+
+.modalContent {
+    background: var(--card, white);
+    width: 90%;
+    max-width: 500px;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+}
+
+.modalHeader {
+    padding: 20px;
+    border-bottom: 1px solid var(--border, #f1f5f9);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.closeIcon {
+    cursor: pointer;
+    color: #64748b;
+}
+
+.modalList {
+    max-height: 400px;
+    overflow-y: auto;
+    padding: 10px;
+}
+
+.modalItem {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    border-radius: 12px;
+    transition: background 0.2s;
+}
+
+.modalItem:hover {
+    background: var(--border, #f8fafc);
+}
+
+.modalCourseImg {
+    width: 45px;
+    height: 45px;
+    border-radius: 10px;
+    object-fit: cover;
+}
+
+.modalCourseTitle {
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.modalManageBtn {
+    background: #6366f1;
+    color: white;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+/* UTILS */
+.noData {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 60px;
+    color: #94a3b8;
 }

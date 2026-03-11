@@ -1,7 +1,5 @@
-// src/components/Dashboard/teacher/AssessmentList.tsx
-
 import { useState } from "react";
-import { Sparkles, FileCheck, PlayCircle, Eye, Loader2, BookOpen } from "lucide-react";
+import { Sparkles, FileCheck, Eye, Loader2, BookOpen, AlertCircle } from "lucide-react";
 import apiClient from "../../../api/apiClient";
 import QuizEditorModal from "./QuizEditorModal";
 import AssignmentEditorModal from "./AssignmentEditorModal";
@@ -10,11 +8,12 @@ import styles from "./AssessmentList.module.css";
 interface AssessmentProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   lectures: any[];
-
   onRefresh: () => void;
+  isAssignmentOnly?: boolean;
+  isQuizOnly?: boolean; // New prop for Quiz-only mode
 }
 
-const AssessmentList = ({ lectures, onRefresh }: AssessmentProps) => {
+const AssessmentList = ({ lectures, onRefresh, isAssignmentOnly, isQuizOnly }: AssessmentProps) => {
   // We only track this to disable the button right after they click it
   const [generatingQuizId, setGeneratingQuizId] = useState<number | null>(null);
   const [generatingAssignmentId, setGeneratingAssignmentId] = useState<number | null>(null);
@@ -33,7 +32,6 @@ const AssessmentList = ({ lectures, onRefresh }: AssessmentProps) => {
     if (type === 'assignment') setGeneratingAssignmentId(lectureId);
     
     try {
-
       // 2. Tell the backend to start the Celery worker
       await apiClient.post("/assessments/generate/", {
         lecture_id: lectureId,
@@ -51,71 +49,121 @@ const AssessmentList = ({ lectures, onRefresh }: AssessmentProps) => {
   };
 
   return (
-    <div className={styles.container}>
-      <table className={styles.table}>
-        <thead>
-          <tr>
-            <th>Lecture Topic</th>
-            <th>Quiz</th>
-            <th>Assignment</th>
-          </tr>
-        </thead>
-        <tbody>
-          {ValidatedLectures.map((lecture) => (
-            <tr key={lecture.id}>
-              <td>{lecture.topic}</td>
+    <div className={styles.assessmentWrapper}>
+      <div className={styles.tableCard}>
+        <table className={styles.modernTable}>
+          <thead>
+            <tr>
+              <th>
+                < BookOpen size={14} className={styles.headerIcon} />
+                Lecture Topic
+              </th>
+              
+              {/* QUIZ COLUMN HEADER - Conditional */}
+              {!isAssignmentOnly && (
+                <th style={{ textAlign: 'center' }}>
+                  <Sparkles size={14} className={styles.headerIcon} />
+                  Quiz
+                </th>
+              )}
 
-              {/* QUIZ ACTIONS */}
-              <td>
-                {lecture.quiz_data ? (
-                  <button
-                    className={styles.viewBtn}
-                    onClick={() => setEditingQuizId(lecture.quiz_id)}
-                  >
-                    View Quiz
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => handleGenerateAssessment(lecture.id, 'quiz')}
-                    disabled={generatingQuizId === lecture.id}
-                    className={styles.generateBtn}
-                  >
-                    {generatingQuizId === lecture.id ? "Started! (Refresh later)" : "✨ Create Quiz"}
-                  </button>
-                )}
-              </td>
-
-              {/* ASSIGNMENT ACTIONS */}
-              <td>
-                {lecture.assignment_data ? (
-                  <button
-                    className={styles.viewBtn}
-                    style={{ backgroundColor: '#8e44ad', borderColor: '#8e44ad', color: 'white' }}
-                    onClick={() => {
-                      if (!lecture.assignment_id) {
-                          alert("Backend Error: assignment_id is missing from the API response!");
-                      } else {
-                          setEditingAssignmentId(lecture.assignment_id);
-                      }
-                    }}
-                  >
-                    View Assignment
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => handleGenerateAssessment(lecture.id, 'assignment')}
-                    disabled={generatingAssignmentId === lecture.id}
-                    className={styles.generateBtn}
-                    style={{ backgroundColor: '#8e44ad', color: 'white' }} 
-                  >
-                    {generatingAssignmentId === lecture.id ? "Started! (Refresh later)" : "✨ Create Assignment"}
-                  </button>
-                )}
-              </td>
+              {/* ASSIGNMENT COLUMN HEADER - Hidden if isQuizOnly is true */}
+              {!isQuizOnly && (
+                <th style={{ textAlign: 'center' }}>
+                  <FileCheck size={14} className={styles.headerIcon} />
+                  Assignment
+                </th>
+              )}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {ValidatedLectures.length > 0 ? (
+              ValidatedLectures.map((lecture) => (
+                <tr key={lecture.id}>
+                  <td className={styles.topicName}>
+                    {lecture.topic}
+                  </td>
+
+                  {/* QUIZ ACTIONS - Conditional */}
+                  {!isAssignmentOnly && (
+                    <td style={{ textAlign: 'center' }}>
+                      {lecture.quiz_data ? (
+                        <button
+                          className={styles.viewBtn}
+                          onClick={() => setEditingQuizId(lecture.quiz_id)}
+                        >
+                          <Eye size={16} />
+                          View Quiz
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => handleGenerateAssessment(lecture.id, 'quiz')}
+                          disabled={generatingQuizId === lecture.id}
+                          className={styles.generateBtn}
+                        >
+                          {generatingQuizId === lecture.id ? (
+                            <><Loader2 size={16} className={styles.spin} /> Generating...</>
+                          ) : (
+                            <><Sparkles size={16} /> Create Quiz</>
+                          )}
+                        </button>
+                      )}
+                    </td>
+                  )}
+
+                  {/* ASSIGNMENT ACTIONS - Hidden if isQuizOnly is true */}
+                  {!isQuizOnly && (
+                    <td style={{ textAlign: 'center' }}>
+                      {lecture.assignment_data ? (
+                        <button
+                          className={styles.viewBtn}
+                          style={{ 
+                            background: '#f5f3ff', 
+                            color: '#8b5cf6', 
+                            borderColor: '#ddd6fe' 
+                          }}
+                          onClick={() => {
+                            if (!lecture.assignment_id) {
+                                alert("Backend Error: assignment_id is missing!");
+                            } else {
+                                setEditingAssignmentId(lecture.assignment_id);
+                            }
+                          }}
+                        >
+                          <FileCheck size={16} />
+                          View Assignment
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => handleGenerateAssessment(lecture.id, 'assignment')}
+                          disabled={generatingAssignmentId === lecture.id}
+                          className={styles.generateBtn}
+                          style={{ background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)' }}
+                        >
+                          {generatingAssignmentId === lecture.id ? (
+                            <><Loader2 size={16} className={styles.spin} /> Generating...</>
+                          ) : (
+                            <><Sparkles size={16} /> Create Assignment</>
+                          )}
+                        </button>
+                      )}
+                    </td>
+                  )}
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={(isAssignmentOnly || isQuizOnly) ? 2 : 3} className={styles.emptyRow}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                    <AlertCircle size={18} />
+                    No validated lectures found. Please validate lectures first.
+                  </div>
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
       
       {/* Modals */}
       {editingQuizId && (

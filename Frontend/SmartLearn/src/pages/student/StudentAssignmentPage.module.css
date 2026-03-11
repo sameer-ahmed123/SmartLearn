@@ -1,0 +1,69 @@
+.pageContainer { padding: 40px; max-width: 1200px; margin: 0 auto; background: #f8fafc; min-height: 100vh; }
+.backButton { display: flex; align-items: center; gap: 8px; border: none; background: none; color: #64748b; font-weight: 500; cursor: pointer; margin-bottom: 24px; transition: color 0.2s; }
+.backButton:hover { color: #6366f1; }
+
+.layoutGrid { display: grid; grid-template-columns: 1.8fr 1fr; gap: 30px; }
+
+/* Cards */
+.mainCard, .uploadCard { background: white; border-radius: 16px; padding: 30px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+
+/* --- Added: Header Area for Marks --- */
+.headerArea { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; }
+.totalPointsBadge { background: #f5f3ff; border: 1px solid #ddd6fe; padding: 8px 16px; border-radius: 12px; text-align: center; min-width: 100px; }
+.pointsLabel { display: block; font-size: 11px; text-transform: uppercase; color: #7c3aed; font-weight: 700; letter-spacing: 0.5px; }
+.pointsValue { font-size: 20px; font-weight: 800; color: #5b21b6; }
+
+/* --- Added: Result & Feedback Section --- */
+.resultCard { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 20px; margin-top: 24px; border-left: 5px solid #10b981; }
+.resultHeader { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.resultHeader h3 { margin: 0; font-size: 16px; color: #166534; }
+.scoreRow { font-size: 15px; color: #14532d; margin-bottom: 8px; }
+.feedbackBox { background: rgba(255, 255, 255, 0.6); padding: 12px; border-radius: 8px; font-style: italic; color: #166534; font-size: 14px; border: 1px dashed #86efac; }
+
+.title { font-size: 28px; color: #0f172a; margin: 0; }
+.typeTag { display: inline-block; background: #e0e7ff; color: #4338ca; font-size: 12px; font-weight: 600; padding: 4px 12px; border-radius: 20px; margin-top: 10px; }
+
+.section { margin-top: 32px; }
+.sectionTitle { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; color: #1e293b; }
+.sectionTitle h3 { margin: 0; font-size: 18px; }
+.icon { color: #6366f1; }
+
+.taskList { list-style: none; padding: 0; margin: 0; }
+.taskItem { padding: 14px; background: #f1f5f9; border-radius: 10px; margin-bottom: 10px; color: #334155; font-size: 15px; border-left: 4px solid #cbd5e1; }
+
+.rubricBox { background: #f8fafc; border-radius: 12px; padding: 10px 20px; }
+.rubricRow { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #e2e8f0; }
+.rubricRow:last-child { border-bottom: none; }
+.criterion { color: #475569; font-size: 15px; }
+.points { font-weight: 700; color: #0f172a; }
+
+/* Upload Section */
+.uploadCard { position: sticky; top: 40px; }
+.subText { color: #64748b; font-size: 14px; margin-bottom: 20px; }
+
+.dropZone { border: 2px dashed #cbd5e1; border-radius: 12px; padding: 40px 20px; text-align: center; transition: all 0.3s ease; }
+.activeZone { border-color: #10b981; background: #f0fdf4; }
+/* Added: submission status color for dropzone */
+.alreadySubmitted { border-color: #6366f1; background: #f5f3ff; }
+
+.uploadLabel { cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.uploadIcon { color: #94a3b8; }
+.successIcon { color: #10b981; }
+.fileName { font-size: 14px; color: #1e293b; font-weight: 500; word-break: break-all; }
+.hiddenInput { display: none; }
+
+.submitBtn { width: 100%; background: #6366f1; color: white; border: none; padding: 16px; border-radius: 12px; font-weight: 600; margin-top: 24px; cursor: pointer; transition: background 0.2s; }
+.submitBtn:hover { background: #4f46e5; }
+.submitBtn:disabled { background: #cbd5e1; cursor: not-allowed; }
+
+.warningNote { display: flex; align-items: center; gap: 8px; margin-top: 16px; font-size: 12px; color: #94a3b8; }
+
+.loaderContainer { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; gap: 16px; }
+.spinner { animation: spin 1s linear infinite; color: #6366f1; }
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+@media (max-width: 900px) { 
+  .layoutGrid { grid-template-columns: 1fr; } 
+  .headerArea { flex-direction: column-reverse; }
+  .totalPointsBadge { align-self: flex-start; }
+}

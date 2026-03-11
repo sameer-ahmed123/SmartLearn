@@ -1,17 +1,26 @@
 .pageWrapper {
-    /* Background remove kar diya taake dashboard background ke sath match kare */
+    padding: 25px;
+    background-color: var(--background, #f8fafc); 
     min-height: 100vh;
-    padding: 30px;
+    color: var(--foreground, #1e293b);
+    transition: all 0.3s ease;
+}
+
+/* Global Dark Mode Overrides - Matched to Sidebar to remove double shade */
+:global(.dark) .pageWrapper {
+    --background: #111827; /* Darker navy/black to match sidebar exactly */
+    --foreground: #f8fafc;
+    --card: #1e293b;
+    --border: #334155;
+    --muted: #1e293b;
+    --muted-foreground: #94a3b8;
 }
 
 /* GRADIENT BANNER */
 .assignBanner {
-    background: linear-gradient(135deg, #3b82f6 0%, #2dd4bf 100%) !important;
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%) !important;
     padding: 40px;
-    border-radius: 24px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    border-radius: 20px;
     color: white !important;
     position: relative;
     overflow: hidden;
@@ -27,7 +36,7 @@
 
 .createBtn {
     background: white !important;
-    color: #3b82f6 !important;
+    color: #4f46e5 !important;
     border: none;
     padding: 12px 24px;
     border-radius: 12px;
@@ -57,35 +66,44 @@
 .statCardBox {
     background: var(--card, white);
     padding: 20px;
-    border-radius: 16px;
+    border-radius: 15px;
     display: flex;
     align-items: center;
     gap: 15px;
-    border: 1px solid var(--border, #eef2f6);
+    border: 1px solid var(--border, #e2e8f0);
 }
 
 .statTextContainer p {
     margin: 0;
-    font-size: 0.7rem;
-    font-weight: 700;
-    color: #94a3b8;
+    font-size: 0.8rem;
+    font-weight: 600;
     text-transform: uppercase;
 }
 
 .statTextContainer h3 {
     margin: 2px 0 0 0;
     font-size: 1.3rem;
-    color: var(--foreground, #1e293b);
 }
 
-/* SEARCH INPUT */
+/* SEARCH */
+.searchWrapper {
+    position: relative;
+    margin-bottom: 30px;
+}
+
+.searchIcon {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted-foreground);
+}
+
 .searchInput {
     width: 100%;
     padding: 12px 12px 12px 45px;
     border-radius: 12px;
-    border: 1px solid var(--border, #e2e8f0);
-    background: var(--card, white);
-    color: var(--foreground);
+    border: 1px solid var(--border);
     outline: none;
 }
 
@@ -100,12 +118,13 @@
     background: var(--card, white);
     padding: 24px;
     border-radius: 20px;
-    border: 1px solid var(--border, #e2e8f0);
+    border: 1px solid var(--border);
 }
 
 .cardTitle {
-    color: var(--foreground, #1e293b);
     margin: 10px 0 5px 0;
+    font-size: 1.1rem;
+    font-weight: 700;
 }
 
 .statusBadge {
@@ -118,11 +137,94 @@
 .open { background: #ecfdf5; color: #10b981; }
 .closed { background: #fee2e2; color: #ef4444; }
 
+:global(.dark) .open { background: rgba(16, 185, 129, 0.1); }
+:global(.dark) .closed { background: rgba(239, 68, 68, 0.1); }
+
 .cardFooter {
     margin-top: 20px;
     padding-top: 15px;
-    border-top: 1px solid var(--border, #f1f5f9);
     display: flex;
     justify-content: space-between;
     align-items: center;
+}
+
+/* MODAL STYLES */
+.modalOverlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    backdrop-filter: blur(4px);
+}
+
+.modalContent {
+    width: 90%;
+    max-width: 550px;
+    border-radius: 16px;
+    padding: 25px;
+    border: 1px solid var(--border);
+}
+
+.modalHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.closeIcon {
+    cursor: pointer;
+    color: var(--muted-foreground);
+}
+
+.modalList {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.modalItem {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px;
+}
+
+.modalCourseImg {
+    width: 45px;
+    height: 45px;
+    border-radius: 8px;
+    object-fit: cover;
+}
+
+.modalCourseTitle {
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.modalManageBtn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #6366f1;
+    color: white;
+    padding: 8px 14px;
+    border-radius: 6px;
+    border: none;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.noData {
+    grid-column: 1/-1;
+    text-align: center;
+    padding: 40px;
+    border-radius: 15px;
+}
+
+@media (max-width: 1100px) {
+    .statsRow { grid-template-columns: repeat(2, 1fr); }
 }

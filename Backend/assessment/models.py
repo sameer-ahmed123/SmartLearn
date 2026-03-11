@@ -3,12 +3,14 @@ from django.conf import settings
 
 # --- QUIZZES ---
 
-
 class Quiz(models.Model):
     status_choices = (
         ('generating', 'Generating'),
         ('ready', 'Ready'),
-        ('failed', 'Failed')
+        ('failed', 'Failed'),
+        ('published', 'Published'),
+        ('archived', 'Archived'),
+        ('draft', 'Draft'),
     )
     lecture = models.OneToOneField(
         'lectures.Lecture', on_delete=models.CASCADE)
@@ -34,23 +36,27 @@ class QuizSubmission(models.Model):
 
 # --- ASSIGNMENTS ---
 
-
 class Assignment(models.Model):
     status_choices = (
         ('generating', 'Generating'),
         ('ready', 'Ready'),
-        ('failed', 'Failed')
+        ('failed', 'Failed'),
+        ('published', 'Published'),
+        ('archived', 'Archived'),
+        ('draft', 'Draft'),
     )
     #  OneToOneField to match Quiz logic (1 AI assignment per lecture)
     lecture = models.OneToOneField('lectures.Lecture', on_delete=models.CASCADE)
     
-    #Structured data from Gemini
+    # Structured data from Gemini
     assignment_data = models.JSONField(null=True, blank=True)
     status = models.CharField(max_length=100, default='generating', choices=status_choices)
     
     description = models.TextField(blank=True, null=True) 
     deadline = models.DateTimeField(null=True, blank=True) 
     created_at = models.DateTimeField(auto_now_add=True)
+    # --- FIXED: null=True, blank=True add kiya taake Celery task save karte waqt error na de ---
+    updated_at = models.DateTimeField(auto_now=True, null=True, blank=True) 
 
     class Meta:
         db_table = "assignment"
@@ -62,6 +68,11 @@ class AssignmentSubmission(models.Model):
                              on_delete=models.CASCADE)
     file_upload = models.FileField(upload_to='submissions/')
     submitted_at = models.DateTimeField(auto_now_add=True)
+    
+    # --- Naye fields (AI/Teacher feedback ke liye) ---
+    # Score ko FloatField kar diya hai taake grading calculation asaan ho
+    score = models.FloatField(null=True, blank=True)
+    feedback = models.TextField(null=True, blank=True)
 
     class Meta:
         unique_together = ('user', 'assignment')

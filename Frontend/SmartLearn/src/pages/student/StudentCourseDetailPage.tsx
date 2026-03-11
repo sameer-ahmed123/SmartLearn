@@ -67,7 +67,7 @@ const StudentCourseDetailPage = () => {
   return (
     <div className="course-detail-container">
       <button onClick={() => navigate(-1)} className="back-navigation">
-        <ArrowLeft size={18} /> Back to Dashboard
+        <ArrowLeft size={18} /> Back
       </button>
 
       {course && (
@@ -110,26 +110,6 @@ const StudentCourseDetailPage = () => {
             </h2>
 
             <div className="lectures-grid">
-              {/* Dummy/Demo Lecture matching your Route: /student/lecture/:id/review */}
-              <div className="lecture-card-modern" style={{ borderLeft: "5px solid #f39c12" }}>
-                <div className="lecture-info-main">
-                  <div className="lecture-number">0</div>
-                  <div className="lecture-text-details">
-                    <h3 className="lecture-topic">Demo Lecture (Testing Route)</h3>
-                    <div className="approved-tag" style={{ color: "#f39c12" }}>
-                      <CheckCircle size={14} /> Sample
-                    </div>
-                  </div>
-                </div>
-                <button 
-                  onClick={() => navigate(`/student/lecture/demo-id/review`)} 
-                  className="start-lecture-btn"
-                  style={{ background: "#f39c12" }}
-                >
-                  View Lecture
-                </button>
-              </div>
-
               {/* Real Lectures from API matching your Route: /student/lecture/:id/review */}
               {lectures.map((lecture, index) => (
                 <div key={lecture.id} className="lecture-card-modern">

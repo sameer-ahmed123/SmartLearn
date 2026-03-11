@@ -2,150 +2,191 @@ import { useState, useEffect } from "react";
 import { 
   Plus, FileText, Users, Calendar, 
   Search, ArrowRight, 
-  CheckCircle, Clock, AlertCircle, BarChart
+  CheckCircle, Clock, BarChart, Loader2, X, Settings
 } from "lucide-react"; 
 import styles from "./TeacherAssignment.module.css";
 import apiClient from "@/api/apiClient";
-import CourseListCard from "@/components/Dashboard/teacher/CourseListCard";
 import type { CourseSummary } from "@/types/Courses/Types";
+import { useNavigate } from "react-router-dom";
 
 const TeacherAssignment = () => {
+  const navigate = useNavigate();
   const [assignments, setAssignments] = useState<any[]>([]);
   const [courses, setCourses] = useState<CourseSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const courseImages = [
+    "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=200",
+    "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=200",
+    "https://images.unsplash.com/photo-1555949963-ff9fe0c870eb?w=200",
+    "https://images.unsplash.com/photo-1501504905252-473c47e087f8?w=200"
+  ];
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const assignData = [
-          { id: 1, title: "Quantum Mechanics Essay", course: "Physics II", submissions: 28, total: 30, status: 'Open', due: "20 Mar" },
-          { id: 2, title: "UI Case Study", course: "Design Systems", submissions: 15, total: 45, status: 'Open', due: "25 Mar" },
-          { id: 3, title: "Backend API Docs", course: "Web Dev", submissions: 40, total: 40, status: 'Closed', due: "10 Mar" },
-        ];
-        
-        const courseResponse = await apiClient.get("/lectures/courses");
-        
-        setAssignments(assignData);
-        setCourses(courseResponse.data);
-        setLoading(false);
+        setLoading(true);
+        const [assignResponse, courseResponse] = await Promise.all([
+          apiClient.get("/assessments/teacher-list/"),
+          apiClient.get("/lectures/courses")
+        ]);
+        setAssignments(assignResponse.data || []);
+        setCourses(courseResponse.data || []);
       } catch (error) {
-        console.error("Error:", error);
+        console.error("Error fetching data:", error);
+      } finally {
         setLoading(false);
       }
     };
     fetchData();
   }, []);
 
-  const filteredData = assignments.filter(a => a.title.toLowerCase().includes(search.toLowerCase()));
+  const totalAssigned = assignments.length;
+  const totalSubmissions = assignments.reduce((acc, curr) => acc + (Number(curr.submission_count) || 0), 0);
+  
+  // Logic updated to match modal status checks
+  const publishedAssignments = assignments.filter(a => (a.status || a.assignment_data?.status)?.toLowerCase() === 'published').length;
+  const draftAssignments = assignments.filter(a => (a.status || a.assignment_data?.status)?.toLowerCase() !== 'published').length;
 
-  if (loading) return <div style={{padding: '50px', textAlign: 'center'}}>Loading...</div>;
+  const filteredData = assignments.filter(a => 
+    a.title?.toLowerCase().includes(search.toLowerCase()) || 
+    a.course_name?.toLowerCase().includes(search.toLowerCase())
+  );
+
+  // Shared Inline Styles for Dynamic Theme
+  const cardBgStyle = { 
+    backgroundColor: 'var(--card, #ffffff)', 
+    color: 'var(--foreground, #1e293b)',
+    borderColor: 'var(--border, #e2e8f0)' 
+  };
+
+  if (loading) return (
+    <div className={styles.pageWrapper} style={{textAlign: 'center', paddingTop: '100px'}}>
+      <Loader2 size={40} className="animate-spin" style={{margin: '0 auto 10px', color: '#6366f1'}} />
+      <p style={{color: 'var(--foreground)'}}>Loading Assignments...</p>
+    </div>
+  );
 
   return (
     <div className={styles.pageWrapper}>
-      
-      {/* BLUE-TEAL GRADIENT BANNER */}
       <div className={styles.assignBanner}>
-        <div>
+        <div style={{ flex: 1, zIndex: 2 }}>
           <h2 className={styles.bannerTitle}>Assignments</h2>
           <p style={{ opacity: 0.9, marginBottom: '20px' }}>Track student submissions and grade their work.</p>
+          <button className={styles.createBtn} onClick={() => setIsModalOpen(true)}>
+            <Plus size={18} /> Create Assignment
+          </button>
         </div>
         <FileText size={130} className={styles.bgIcon} />
       </div>
 
-      {/* STATS BOXES */}
+      {isModalOpen && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalContent} style={cardBgStyle}>
+            <div className={styles.modalHeader}>
+              <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: '700' }}>Select Course</h3>
+              <X size={24} className={styles.closeIcon} onClick={() => setIsModalOpen(false)} />
+            </div>
+            <div className={styles.modalList}>
+              {courses.map((course, index) => (
+                <div key={`course-${course.id}-${index}`} className={styles.modalItem} style={{borderBottom: '1px solid var(--border)'}}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <img src={courseImages[index % courseImages.length]} alt="" className={styles.modalCourseImg} />
+                    <div>
+                      <span className={styles.modalCourseTitle}>{course.title}</span>
+                      <p style={{ fontSize: '0.7rem', color: 'var(--muted-foreground)', margin: 0 }}>
+                        {course.lecture_count || 0} Lectures
+                      </p>
+                    </div>
+                  </div>
+                  <button onClick={() => navigate(`/teacher/course/${course.id}?tab=assessments`)} className={styles.modalManageBtn}>
+                    <Settings size={14} /> Manage
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className={styles.statsRow}>
-        <div className={styles.statCardBox}>
-          <div style={{ padding: '10px', borderRadius: '10px', background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6' }}>
-            <BarChart size={22} />
+        {[
+          { label: 'Total Assigned', val: totalAssigned, icon: <BarChart size={22} />, color: '#3b82f6' },
+          { label: 'Total Submissions', val: totalSubmissions, icon: <Users size={22} />, color: '#10b981' },
+          { label: 'Active (Published)', val: publishedAssignments, icon: <CheckCircle size={22} />, color: '#f59e0b' },
+          { label: 'Draft', val: draftAssignments, icon: <Clock size={22} />, color: '#ef4444' },
+        ].map((s, i) => (
+          <div key={`stat-${i}`} className={styles.statCardBox} style={cardBgStyle}>
+            <div style={{ padding: '10px', borderRadius: '10px', background: `${s.color}15`, color: s.color }}>
+              {s.icon}
+            </div>
+            <div className={styles.statTextContainer}>
+              <p style={{ color: 'var(--muted-foreground)' }}>{s.label}</p>
+              <h3 style={{ color: 'var(--foreground)' }}>{s.val}</h3>
+            </div>
           </div>
-          <div className={styles.statTextContainer}>
-            <p>Total Assigned</p>
-            <h3>{assignments.length}</h3>
-          </div>
-        </div>
-
-        <div className={styles.statCardBox}>
-          <div style={{ padding: '10px', borderRadius: '10px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981' }}>
-            <CheckCircle size={22} />
-          </div>
-          <div className={styles.statTextContainer}>
-            <p>Submissions</p>
-            <h3>83%</h3>
-          </div>
-        </div>
-
-        <div className={styles.statCardBox}>
-          <div style={{ padding: '10px', borderRadius: '10px', background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b' }}>
-            <Clock size={22} />
-          </div>
-          <div className={styles.statTextContainer}>
-            <p>Pending Review</p>
-            <h3>12</h3>
-          </div>
-        </div>
-
-        <div className={styles.statCardBox}>
-          <div style={{ padding: '10px', borderRadius: '10px', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444' }}>
-            <AlertCircle size={22} />
-          </div>
-          <div className={styles.statTextContainer}>
-            <p>Overdue</p>
-            <h3>05</h3>
-          </div>
-        </div>
+        ))}
       </div>
 
-      {/* SEARCH */}
-      <div style={{ position: 'relative', marginBottom: '30px' }}>
-        <Search size={18} style={{ position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+      <div className={styles.searchWrapper}>
+        <Search size={18} className={styles.searchIcon} />
         <input 
           type="text" 
-          placeholder="Search assignments..." 
+          placeholder="Search by title or course..." 
           className={styles.searchInput}
+          style={{ backgroundColor: 'var(--card)', color: 'var(--foreground)', borderColor: 'var(--border)' }}
+          value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
       </div>
 
-      {/* ASSIGNMENT GRID */}
       <div className={styles.assignGrid}>
-        {filteredData.map((item) => (
-          <div key={item.id} className={styles.assignCard}>
-            <span className={`${styles.statusBadge} ${item.status === 'Open' ? styles.open : styles.closed}`}>
-              {item.status}
-            </span>
-            <h3 className={styles.cardTitle}>{item.title}</h3>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary, #64748b)', margin: 0 }}>{item.course}</p>
+        {filteredData.length > 0 ? (
+          filteredData.map((item, idx) => {
+            const rawDate = item.deadline || item.assignment_data?.deadline || item.due_date || item.created_at;
+            const formattedDate = rawDate ? new Date(rawDate).toLocaleDateString() : 'No deadline';
             
-            <div style={{ marginTop: '20px', display: 'flex', gap: '15px' }}>
-              <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary, #64748b)' }}>
-                <Users size={14} style={{ marginRight: '5px' }} /> 
-                {item.submissions}/{item.total} Done
+            // Logic integrated from Editor Modal with fallback for nested data
+            const currentStatus = (item.status || item.assignment_data?.status || 'draft').toLowerCase();
+            
+            const statusDisplay = 
+              currentStatus === 'published' ? 'Published (Live)' : 
+              currentStatus === 'draft' ? 'Draft (Private)' : 
+              currentStatus === 'archived' ? 'Archived' : 'Draft (Private)';
+
+            // Status styling logic
+            const statusClass = currentStatus === 'published' ? styles.open : styles.closed;
+
+            return (
+              <div key={item.id || `assignment-${idx}`} className={styles.assignCard} style={cardBgStyle}>
+                <span className={`${styles.statusBadge} ${statusClass}`}>
+                  {statusDisplay}
+                </span>
+                <h3 className={styles.cardTitle}>{item.title}</h3>
+                <p style={{ fontSize: '0.85rem', color: 'var(--muted-foreground)', margin: '5px 0' }}>
+                  <strong>Course:</strong> {item.course_name || 'General'}
+                </p>
+                <div style={{ marginTop: '20px', display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
+                  <div style={{ fontSize: '0.85rem', color: 'var(--muted-foreground)', display: 'flex', alignItems: 'center' }}>
+                    <Users size={14} style={{ marginRight: '5px' }} /> {item.submission_count || 0} Submissions
+                  </div>
+                  <div style={{ fontSize: '0.85rem', color: 'var(--muted-foreground)', display: 'flex', alignItems: 'center' }}>
+                    <Calendar size={14} style={{ marginRight: '5px' }} /> {formattedDate}
+                  </div>
+                </div>
+                <div className={styles.cardFooter} style={{borderTop: '1px solid var(--border)'}} onClick={() => navigate(`/teacher/lecture/${item.lecture_id || item.lecture}/assignment`)}>
+                  <span style={{ color: '#3b82f6', fontWeight: '600', cursor: 'pointer', fontSize: '0.9rem' }}>View Submissions</span>
+                  <ArrowRight size={16} color="#3b82f6" />
+                </div>
               </div>
-              <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary, #64748b)' }}>
-                <Calendar size={14} style={{ marginRight: '5px' }} /> 
-                Due: {item.due}
-              </div>
-            </div>
-
-            <div className={styles.cardFooter}>
-              <span style={{ color: '#3b82f6', fontWeight: '600', cursor: 'pointer', fontSize: '0.9rem' }}>
-                Grade Now
-              </span>
-              <ArrowRight size={16} color="#3b82f6" />
-            </div>
-          </div>
-        ))}
+            );
+          })
+        ) : (
+          <div className={styles.noData} style={{backgroundColor: 'var(--card)', color: 'var(--muted-foreground)'}}>No assignments found.</div>
+        )}
       </div>
-
-      {/* MY COURSES SECTION */}
-      <h2 style={{ margin: '50px 0 20px 0', fontSize: '1.5rem', fontWeight: '700' }} className={styles.cardTitle}>My Courses</h2>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px' }}>
-        {courses.map((course) => (
-          <CourseListCard key={course.id} course={course} />
-        ))}
-      </div>
-
     </div>
   );
 };

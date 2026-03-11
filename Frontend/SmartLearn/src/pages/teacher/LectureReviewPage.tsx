@@ -6,7 +6,7 @@ import apiClient from "@/api/apiClient";
 import ValidationActionPanel from "@/components/Dashboard/teacher/ValidationActionPanel";
 import { 
   Video, FileText, Info, ArrowLeft, Clock, 
-  CheckCircle, Bot, MessageSquare 
+  CheckCircle, Bot, MessageSquare, Trash2 
 } from "lucide-react";
 
 const LectureReviewPage = () => {
@@ -16,6 +16,7 @@ const LectureReviewPage = () => {
   const [lecture, setlecture] = useState<LectureDetails | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     if (!lectureId) return;
@@ -33,6 +34,27 @@ const LectureReviewPage = () => {
     };
     fetchLectureDetails();
   }, [lectureId]);
+
+  const handleDeleteLecture = async () => {
+    if (!window.confirm("Are you sure you want to delete this lecture? This action cannot be undone.")) {
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      // Backend par 'DELETE' method enable hona chahiye
+      await apiClient.delete(`/lectures/${lectureId}/`);
+      navigate(-1); // Success par pichle page par bhej dein
+    } catch (err: any) {
+      console.error("Failed to delete lecture:", err);
+      const msg = err.response?.status === 405 
+        ? "Error 405: Delete method not allowed on server. Please check backend view decorators."
+        : "Failed to delete lecture.";
+      alert(msg);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   if (isLoading) return <div className={styles.loader}>Loading...</div>;
 
@@ -124,6 +146,15 @@ const LectureReviewPage = () => {
               </div>
             </div>
           )}
+
+          <button 
+            className={styles.deleteLectureBtn} 
+            onClick={handleDeleteLecture}
+            disabled={isDeleting}
+          >
+            <Trash2 size={18} />
+            {isDeleting ? "Deleting..." : "Delete Lecture"}
+          </button>
         </div>
       </div>
     </div>

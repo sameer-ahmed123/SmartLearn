@@ -92,6 +92,43 @@
 .successText h3 { margin: 0; font-size: 1rem; color: white !important; }
 .successText p { margin: 0; font-size: 0.85rem; opacity: 0.9; color: white !important; }
 
+/* --- DELETE LECTURE BUTTON STYLING --- */
+.deleteLectureBtn {
+    width: 100%;
+    margin-top: 20px;
+    padding: 14px;
+    border-radius: 12px;
+    border: 1.5px solid #fee2e2;
+    background: #fff;
+    color: #ef4444;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.deleteLectureBtn:hover:not(:disabled) {
+    background: #fef2f2;
+    border-color: #fecaca;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.1);
+}
+
+.deleteLectureBtn:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.deleteLectureBtn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: #f8fafc;
+    border-color: #e2e8f0;
+    color: #94a3b8;
+}
+
 .loader, .error { padding: 50px; text-align: center; color: var(--foreground); }
 
 @media (max-width: 1024px) {

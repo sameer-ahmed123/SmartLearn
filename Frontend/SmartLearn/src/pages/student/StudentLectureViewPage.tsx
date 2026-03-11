@@ -53,16 +53,29 @@ const StudentLectureReviewPage = () => {
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim()) return;
+
     const userMsg = { role: "user", text: input };
     setMessages(prev => [...prev, userMsg]);
+    const currentInput = input;
     setInput("");
 
-    setTimeout(() => {
+    try {
+      // Backend endpoint call: lectures/<id>/chat/
+      const response = await apiClient.post(`lectures/${id}/chat/`, { 
+        message: currentInput 
+      });
+
       setMessages(prev => [...prev, { 
         role: "bot", 
-        text: `I'm analyzing the lecture content for: "${input}". (AI integration coming soon!)` 
+        text: response.data.text 
       }]);
-    }, 1000);
+    } catch (error) {
+      console.error("Chat error:", error);
+      setMessages(prev => [...prev, { 
+        role: "bot", 
+        text: "Sorry, I'm having trouble connecting right now. Please try again." 
+      }]);
+    }
   };
 
   if (loading) return <div className="loader">Opening Lecture Room...</div>;
@@ -127,25 +140,8 @@ const StudentLectureReviewPage = () => {
           </div>
         </div>
 
-        {/* RIGHT COLUMN: Metadata & ChatBot */}
-        <div className="rightColumn">
-          {/* Metadata Info */}
-          <div className="metadataCard">
-            <div className="metaHeader">
-              <Info size={16} /> LECTURE DETAILS
-            </div>
-            <div className="metaGroup">
-              <label><Clock size={12} /> DATE PUBLISHED</label>
-              <p>{lecture?.created_at ? new Date(lecture.created_at).toLocaleDateString() : "N/A"}</p>
-            </div>
-            <div className="metaGroup">
-              <label><MessageSquare size={12} /> AI TUTOR STATUS</label>
-              <div className="promptBox" style={{ background: '#ecfdf5', color: '#059669', border: '1px solid #10b981' }}>
-                Active & Ready to Assist
-              </div>
-            </div>
-          </div>
-
+        {/* RIGHT COLUMN: ChatBot */}
+        <div className="rightColumn">          
           {/* ChatBot Section */}
           <div className="ai-chatbot-sidebar" style={{ height: '500px' }}>
             <div className="chat-header">

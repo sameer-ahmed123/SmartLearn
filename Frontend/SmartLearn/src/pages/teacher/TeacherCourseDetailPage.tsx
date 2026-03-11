@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useLocation } from "react-router-dom"; // useLocation add kiya
 import CourseContentTable from "../../components/Dashboard/teacher/CourseContentTable";
 import CourseManagementHeader from "../../components/Dashboard/teacher/CourseManagementHeader";
 import apiClient from "../../api/apiClient";
@@ -16,6 +16,7 @@ interface CourseDetail {
 
 const TeacherCourseDetailPage = () => {
   const { courseid } = useParams<{ courseid: string }>();
+  const location = useLocation(); // URL location track karne ke liye
   const courseId = courseid;
 
   const [lectures, setLectures] = useState<CourseContentItem[]>([]);
@@ -26,6 +27,23 @@ const TeacherCourseDetailPage = () => {
   const [activeTab, setActiveTab] = useState<"content" | "assessments">(
     "content"
   );
+
+  // Check if we should hide tabs based on URL param (for content, assignments and quizzes)
+  const queryParams = new URLSearchParams(location.search);
+  const isAssignmentMode = queryParams.get("tab") === "assessments";
+  const isQuizMode = queryParams.get("tab") === "quizzes";
+  const isContentMode = queryParams.get("tab") === "content"; // Added content mode check
+  const hideTabs = isAssignmentMode || isQuizMode || isContentMode; // Updated hideTabs logic
+
+  // URL query parameter check karne ke liye logic
+  useEffect(() => {
+    const tabParam = queryParams.get("tab");
+    if (tabParam === "assessments" || tabParam === "quizzes") {
+      setActiveTab("assessments");
+    } else {
+      setActiveTab("content");
+    }
+  }, [location.search]);
 
   const refreshData = async () => {
     if (!courseId) return;
@@ -88,40 +106,51 @@ const TeacherCourseDetailPage = () => {
         onCourseUpdate={handleCourseUpdate}
       />
 
-      {/* Tabs */}
-      <div style={{ marginBottom: "20px", borderBottom: "1px solid #eee" }}>
-        <button
-          onClick={() => setActiveTab("content")}
-          style={{
-            color: "#434343",
-            padding: "10px 20px",
-            marginRight: "10px",
-            background: "none",
-            border: "none",
-            borderBottom:
-              activeTab === "content" ? "3px solid #3498db" : "none",
-            fontWeight: activeTab === "content" ? "bold" : "normal",
-            cursor: "pointer",
-          }}
-        >
-          📚 Lecture Content
-        </button>
-        <button
-          onClick={() => setActiveTab("assessments")}
-          style={{
-            color: "#434343",
-            padding: "10px 20px",
-            background: "none",
-            border: "none",
-            borderBottom:
-              activeTab === "assessments" ? "3px solid #9b59b6" : "none",
-            fontWeight: activeTab === "assessments" ? "bold" : "normal",
-            cursor: "pointer",
-          }}
-        >
-          📝 Assessments (Quiz)
-        </button>
-      </div>
+      {/* Tabs - Hidden if hideTabs is true */}
+      {!hideTabs && (
+        <div style={{ marginBottom: "20px", borderBottom: "1px solid #eee" }}>
+          <button
+            onClick={() => setActiveTab("content")}
+            style={{
+              color: "#434343",
+              padding: "10px 20px",
+              marginRight: "10px",
+              background: "none",
+              border: "none",
+              borderBottom:
+                activeTab === "content" ? "3px solid #3498db" : "none",
+              fontWeight: activeTab === "content" ? "bold" : "normal",
+              cursor: "pointer",
+            }}
+          >
+            📚 Lecture Content
+          </button>
+          <button
+            onClick={() => setActiveTab("assessments")}
+            style={{
+              color: "#434343",
+              padding: "10px 20px",
+              background: "none",
+              border: "none",
+              borderBottom:
+                activeTab === "assessments" ? "3px solid #9b59b6" : "none",
+              fontWeight: activeTab === "assessments" ? "bold" : "normal",
+              cursor: "pointer",
+            }}
+          >
+            📝 Assessments (Quiz)
+          </button>
+        </div>
+      )}
+
+      {/* Conditional Heading Title - Only show if NOT in hidden mode */}
+      {!hideTabs && (
+        <div style={{ marginBottom: "20px" }}>
+          <h2 style={{ color: "#434343", fontSize: "1.5rem" }}>
+            {activeTab === "content" ? "Course Content" : "Course Assessments"}
+          </h2>
+        </div>
+      )}
 
       {activeTab === "content" ? (
         <CourseContentTable
@@ -129,7 +158,13 @@ const TeacherCourseDetailPage = () => {
           onGenerateClick={() => setIsGenerateOpen(true)}
         />
       ) : (
-        <AssessmentList onRefresh={refreshData} lectures={lectures} />
+        /* Yahan isAssignmentOnly aur isQuizOnly props pass kiye gaye hain */
+        <AssessmentList 
+          onRefresh={refreshData} 
+          lectures={lectures} 
+          isAssignmentOnly={isAssignmentMode} 
+          isQuizOnly={isQuizMode}
+        />
       )}
 
       {course && (

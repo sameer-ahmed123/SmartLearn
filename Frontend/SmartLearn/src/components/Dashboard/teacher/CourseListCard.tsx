@@ -70,7 +70,8 @@ const CourseListCard: React.FC<CourseListCardProps> = ({ course }) => {
         </div>
 
         <div className={styles.actions}>
-          <Link to={`/teacher/course/${course.id}`} className={styles.manageBtn}>
+          {/* Path wahi rakha hai, sirf query param add kiya hai */}
+          <Link to={`/teacher/course/${course.id}?tab=content`} className={styles.manageBtn}>
             Manage Content
           </Link>
         </div>

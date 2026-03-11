@@ -142,8 +142,43 @@
   border-top: 1px solid var(--border, #eee);
   display: flex;
   justify-content: flex-end;
+  align-items: center; /* Centering items vertically */
   gap: 10px;
 }
+
+/* --- NEW STATUS PICKER STYLES --- */
+.statusPicker {
+  margin-right: auto; /* Pushes the dropdown to the left side of the footer */
+  display: flex;
+  align-items: center;
+}
+
+.selectWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.styledSelect {
+  appearance: none;
+  background: var(--card, #ffffff);
+  border: 1px solid var(--border, #ccc);
+  padding: 8px 30px 8px 12px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  outline: none;
+  color: var(--foreground, #333);
+  min-width: 150px;
+}
+
+.selectArrow {
+  position: absolute;
+  right: 10px;
+  pointer-events: none;
+  color: #7f8c8d;
+}
+/* -------------------------------- */
 
 .cancelBtn {
   padding: 10px 20px;

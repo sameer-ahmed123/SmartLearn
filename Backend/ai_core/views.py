@@ -8,7 +8,7 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 
 # Gemini Config
-GEMINI_API_KEY = "AIzaSyBSnFVZs7RBmCy3XyuV6CExxyrm0b5_4v0" 
+GEMINI_API_KEY = "AIzaSyDFOA5zdmntZoOvtGtX1BigW0vfKC7RZjI" 
 genai.configure(api_key=GEMINI_API_KEY)
 
 class AIChatView(APIView):

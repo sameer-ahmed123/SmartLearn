@@ -1,3 +1,6 @@
+import os
+import google.generativeai as genai
+from dotenv import load_dotenv  # Added to load .env variables
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes  
 from rest_framework.response import Response
@@ -12,6 +15,13 @@ from users.permissions import CanViewLecture, IsCourseOwner, IsTeacher
 from rest_framework.permissions import IsAuthenticated
 from .tasks import generate_lecture_from_source
 
+# Load environment variables from .env
+load_dotenv()
+
+# Gemini Configuration
+GEMINI_KEY = os.environ.get("GEMINI_API_KEY")
+if GEMINI_KEY:
+    genai.configure(api_key=GEMINI_KEY)
 
 # -----------------------------------------------------------
 # NEW FBV 1: COURSE - GET (List) and POST (Create/Enroll)
@@ -201,7 +211,7 @@ def lecture_validation_queue(request):
     return Response(serializer.data)
 
 
-@api_view(["GET"])
+@api_view(["GET", "DELETE"])  # ADDED DELETE METHOD HERE
 @permission_classes([IsAuthenticated, CanViewLecture])
 def lecture_detail(request, id):
     lecture = get_object_or_404(
@@ -210,8 +220,17 @@ def lecture_detail(request, id):
             'content_source__course'
         ),
         id=id)
-    serializer = LectureDetailSerializer(lecture)
-    return Response(serializer.data)
+    
+    if request.method == 'GET':
+        serializer = LectureDetailSerializer(lecture)
+        return Response(serializer.data)
+    
+    elif request.method == 'DELETE':
+        # Ensure only the course owner (teacher) can delete the lecture
+        if request.user.role == "teacher" and lecture.content_source.course.teacher == request.user:
+            lecture.delete()
+            return Response({"detail": "Lecture deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
+        return Response({"detail": "Only the course owner can delete this lecture."}, status=status.HTTP_403_FORBIDDEN)
 
 
 @api_view(["PATCH"])
@@ -240,5 +259,66 @@ def lecture_validate_action(request, id):
 def course_lecture_list(request, course_id):
     lecture_list = Lecture.objects.filter(content_source__course__id=course_id).select_related(
         'content_source', 'content_source__course', 'quiz','assignment')
-    serializer = CourseLectureListItem(lecture_list, many=True)
-    return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    # Custom response to include necessary fields for the table
+    data = []
+    for lecture in lecture_list:
+        data.append({
+            "id": lecture.id,
+            "topic": lecture.topic,
+            "created_at": lecture.created_at,
+            "validation_status": lecture.validation_status,
+            "status_display": lecture.get_validation_status_display(),
+            "review_url": f"/dashboard/teacher/lectures/{lecture.id}/review",
+            "quiz_id": lecture.quiz.id if hasattr(lecture, 'quiz') and lecture.quiz else None,
+            "assignment_id": lecture.assignment.id if hasattr(lecture, 'assignment') and lecture.assignment else None,
+        })
+    
+    return Response(data, status=status.HTTP_200_OK)
+
+# --- RE-FIXED CHATBOT: Final Stability Logic ---
+@api_view(['POST'])
+@permission_classes([IsAuthenticated, CanViewLecture])
+def lecture_chat(request, id):
+    lecture = get_object_or_404(Lecture, id=id)
+    user_query = request.data.get('message')
+
+    if not user_query:
+        return Response({"detail": "Message is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+    api_key = os.environ.get("GEMINI_API_KEY")
+    if not api_key:
+        return Response({"detail": "Gemini API Key missing."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    try:
+        genai.configure(api_key=api_key)
+        
+        # 404 Error se bachne ke liye available models list karna
+        available_model_names = [m.name for m in genai.list_models()]
+        
+        # Priority check
+        if 'models/gemini-1.5-flash-latest' in available_model_names:
+            selected_model = 'gemini-1.5-flash-latest'
+        elif 'models/gemini-1.5-flash' in available_model_names:
+            selected_model = 'gemini-1.5-flash'
+        elif 'models/gemini-pro' in available_model_names:
+            selected_model = 'gemini-pro'
+        else:
+            selected_model = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods][0]
+
+        model = genai.GenerativeModel(selected_model)
+        
+        lecture_context = lecture.summary_text if lecture.summary_text else "No summary available."
+        prompt = (
+            f"You are a helpful AI tutor for this course lecture: {lecture.topic}.\n"
+            f"Context: {lecture_context}\n\n"
+            f"Student Question: {user_query}\n"
+            f"Please answer precisely based on the context above."
+        )
+        
+        response = model.generate_content(prompt)
+        return Response({"text": response.text}, status=status.HTTP_200_OK)
+    
+    except Exception as e:
+        print(f"AI ERROR: {str(e)}")
+        return Response({"detail": f"AI Error: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
