@@ -39,7 +39,8 @@ interface ContentSource{
 export interface LectureDetails{
     id:number,
     topic:string,
-    video_url:string,
+    video_url?: string | null;
+    video_status?: "none" | "processing" | "completed" | "failed";
     summary_text:string,
     validation_status: 'validated'|'rejected'|'pending',
     status_display:string,
@@ -59,6 +60,8 @@ export interface CourseContentItem {
   course_topic: string; 
   created_at: string;
   review_url :string,
+  video_status?: "none" | "processing" | "completed" | "failed";
+  video_url?: string | null;
 //   quiz_id?: number;
 }
 

@@ -119,7 +119,7 @@ const TeacherCourseDetailPage = () => {
             cursor: "pointer",
           }}
         >
-          📝 Assessments (Quiz)
+          📝 Assessments
         </button>
       </div>
 

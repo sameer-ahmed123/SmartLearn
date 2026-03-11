@@ -1,10 +1,10 @@
-
 import type { LectureDetails } from "@/types/Lectures/Types";
 import styles from "./LectureReviewPage.module.css";
 import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import apiClient from "@/api/apiClient";
 import ValidationActionPanel from "@/components/Dashboard/teacher/ValidationActionPanel";
+import SharedVideoPlayer from "@/components/Dashboard/shared/SharedVideoPlayer";
 const LectureReviewPage = () => {
   const { id } = useParams<{ id: string }>();
   const lectureId = id;
@@ -40,12 +40,7 @@ const LectureReviewPage = () => {
   }, [lectureId]);
 
   if (isLoading) {
-    return (
-      <p>
-        {" "}
-        Lecture is Loading....{" "}
-      </p>
-    );
+    return <p> Lecture is Loading.... </p>;
   }
 
   if (error) {
@@ -57,9 +52,7 @@ const LectureReviewPage = () => {
   }
 
   if (!lecture) {
-    return (
-      <p>Lecture Not Found.</p>
-    );
+    return <p>Lecture Not Found.</p>;
   }
 
   const isPending = lecture.validation_status === "pending";
@@ -76,7 +69,11 @@ const LectureReviewPage = () => {
           <h2>Video Content</h2>
           {/* Placeholder for the video player. In a real app, this would be an embedded iframe */}
           <div className={styles.videoPlayer}>
-            <p>Video Player Placeholder (URL: {lecture.video_url || "N/A"})</p>
+            <SharedVideoPlayer
+              videoUrl={lecture.video_url}
+              videoStatus={lecture.video_status}
+              title="AI Lecture Presentation"
+            />
           </div>
 
           <h2>Summary Text</h2>

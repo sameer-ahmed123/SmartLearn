@@ -40,7 +40,7 @@ class CourseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Course
         fields = [
-            'id', 'teacher', 'title', 'description', 'status', 'created_at', 'lecture_count', 'content_source_count'
+            'id', 'teacher', 'title', 'description', 'status', 'created_at', 'lecture_count', 'content_source_count',
         ]
         read_only_fields = ['teacher', 'created_at']
 
@@ -150,6 +150,7 @@ class LectureDetailSerializer(serializers.ModelSerializer):
             'id',
             'topic',
             'video_url',
+            'video_status',
             'summary_text',
             'validation_status',
             'status_display',
@@ -189,8 +190,8 @@ class LectureValidationActionSerializer(serializers.ModelSerializer):
     """
     class Meta:
         model = Lecture
-        fields = ['validation_status', 'rejection_comment']
-        read_only_fields = ['id', 'topic', 'video_url',
+        fields = ['validation_status', 'rejection_comment','video_url','video_status']
+        read_only_fields = ['id', 'topic', 'video_url','video_status'
                             'summary_text', 'content_source']
 
     def validate(self, data):
@@ -239,6 +240,8 @@ class CourseLectureListItem(serializers.ModelSerializer):
             'quiz_id',
             'assignment_data',
             'assignment_id',
+            'video_status',
+            'video_url',
         ]
 
     def get_quiz_data(self, obj):

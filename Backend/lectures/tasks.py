@@ -1,3 +1,5 @@
+import time
+
 from .models import ContentSource, Lecture, Course
 import logging
 import os
@@ -83,7 +85,8 @@ def generate_lecture_from_source(content_source_id):
             topic=f"Auto-Generated Lecture: {course_title} Part {source_instance.id}",
             # Temporary: script is stored in summary_text until dedicated schema update
             summary_text=script,
-            video_url=video_url,
+            video_url=None,
+            video_status ='none',
             # Associate lecture with the original teacher who uploaded the source
             generated_by=source_instance.uploaded_by,
             validation_status='pending',
@@ -118,3 +121,41 @@ def generate_lecture_from_source(content_source_id):
                         f"failed to remove  temp file {path}: {cleanup_e}")
 
     return None
+
+
+@celery_app.task
+def generate_heygen_video_task(lecture_id):
+    """
+    Triggered only when a teacher validates a lecture.
+    Currently set to MOCK MODE to preserve the 1/month HeyGen API limit.
+    """
+    try:
+        lecture = Lecture.objects.get(id=lecture_id)
+        
+        # 1. Update status to processing to update frontend UI
+        lecture.video_status = 'processing'
+        lecture.save(update_fields=['video_status'])
+        
+        logger.info(f"Starting MOCK video generation for Lecture {lecture_id}")
+
+        # 2. Simulate HeyGen API and Cloudinary processing time
+        time.sleep(30) 
+
+        # 3. Apply Mock Cloudinary/HeyGen Data
+        dummy_video_url = "https://res.cloudinary.com/demo/video/upload/v1690000000/sample_video.mp4"
+        
+        lecture.video_url = dummy_video_url
+        lecture.video_status = 'completed'
+        lecture.save(update_fields=['video_url', 'video_status'])
+
+        logger.info(f"MOCK video generation complete for Lecture {lecture_id}. URL: {dummy_video_url}")
+
+    except Lecture.DoesNotExist:
+        logger.error(f"Lecture ID {lecture_id} not found for video generation.")
+    except Exception as e:
+        logger.exception(f"Video generation failed for Lecture {lecture_id}: {e}")
+        try:
+            lecture.video_status = 'failed'
+            lecture.save(update_fields=['video_status'])
+        except:
+            pass

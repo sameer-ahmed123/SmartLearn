@@ -38,6 +38,20 @@ const CourseContentTable = ({
     }
   };
 
+  const renderVideoStatus = (status?: string) => {
+    switch (status) {
+      case "processing":
+        return <span style={{ color: '#f39c12', fontWeight: 'bold' }}>⏳ Processing...</span>;
+      case "completed":
+        return <span style={{ color: '#27ae60', fontWeight: 'bold' }}>✅ Ready</span>;
+      case "failed":
+        return <span style={{ color: '#c0392b', fontWeight: 'bold' }}>❌ Failed</span>;
+      case "none":
+      default:
+        return <span style={{ color: '#7f8c8d' }}>—</span>;
+    }
+  };
+
   const renderActions = (lecture: CourseContentItem) => {
     switch (lecture.validation_status) {
       case "pending":
@@ -111,7 +125,8 @@ const CourseContentTable = ({
           <tr>
             <th>Topic</th>
             <th className={styles.createdCol}>Generated On</th>
-            <th>Status</th>
+            <th>Lecture Status</th>
+            <th>Video Status</th>
             <th className={styles.actionCol}>Actions</th>
           </tr>
         </thead>
@@ -137,6 +152,9 @@ const CourseContentTable = ({
                   >
                     {item.status_display}
                   </span>
+                </td>
+                <td>
+                  {renderVideoStatus(item.video_status)}
                 </td>
                 <td className={styles.actionCol}>{renderActions(item)}</td>
               </tr>

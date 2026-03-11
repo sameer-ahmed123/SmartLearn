@@ -2,6 +2,8 @@ from django.db import models
 from django.conf import settings
 
 # 1: COURSE MODEL ---Subject Container
+
+
 class Course(models.Model):
     """This represents the Highest Level Container for content
         Example: COMPUTER_SCIENCE
@@ -31,6 +33,8 @@ class Course(models.Model):
         db_table = "course"
 
 # 2: CONTENT SOURCE MODEL ---(Teacher k Inptut Contain kare ga files)
+
+
 class ContentSource(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="content_sources",
                                help_text="the cource this content is intended for")
@@ -52,6 +56,8 @@ class ContentSource(models.Model):
         db_table = "content_source"
 
 # 3: LECTURE MODEL ---(AI's Structured Output)
+
+
 class Lecture(models.Model):
     content_source = models.ForeignKey(
         ContentSource,
@@ -74,10 +80,24 @@ class Lecture(models.Model):
     validated_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
                                      null=True, blank=True, related_name='validated_lectures')
 
-    script = models.TextField(blank=True,null=True, help_text="Full Ai Generated Lecture Script")
-    context = models.TextField(blank=True, null=True,help_text="Ai-Generated context for chatbot/Quiz/Assignment")
+    script = models.TextField(blank=True, null=True,
+                              help_text="Full Ai Generated Lecture Script")
+    context = models.TextField(
+        blank=True, null=True, help_text="Ai-Generated context for chatbot/Quiz/Assignment")
     
-    video_url = models.URLField()
+    VIDEO_STATUS_CHOICES = (
+        ('none', 'None'),
+        ('processing', 'Processing'),
+        ('completed', 'Completed'),
+        ('failed', 'Failed'),
+    )
+    video_status = models.CharField(
+        max_length=20, choices=VIDEO_STATUS_CHOICES, default='none')
+    
+    video_url = models.URLField(blank=True, null=True)
+    video_public_id = models.CharField(
+        max_length=255, blank=True, null=True, help_text="Cloudinary Public ID for management")
+
     summary_text = models.TextField()
 
     rejection_comment = models.TextField(blank=True, null=True)
