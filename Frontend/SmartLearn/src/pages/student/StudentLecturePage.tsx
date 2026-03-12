@@ -88,7 +88,7 @@ const StudentLecturePage = () => {
         <div className="student-banner">
           <div className="banner-content">
             <h1 style={{ color: 'white', fontSize: '2rem', margin: 0 }}>Learning Portal</h1>
-            <p style={{ color: 'white',  }}>Review your course materials and track your goals.</p>
+            <p style={{ color: 'white', opacity: 0.9 }}>Review your course materials and track your goals.</p>
             <button className="enroll-trigger-btn" onClick={() => setIsModalOpen(true)}>
               <Plus size={20} /> Enroll in New Course
             </button>
@@ -125,7 +125,6 @@ const StudentLecturePage = () => {
             
             <div style={{ marginTop: '25px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <h3 style={{ margin: 0, color: 'var(--foreground)' }}>Lecture Details</h3>
-                <button className="ai-btn"><MessageCircle size={18} /> Ask AI Assistant</button>
             </div>
             <p className="lecture-desc" style={{ color: 'var(--muted-foreground)' }}>This video covers the core foundations. Please review the mathematical formulas.</p>
           </div>

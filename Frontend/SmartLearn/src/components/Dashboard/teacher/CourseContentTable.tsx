@@ -4,7 +4,7 @@ import styles from "./CourseContentTable.module.css";
 import { Link } from "react-router-dom";
 import { 
   FileText, Calendar, CheckCircle2, Clock, AlertCircle, 
-  ExternalLink, Eye, Edit3, Plus, Filter 
+  Eye, Edit3, Plus, Filter 
 } from "lucide-react";
 
 interface CourseContentTableProps {
@@ -52,22 +52,25 @@ const CourseContentTable = ({
   };
 
   const renderActions = (lecture: CourseContentItem) => {
+    // FIX: Manual path construction to match App.tsx routes
+    const reviewPath = `/teacher/lecture/${lecture.id}/review`;
+
     switch (lecture.validation_status) {
       case "pending":
         return (
-          <Link to={lecture.review_url} className={styles.actionReview}>
+          <Link to={reviewPath} className={styles.actionReview}>
             <Edit3 size={14} /> Review
           </Link>
         );
       case "rejected":
         return (
-          <Link to={lecture.review_url} className={styles.actionEdit}>
+          <Link to={reviewPath} className={styles.actionEdit}>
             <AlertCircle size={14} /> Fix
           </Link>
         );
       case "validated":
         return (
-          <Link to={lecture.review_url} className={styles.actionView}>
+          <Link to={reviewPath} className={styles.actionView}>
             <Eye size={14} /> View
           </Link>
         );

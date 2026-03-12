@@ -69,6 +69,20 @@ def course_list_create(request):
 
 
 # -----------------------------------------------------------
+# NEW: Teacher Specific Course List (For Dashboard Sidebar/Dropdowns)
+# -----------------------------------------------------------
+@api_view(['GET'])
+@permission_classes([IsAuthenticated, IsTeacher])
+def teacher_courses_list(request):
+    """
+    Returns only the courses owned by the authenticated teacher.
+    """
+    courses = Course.objects.filter(teacher=request.user).order_by('-created_at')
+    serializer = CourseSerializer(courses, many=True, context={'request': request})
+    return Response(serializer.data)
+
+
+# -----------------------------------------------------------
 # NEW FBV 2: COURSE - GET (Detail), PUT/PATCH (Update), DELETE (Destroy)
 # -----------------------------------------------------------
 @api_view(['GET', 'PUT', 'PATCH', 'DELETE'])

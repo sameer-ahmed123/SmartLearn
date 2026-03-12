@@ -6,6 +6,9 @@ class QuizSerializer(serializers.ModelSerializer):
     course_name = serializers.CharField(source='lecture.content_source.course.title', read_only=True)
     lecture_title = serializers.CharField(source='lecture.topic', read_only=True)
     questions_count = serializers.SerializerMethodField()
+    
+    # --- ADDED: Student ka score fetch karne ke liye field ---
+    user_score = serializers.SerializerMethodField()
 
     class Meta:
         model = Quiz
@@ -13,13 +16,29 @@ class QuizSerializer(serializers.ModelSerializer):
 
     def get_questions_count(self, obj):
         if obj.quiz_data:
-            # quiz_data list hai to uski length return hogi
-            return len(obj.quiz_data)
+            # Agar quiz_data dictionary hai jisme 'questions' key hai
+            if isinstance(obj.quiz_data, dict) and 'questions' in obj.quiz_data:
+                return len(obj.quiz_data['questions'])
+            # Agar quiz_data direct list hai
+            elif isinstance(obj.quiz_data, list):
+                return len(obj.quiz_data)
         return 0
+
+    def get_user_score(self, obj):
+        # Request se current student nikalna
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            # QuizSubmission se is quiz ka score uthana
+            submission = QuizSubmission.objects.filter(user=request.user, quiz=obj).first()
+            if submission:
+                return submission.score
+        return None
 
 class QuizSubmissionSerializer(serializers.ModelSerializer):
     # --- ADDED: User name logic for Quiz Analytics ---
     user_name = serializers.SerializerMethodField()
+    # Explicitly handling score to ensure it's passed as float/number
+    score = serializers.FloatField(read_only=True)
 
     class Meta:
         model = QuizSubmission
@@ -52,7 +71,10 @@ class AssignmentSerializer(serializers.ModelSerializer):
 
     def get_questions_count(self, obj):
         if obj.quiz_data:
-            return len(obj.quiz_data)
+            if isinstance(obj.quiz_data, dict) and 'questions' in obj.quiz_data:
+                return len(obj.quiz_data['questions'])
+            elif isinstance(obj.quiz_data, list):
+                return len(obj.quiz_data)
         return 0
 
     def get_submission_count(self, obj):

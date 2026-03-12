@@ -134,6 +134,24 @@
   gap: 12px;
 }
 
+/* Course Dropdown Styling */
+.courseSelect {
+  height: 48px;
+  padding: 0 15px;
+  border-radius: 12px;
+  border: 1.5px solid var(--border, #e2e8f0);
+  background: var(--card, white);
+  color: var(--foreground, #1e293b);
+  font-weight: 600;
+  outline: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.courseSelect:hover {
+  border-color: #6366f1;
+}
+
 .roundActionBtn {
   background: var(--card, white);
   border: 1.5px solid var(--border, #e2e8f0);
@@ -217,10 +235,12 @@
   font-weight: 800;
 }
 
-/* Grade Colors */
+/* Grade Colors - Matching Student Portal */
 .gradeA { background: #dcfce7; color: #15803d; }
 .gradeB { background: #e0e7ff; color: #4338ca; }
 .gradeC { background: #fef3c7; color: #b45309; }
+.gradeD { background: #ffedd5; color: #9a3412; }
+.gradeF { background: #fee2e2; color: #b91c1c; }
 
 .actionCell {
   display: flex;

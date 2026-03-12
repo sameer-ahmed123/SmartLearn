@@ -1,5 +1,5 @@
 from django.shortcuts import render
-
+import os
 
 import google.generativeai as genai
 from rest_framework.views import APIView
@@ -8,7 +8,7 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 
 # Gemini Config
-GEMINI_API_KEY = "AIzaSyDFOA5zdmntZoOvtGtX1BigW0vfKC7RZjI" 
+GEMINI_API_KEY = os.environ.get("CHATBOT_API_KEY") 
 genai.configure(api_key=GEMINI_API_KEY)
 
 class AIChatView(APIView):

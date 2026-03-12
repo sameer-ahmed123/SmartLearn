@@ -33,6 +33,7 @@ import StudentQuizPage from "./pages/student/StudentQuizPage";
 import StudentAssignmentPage from "./pages/student/StudentAssignmentPage";
 import AssignmentSubmission from "./pages/teacher/AssignmentSubmissions";
 import QuizDetailView from "./pages/teacher/QuizDetailView";
+import StudentReportPage from "./pages/teacher/StudentReportPage";
 
 
 // --- FIX: TypeScript interface for Google Translate ---
@@ -169,6 +170,10 @@ const App: React.FC = () => {
             <Route
               path="/teacher/lecture/:id/quiz"
               element={<QuizDetailView />}
+            />
+            <Route 
+            path="/teacher/student-report/:studentId" 
+            element={<StudentReportPage />} 
             />
             
           </Route>

@@ -19,11 +19,20 @@ const QuizDetailView = () => {
     const fetchDetails = async () => {
       try {
         setLoading(true);
+        // Pehle quiz detail fetch karein
         const response = await apiClient.get(`/assessments/quiz/detail-by-lecture/${id}/`);
-        setQuizData(response.data);
+        
+        // Agar backend se direct fields nahi aa rahe to hum naya detail endpoint bhi call kar sakte hain
+        // Lekin filhal hum usi response ko use kar rahe hain
+        const quizId = response.data.id;
+        
+        if (quizId) {
+            // Naya detail call taake extra serializer fields (questions_count etc) mil sakein
+            const detailResponse = await apiClient.get(`/assessments/quiz/${quizId}/`);
+            setQuizData(detailResponse.data);
 
-        if (response.data.id) {
-            const subResponse = await apiClient.get(`/assessments/quiz/${response.data.id}/submissions/`);
+            // Submissions fetch karein
+            const subResponse = await apiClient.get(`/assessments/quiz/${quizId}/submissions/`);
             setSubmissions(subResponse.data);
         }
         
@@ -102,7 +111,7 @@ const QuizDetailView = () => {
           <ArrowLeft size={18} /> Back
         </button>
         <div className={styles.titleInfo}>
-          <h1 style={{ color: 'var(--foreground)' }}>{quizData.lecture_topic || "Quiz Details"}</h1>
+          <h1 style={{ color: 'var(--foreground)' }}>{quizData.lecture_title || quizData.lecture_topic || "Quiz Details"}</h1>
           <p style={{ color: 'var(--muted-foreground)' }}>{quizData.course_name} • <span className={styles.statusText}>{quizData.status}</span></p>
         </div>
       </header>

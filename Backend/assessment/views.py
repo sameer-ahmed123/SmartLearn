@@ -2,17 +2,27 @@ from django.shortcuts import get_object_or_404
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from assessment.models import Assignment, Quiz, QuizSubmission, AssignmentSubmission
-from assessment.serialzers import AssignmentSerializer, QuizSerializer, AssignmentSubmissionSerializer
+from assessment.serialzers import AssignmentSerializer, QuizSerializer, AssignmentSubmissionSerializer, QuizSubmissionSerializer
 from users.permissions import IsCourseOwner
 from rest_framework.response import Response
 from rest_framework import status
 from .tasks import generate_assessment_task
 from django.utils import timezone
+from django.db.models import Sum, F, Avg
+from django.contrib.auth import get_user_model
 import json
 import PyPDF2  # PDF text extraction ke liye
-import docx     # Word file text extraction ke liye
+import docx       # Word file text extraction ke liye
 import google.generativeai as genai  # AI Grading ke liye
 from django.conf import settings
+
+# Enrollment model import
+try:
+    from courses.models import Enrollment
+except ImportError:
+    Enrollment = None
+
+User = get_user_model()
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated,IsCourseOwner])
@@ -46,7 +56,9 @@ def quiz_detail_update(request, quiz_id):
     if request.method == 'GET':
         if not (is_teacher or is_enrolled):
             return Response({"error": "You do not have permission to view this quiz."}, status=403)
-        serializer = QuizSerializer(quiz)
+        
+        # --- UPDATED: Added context to fetch user_score correctly ---
+        serializer = QuizSerializer(quiz, context={'request': request})
         return Response(serializer.data)
 
     elif request.method in ['PUT', 'PATCH']:
@@ -293,12 +305,13 @@ def submit_assignment(request, assignment_id):
         rubric = assignment.assignment_data.get('rubric', [])
         tasks = assignment.assignment_data.get('tasks', [])
         
+        # Prompt updated to ensure percentage-based scoring
         prompt = f"""
         Grade this student assignment based on the provided tasks and rubric.
         Tasks: {tasks}
         Rubric: {rubric}
         Student Work Content: {extracted_text}
-        Return ONLY a JSON object in this format: {{"score": <number>, "feedback": "<string>"}}
+        Return ONLY a JSON object in this format: {{"score": <number between 0 and 100>, "feedback": "<string>"}}
         """
         
         response = model.generate_content(prompt)
@@ -347,8 +360,8 @@ def teacher_assignment_list(request):
             "submission_count": sub_count, 
             "type": "assignment",
             "status": asm.status,
-            "deadline": asm.deadline, # Added for date display
-            "created_at": asm.created_at # Fallback date
+            "deadline": asm.deadline, 
+            "created_at": asm.created_at
         })
     return Response(assignment_list)
 
@@ -378,7 +391,7 @@ def teacher_quiz_list(request):
             "questions_count": q_count,     
             "type": "quiz",
             "status": quiz.status,
-            "created_at": quiz.created_at # Yeh line date fix karegi
+            "created_at": quiz.created_at
         })
     return Response(quiz_list)
 
@@ -391,9 +404,10 @@ def quiz_detail_by_lecture(request, lecture_id):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_quiz_submissions(request, quiz_id):
+    # UPDATED: Score properly fetch karne ke liye serializer use kiya gaya hai
     submissions = QuizSubmission.objects.filter(quiz_id=quiz_id).select_related('user')
-    data = [{"id": sub.id, "user_name": sub.user.username, "score": sub.score, "submitted_at": sub.submitted_at} for sub in submissions]
-    return Response(data)
+    serializer = QuizSubmissionSerializer(submissions, many=True)
+    return Response(serializer.data)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -411,3 +425,187 @@ def grade_assignment_submission(request, submission_id):
     submission.feedback = request.data.get('feedback', '')
     submission.save()
     return Response({"message": "Graded successfully", "score": submission.score})
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def teacher_gradebook_summary(request):
+    teacher = request.user
+    # Query parameter se course_id lein
+    course_id = request.query_params.get('course_id')
+    
+    # Filter students based on course if provided
+    student_query = User.objects.filter(course_enrollments__course__teacher=teacher)
+    if course_id:
+        student_query = student_query.filter(course_enrollments__course_id=course_id)
+    
+    students = student_query.distinct()
+    gradebook_data = []
+    
+    for student in students:
+        # Base filters for submissions
+        asg_filter = {'user': student, 'assignment__lecture__content_source__course__teacher': teacher, 'score__isnull': False}
+        quiz_filter = {'user': student, 'quiz__lecture__content_source__course__teacher': teacher}
+        
+        if course_id:
+            asg_filter['assignment__lecture__content_source__course_id'] = course_id
+            quiz_filter['quiz__lecture__content_source__course_id'] = course_id
+
+        asg_avg = AssignmentSubmission.objects.filter(**asg_filter).aggregate(avg=Avg('score'))['avg'] or 0
+        quiz_avg = QuizSubmission.objects.filter(**quiz_filter).aggregate(avg=Avg('score'))['avg'] or 0
+        
+        gradebook_data.append({
+            "id": student.id,
+            "student_name": student.full_name if student.full_name else student.username,
+            "student_id_num": f"STU-{student.id:03d}",
+            "avatar_url": "",
+            "assignments_marks": round(asg_avg, 2),
+            "quizzes_marks": round(quiz_avg, 2),
+            "exam_marks": 0,
+            "total_possible": 100
+        })
+    return Response(gradebook_data)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def student_detail_report(request, student_id):
+    teacher = request.user
+    student = get_object_or_404(User, id=student_id)
+    course_id = request.query_params.get('course_id')
+
+    asg_filter = {'user': student, 'assignment__lecture__content_source__course__teacher': teacher}
+    quiz_filter = {'user': student, 'quiz__lecture__content_source__course__teacher': teacher}
+
+    if course_id:
+        asg_filter['assignment__lecture__content_source__course_id'] = course_id
+        quiz_filter['quiz__lecture__content_source__course_id'] = course_id
+
+    assignments = AssignmentSubmission.objects.filter(**asg_filter).select_related('assignment__lecture')
+
+    asg_list = [{
+        "title": sub.assignment.lecture.topic if (sub.assignment and sub.assignment.lecture) else "Assignment",
+        "score": sub.score if sub.score is not None else 0,
+        "feedback": sub.feedback or "No feedback yet",
+        "status": "Graded" if sub.score is not None else "Submitted"
+    } for sub in assignments]
+
+    quizzes = QuizSubmission.objects.filter(**quiz_filter).select_related('quiz__lecture')
+
+    quiz_list = [{
+        "title": sub.quiz.lecture.topic if (sub.quiz and sub.quiz.lecture) else "Quiz",
+        "score": sub.score if sub.score is not None else 0,
+        "submitted_at": sub.submitted_at
+    } for sub in quizzes]
+
+    # Course info for the header if course_id is provided
+    course_info = None
+    if course_id:
+        try:
+            from courses.models import Course
+            c_obj = Course.objects.get(id=course_id)
+            course_info = {"id": c_obj.id, "title": c_obj.title}
+        except:
+            pass
+
+    return Response({
+        "student_info": {
+            "name": student.full_name if (hasattr(student, 'full_name') and student.full_name) else student.username,
+            "email": student.email,
+            "id_num": f"STU-{student.id:03d}",
+            "id": student.id
+        },
+        "course_info": course_info,
+        "assignments": asg_list,
+        "quizzes": quiz_list
+    }, status=status.HTTP_200_OK)
+
+# --- STUDENT GRADEBOOK SUMMARY UPDATED ---
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def student_gradebook_summary(request):
+    user = request.user
+    
+    # Submissions fetch karein with related data
+    assignments = AssignmentSubmission.objects.filter(user=user).select_related(
+        'assignment__lecture__content_source__course'
+    )
+    quizzes = QuizSubmission.objects.filter(user=user).select_related(
+        'quiz__lecture__content_source__course'
+    )
+
+    course_data = {}
+
+    # Quiz scores group karein
+    for q in quizzes:
+        course = q.quiz.lecture.content_source.course
+        c_id = course.id
+        if c_id not in course_data:
+            course_data[c_id] = {
+                "course": course.title,
+                "instructor": course.teacher.full_name or course.teacher.username,
+                "asg_scores": [],
+                "quiz_scores": [],
+                "exam_marks": 0,
+                "status": "Completed"
+            }
+        if q.score is not None:
+            course_data[c_id]["quiz_scores"].append(float(q.score))
+
+    # Assignment scores same course group mein add karein
+    for a in assignments:
+        course = a.assignment.lecture.content_source.course
+        c_id = course.id
+        if c_id not in course_data:
+            course_data[c_id] = {
+                "course": course.title,
+                "instructor": course.teacher.full_name or course.teacher.username,
+                "asg_scores": [],
+                "quiz_scores": [],
+                "exam_marks": 0,
+                "status": "Completed"
+            }
+        if a.score is not None:
+            course_data[c_id]["asg_scores"].append(float(a.score))
+
+    final_course_list = []
+    total_avg_sum = 0
+    
+    for c_id, data in course_data.items():
+        # Averages nikalein (Teacher Portal logic)
+        asg_avg = sum(data["asg_scores"]) / len(data["asg_scores"]) if data["asg_scores"] else 0
+        quiz_avg = sum(data["quiz_scores"]) / len(data["quiz_scores"]) if data["quiz_scores"] else 0
+        
+        # Teacher total calculation: (Avg Assignments + Avg Quizzes + Exams) / 3
+        total_score = round((asg_avg + quiz_avg + data["exam_marks"]) / 3, 2)
+        total_avg_sum += total_score
+        
+        if total_score >= 85: grade = "A"
+        elif total_score >= 75: grade = "B+"
+        elif total_score >= 65: grade = "B-"
+        elif total_score >= 50: grade = "C"
+        else: grade = "F"
+
+        final_course_list.append({
+            "course": data["course"],
+            "instructor": data["instructor"],
+            "assignments_marks": round(asg_avg, 2),
+            "quizzes_marks": round(quiz_avg, 2),
+            "exam_marks": data["exam_marks"],
+            "score": total_score,
+            "grade": grade,
+            "status": data["status"]
+        })
+
+    course_count = len(final_course_list)
+    # GPA mapping based on total_score average
+    gpa = round((total_avg_sum / (course_count * 25)), 2) if course_count > 0 else 0.00
+
+    return Response({
+        "stats": {
+            "gpa": gpa,
+            "total_courses": course_count,
+            "completed_courses": course_count,
+            "quizzes_done": quizzes.count(),
+            "assignments_done": assignments.count(),
+        },
+        "courses": final_course_list
+    })
