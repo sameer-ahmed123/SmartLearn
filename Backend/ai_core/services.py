@@ -14,14 +14,18 @@
 
 import os
 import uuid
+import requests
+import time
 # type:ignore  its a part of the pymupdf library (required for pdf processing)
 import fitz  # type:ignore
 import logging  # type: ignore
-from django.conf import settings
+from django.conf import settings # type:ignore
 from PIL import Image  # type: ignore
 from pptx import Presentation  # python-pptx library for PPTX # type: ignore
 import google.genai as genai  # type: ignore
 from pptx.enum.shapes import MSO_SHAPE_TYPE  # type:ignore
+import cloudinary.uploader # type:ignore
+
 
 
 logger = logging.getLogger(__name__)
@@ -301,15 +305,6 @@ def generate_lecture_script(prompt, file_data):
         return f"LLM Script Generation failed. {e}", "error context"
 
 
-def generate_video(script):
-    """
-    (PLACEHOLDER) Calls a Video Generation API.
-    Returns: (video_url, transcript_text)
-    """
-    # Typically, the video service needs the full script and returns a URL and a transcript confirmation.
-    video_url = "https://external.video.service/generated_" + str(hash(script))
-    transcript = script
-    return video_url, transcript
 
 #######
 ##
@@ -463,3 +458,183 @@ def generate_assignment_json(script, context,num_questions=5):
     except Exception as e:
         logger.error(f"Assignment Generation LLM Error: {e}")
         raise Exception(f"Failed to generate assignment: {e}")
+    
+    
+
+
+
+def upload_video_to_cloudinary(video_source, lecture_id):
+    """
+    Uploads a video to Cloudinary and returns the secure URL and Public ID.
+    Accepts both local file paths AND remote URLs (like HeyGen's temporary output link).
+    """
+    try:
+        logger.info(f"Starting Cloudinary upload for Lecture {lecture_id}...")
+        
+        # use upload_large for videos because they can exceed standard file size limit
+        # resource_type="video" is strictly required by Cloudinary for mp4 files
+        response = cloudinary.uploader.upload_large(
+            video_source,
+            resource_type="video",
+            folder="smartlearn_videos/lectures", 
+            chunk_size=6000000 
+        )
+        
+        secure_url = response.get('secure_url')
+        public_id = response.get('public_id')
+        
+        logger.info(f"Cloudinary upload successful! URL: {secure_url}")
+        return secure_url, public_id
+        
+    except Exception as e:
+        logger.error(f"Cloudinary upload failed for Lecture {lecture_id}: {e}")
+        return None, None
+    
+
+
+def generate_heygen_video(script_text):
+    """
+    1. Sends the script to HeyGen.
+    2. Polls their server every 10 seconds until the video is done.
+    3. Returns the temporary HeyGen download URL.
+    """
+    logger.info("Sending script to HeyGen API...")
+
+    # --- PART 1: START GENERATION ---
+    generate_url = "https://api.heygen.com/v2/video/generate"
+    headers = {
+        "X-Api-Key": settings.HEYGEN_API_KEY,
+        "Content-Type": "application/json"
+    }
+    
+    
+    payload = {
+        "video_inputs": [
+            {
+                "character": {
+                    "type": "avatar",
+                    "avatar_id": "Abigail_standing_office_front", 
+                    "avatar_style": "normal"
+                },
+                "voice": {
+                    "type": "text",
+                    "input_text": script_text,
+                    "voice_id": "1bd001e7e50f421d891986aad5158bc8" # Default female English voice
+                },
+            }
+        ],
+        "dimension": {
+            "width": 1280,
+            "height": 720
+        }
+    }
+    
+    response = requests.post(generate_url, json=payload, headers=headers)
+    if response.status_code != 200:
+        logger.error(f"HeyGen Start API Error: {response.text}")
+        raise Exception(f"HeyGen Start API Error: {response.text}")
+        
+    data = response.json()
+    video_id = data.get("data", {}).get("video_id")
+    
+    if not video_id:
+        raise Exception("HeyGen did not return a video_id")
+
+    logger.info(f"HeyGen generation started! Video ID: {video_id}. Waiting for completion...")
+
+    # --- PART 2: POLL HEYGEN FOR VIDEO COMPLETION STATUS ---
+    status_url = f"https://api.heygen.com/v1/video_status.get?video_id={video_id}"
+    headers_status = {"X-Api-Key": settings.HEYGEN_API_KEY}
+    
+    max_attempts = 45 # 45 attempts * 10 seconds = 7.5 minutes max wait time
+    
+    for attempt in range(max_attempts):
+        status_res = requests.get(status_url, headers=headers_status)
+        status_data = status_res.json()
+        video_status = status_data.get("data", {}).get("status")
+        
+        if video_status == "completed":
+            video_url = status_data.get("data", {}).get("video_url")
+            logger.info("HeyGen rendering complete!")
+            return video_url
+            
+        elif video_status == "failed":
+            error_detail = status_data.get("data", {}).get("error", "Unknown error")
+            raise Exception(f"HeyGen rendering failed internally: {error_detail}")
+        
+        logger.info(f"HeyGen status: {video_status}... checking again in 10 seconds.")
+        time.sleep(10) # Pause the Celery worker for 10 seconds before asking again
+        
+    raise Exception("HeyGen video generation timed out (exceeded 7.5 minutes).")
+
+
+def generate_did_video(script_text):
+    """
+    1. Sends a static image and script to D-ID.
+    2. Polls their server until the video is done.
+    3. Returns the temporary D-ID download URL.
+    """
+    logger.info("Sending script to D-ID API...")
+
+    # --- PART 1: START GENERATION ---
+    generate_url = "https://api.d-id.com/talks"
+    
+    # D-ID requires the key to be passed as Basic Auth. 
+    # When you copy your key from the D-ID dashboard, it will likely be in the correct format.
+    headers = {
+        "accept": "application/json",
+        "content-type": "application/json",
+        "authorization": f"Basic {settings.DID_API_KEY}"
+    }
+    
+    payload = {
+        "script": {
+            "type": "text",
+            "input": script_text,
+            "provider": {
+                "type": "microsoft",
+                "voice_id": "en-US-JennyNeural" # Standard professional female voice
+            }
+        },
+        # can replace this with any public URL of a clean, forward-facing headshot!
+        # the avatar source image
+        "source_url": "https://plus.unsplash.com/premium_photo-1661505218403-c684557a824d?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" 
+    }
+    
+    response = requests.post(generate_url, json=payload, headers=headers)
+    
+    if response.status_code != 201:
+        logger.error(f"D-ID Start API Error: {response.text}")
+        raise Exception(f"D-ID Start API Error: {response.text}")
+        
+    data = response.json()
+    talk_id = data.get("id")
+    
+    if not talk_id:
+        raise Exception("D-ID did not return a talk_id")
+
+    logger.info(f"D-ID generation started! Talk ID: {talk_id}. Waiting for completion...")
+
+    # --- PART 2: POLL D-ID FOR VIDEO COMPLETION STATUS  ---
+    status_url = f"https://api.d-id.com/talks/{talk_id}"
+    
+    max_attempts = 45 # 45 attempts * 10 seconds = 7.5 minutes max wait time
+    
+    for attempt in range(max_attempts):
+        status_res = requests.get(status_url, headers=headers)
+        status_data = status_res.json()
+        video_status = status_data.get("status")
+        
+        if video_status == "done":
+            video_url = status_data.get("result_url")
+            logger.info("D-ID rendering complete!")
+            return video_url
+            
+        elif video_status == "error":
+            error_detail = status_data.get("last_error", "Unknown error")
+            raise Exception(f"D-ID rendering failed internally: {error_detail}")
+        
+        logger.info(f"D-ID status: {video_status}... checking again in 10 seconds.")
+        time.sleep(10) 
+        
+    raise Exception("D-ID video generation timed out (exceeded 7.5 minutes).")

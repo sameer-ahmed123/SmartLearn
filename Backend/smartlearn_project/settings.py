@@ -11,6 +11,9 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 import os 
 from pathlib import Path
+import cloudinary # type:ignore
+import cloudinary.uploader # type:ignore
+import cloudinary.api # type:ignore
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -216,3 +219,32 @@ CELERY_TIMEZONE = 'Asia/Karachi' # Set to your local timezone (e.g., 'Asia/Karac
 ## FKN IDIOT DO NOT LEAK THIS AGAIN !!!!!!!!!!
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 # Use a similar method for other keys (e.g., VIDEO_GEN_KEY)
+
+
+
+# ----------------------- CLOUDINARY CONFIGURATION ----------------------
+#--------------------------------------------------------------------
+
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': os.environ.get("CLOUD_NAME"),
+    'API_KEY': os.environ.get("CLOUDINARY_API_KEY"),
+    'API_SECRET': os.environ.get("CLOUDINARY_API_SECRET")
+}
+
+cloudinary.config(
+    cloud_name = CLOUDINARY_STORAGE['CLOUD_NAME'],
+    api_key = CLOUDINARY_STORAGE['API_KEY'],
+    api_secret = CLOUDINARY_STORAGE['API_SECRET'],
+    secure = True
+)
+
+
+# ----------------------- HEYGEN VIDEO API CONFIGURATION ----------------------
+#--------------------------------------------------------------------
+
+HEYGEN_API_KEY = os.environ.get("HEYGEN_API_KEY")
+
+
+# ----------------------- D-ID VIDEO API CONFIGURATION ----------------------
+#--------------------------------------------------------------------
+DID_API_KEY = os.environ.get("DID_API_KEY")

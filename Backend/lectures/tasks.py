@@ -3,7 +3,7 @@ import time
 from .models import ContentSource, Lecture, Course
 import logging
 import os
-from ai_core.services import read_content_file, generate_lecture_script, generate_video
+from ai_core.services import read_content_file, generate_lecture_script, upload_video_to_cloudinary, generate_heygen_video, generate_did_video
 from smartlearn_project import celery_app
 
 print("--- LECTURES TASKS MODULE LOADED ---")
@@ -72,10 +72,7 @@ def generate_lecture_from_source(content_source_id):
         print(script)
         print(context)
 
-        # Step 2: Trigger Video/Audio generation based on the script
-        # Note: video_url and transcript are currently placeholder returns until API integration is finalized
-        video_url, transcript_text = generate_video(script)
-
+        
         """
         4. DATABASE PERSISTENCE
         """
@@ -86,7 +83,7 @@ def generate_lecture_from_source(content_source_id):
             # Temporary: script is stored in summary_text until dedicated schema update
             summary_text=script,
             video_url=None,
-            video_status ='none',
+            video_status='none',
             # Associate lecture with the original teacher who uploaded the source
             generated_by=source_instance.uploaded_by,
             validation_status='pending',
@@ -95,7 +92,7 @@ def generate_lecture_from_source(content_source_id):
         )
 
         logger.info(
-            f"Successfully created Lecture for source ID: {content_source_id}. Video URL: {video_url}")
+            f"Successfully created Lecture for source ID: {content_source_id}.")
 
     except ContentSource.DoesNotExist:
         logger.error(f"ContentSource with ID {content_source_id} not found.")
@@ -124,31 +121,51 @@ def generate_lecture_from_source(content_source_id):
 
 
 @celery_app.task
-def generate_heygen_video_task(lecture_id):
+def generate_video_task(lecture_id):
     """
-    Triggered only when a teacher validates a lecture.
-    Currently set to MOCK MODE to preserve the 1/month HeyGen API limit.
+    Triggered when a teacher validates a lecture.
+    Contains Mock, HeyGen, and D-ID engines.
     """
     try:
         lecture = Lecture.objects.get(id=lecture_id)
         
-        # 1. Update status to processing to update frontend UI
         lecture.video_status = 'processing'
         lecture.save(update_fields=['video_status'])
         
-        logger.info(f"Starting MOCK video generation for Lecture {lecture_id}")
-
-        # 2. Simulate HeyGen API and Cloudinary processing time
-        time.sleep(30) 
-
-        # 3. Apply Mock Cloudinary/HeyGen Data
-        dummy_video_url = "https://res.cloudinary.com/demo/video/upload/v1690000000/sample_video.mp4"
+        logger.info(f"Starting video generation pipeline for Lecture {lecture_id}")
         
-        lecture.video_url = dummy_video_url
-        lecture.video_status = 'completed'
-        lecture.save(update_fields=['video_url', 'video_status'])
+        # ==========================================
+        # SELECT YOUR ENGINE (Uncomment)
+        # ==========================================
+        
+        # ENGINE 1: MOCK MODE (For fast, free local development)
+        time.sleep(20)
+        temp_video_url = "https://www.w3schools.com/html/mov_bbb.mp4"
+        
+        # ENGINE 2: HEYGEN (3D Avatars - Strict API limits)
+        # temp_video_url = generate_heygen_video(lecture.script)
+        
+        # ENGINE 3: D-ID (2D Image Animation - Good developer trial)
+        # temp_video_url = generate_did_video(lecture.script)
+        
+        # ==========================================
+        # CLOUDINARY UPLOAD & DATABASE STORAGE
+        # ==========================================
+        
+        logger.info("Transferring generated video to Cloudinary CDN...")
+        cloudinary_url, public_id = upload_video_to_cloudinary(temp_video_url, lecture_id)
 
-        logger.info(f"MOCK video generation complete for Lecture {lecture_id}. URL: {dummy_video_url}")
+        if not cloudinary_url:
+            raise Exception("Cloudinary upload returned None.")
+
+        lecture.video_url = cloudinary_url
+        
+        # If using Mock Engine, mock the public_id so Cloudinary doesn't break on delete
+        lecture.video_public_id = public_id if public_id else "mock_dummy_id_12345" 
+        lecture.video_status = 'completed'
+        lecture.save(update_fields=['video_url', 'video_public_id', 'video_status'])
+
+        logger.info(f"Pipeline complete for Lecture {lecture_id}. Final URL: {cloudinary_url}")
 
     except Lecture.DoesNotExist:
         logger.error(f"Lecture ID {lecture_id} not found for video generation.")

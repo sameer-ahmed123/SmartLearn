@@ -10,7 +10,7 @@ from .serializers import (
 )
 from users.permissions import CanViewLecture, IsCourseOwner, IsTeacher
 from rest_framework.permissions import IsAuthenticated
-from .tasks import generate_lecture_from_source,generate_heygen_video_task
+from .tasks import generate_lecture_from_source,generate_video_task
 
 
 # -----------------------------------------------------------
@@ -251,7 +251,7 @@ def lecture_validate_action(request, id):
         updated_lecture = serializer.save(validated_by=request.user)
         
         if updated_lecture.validation_status == 'validated':
-            generate_heygen_video_task.delay(updated_lecture.id)
+            generate_video_task.delay(updated_lecture.id)
             
         return Response(serializer.data, status=status.HTTP_200_OK)
 
