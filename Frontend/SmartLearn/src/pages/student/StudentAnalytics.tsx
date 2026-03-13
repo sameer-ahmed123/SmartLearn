@@ -1,34 +1,42 @@
+import React, { useState, useEffect } from "react";
 import { 
   TrendingUp, Clock, Target, PlayCircle, 
   CheckCircle2, AlertCircle, BarChart3, ArrowUpRight,
   Zap, Layers, Award, FileText 
 } from "lucide-react";
 import "./StudentAnalytics.css";
+import apiClient from "@/api/apiClient";
 
 const StudentAnalyticsPage = () => {
-  // Stats Data
-  const performanceMetrics = [
-    { label: "Course Completion", value: "72%", icon: <CheckCircle2 />, color: "#10b981", trend: "+5%" },
-    { label: "Avg. Quiz Score", value: "84%", icon: <Target />, color: "#6366f1", trend: "+12%" },
-    { label: "Study Hours", value: "48h", icon: <Clock />, color: "#f59e0b", trend: "+8h" },
-    { label: "Overall Progress", value: "B+", icon: <Award />, color: "#8b5cf6", trend: "Top 10%" },
-  ];
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // Assignment Data
-  const assignments = [
-    { title: "Quantum Physics Lab", deadline: "2 Days left", progress: 100, status: "Submitted" },
-    { title: "Python Data Analysis", deadline: "5 Days left", progress: 45, status: "In Progress" },
-    { title: "Neural Networks Intro", deadline: "Overdue", progress: 10, status: "Late" },
-  ];
+  useEffect(() => {
+    const fetchAnalytics = async () => {
+      try {
+        const response = await apiClient.get("assessments/student-analytics/", {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+        });
+        setData(response.data);
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching analytics:", error);
+        setLoading(false);
+      }
+    };
+    fetchAnalytics();
+  }, []);
 
-  // Logic: Green > 80, Orange > 70, Yellow-Orange > 60, Yellow > 50, Red < 50
-  const getStatusColor = (score: number) => {
+  const getStatusColor = (score) => {
     if (score >= 80) return "#10b981"; 
     if (score >= 70) return "#f59e0b"; 
     if (score >= 60) return "#fb923c"; 
     if (score >= 50) return "#eab308";
     return "#ef4444";                 
   };
+
+  if (loading) return <div className="loading">Loading Analytics...</div>;
+  if (!data) return <div className="error">Failed to load data.</div>;
 
   return (
     <div className="dashboard-wrapper">
@@ -47,7 +55,12 @@ const StudentAnalyticsPage = () => {
 
         {/* TOP METRICS GRID */}
         <div className="stats-grid">
-          {performanceMetrics.map((m, i) => (
+          {[
+            { label: "Course Completion", value: `${data.stats.completion}%`, icon: <CheckCircle2 />, color: "#10b981", trend: data.stats.completion_trend },
+            { label: "Avg. Quiz Score", value: `${data.stats.avg_quiz}%`, icon: <Target />, color: "#6366f1", trend: data.stats.quiz_trend },
+            { label: "Study Hours", value: `${data.stats.study_hours}h`, icon: <Clock />, color: "#f59e0b", trend: data.stats.hours_trend },
+            { label: "Overall Progress", value: data.stats.grade, icon: <Award />, color: "#8b5cf6", trend: "Top 10%" },
+          ].map((m, i) => (
             <div key={i} className="stat-item-card analytics-card">
               <div className="card-top">
                 <div style={{ color: m.color, background: `${m.color}15`, padding: '10px', borderRadius: '12px' }}>
@@ -67,26 +80,48 @@ const StudentAnalyticsPage = () => {
 
         {/* MAIN ANALYTICS SECTION */}
         <div className="analytics-main-grid">
-          {/* COURSE PERFORMANCE */}
+          
+          {/* COURSE PERFORMANCE (Ab sirf Video Progress hai) */}
           <div className="content-card">
             <div className="card-header">
               <PlayCircle size={22} color="#6366f1" />
-              <h3 style={{ margin: 0 }}>Course-wise Performance</h3>
+              <h3 style={{ margin: 0 }}>Course Progress</h3>
             </div>
             <div className="performance-list">
-              {[
-                { name: "Quantum Mechanics", watch: "85%", quiz: 90 },
-                { name: "Advanced Python", watch: "60%", quiz: 75 },
-                { name: "Machine Learning", watch: "40%", quiz: 55 },
-              ].map((c, idx) => (
+              {data.courses.map((c, idx) => (
                 <div key={idx} className="performance-item">
                   <div className="item-info"><span className="course-title">{c.name}</span></div>
                   <div className="progress-group">
-                    <div className="progress-label"><span>Video Progress</span><span>{c.watch}</span></div>
-                    <div className="progress-bar-bg"><div className="progress-bar-fill" style={{ width: c.watch, background: '#6366f1' }}></div></div>
+                    <div className="progress-label"><span>Video Watch Time</span><span>{c.watch}%</span></div>
+                    <div className="progress-bar-bg">
+                      <div className="progress-bar-fill" style={{ width: `${c.watch}%`, background: '#6366f1' }}></div>
+                    </div>
                   </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* RECOMMENDED FOCUS */}
+          <div className="content-card focus-card">
+              <div className="card-header"><AlertCircle size={20} color="#ef4444" /><h3>Recommended Focus</h3></div>
+              <ul className="focus-list">
+                {data.recommendations.map((rec, i) => <li key={i}>{rec}</li>)}
+              </ul>
+          </div>
+
+          {/* QUIZ PERFORMANCE CARD (Naya Section jo aapne manga) */}
+          <div className="content-card">
+            <div className="card-header">
+              <Target size={22} color="#10b981" />
+              <h3 style={{ margin: 0 }}>Quiz Performance</h3>
+            </div>
+            <div className="performance-list">
+              {data.courses.map((c, idx) => (
+                <div key={idx} className="performance-item">
+                  <div className="item-info"><span className="course-title">{c.name}</span></div>
                   <div className="progress-group">
-                    <div className="progress-label"><span>Quiz Average</span><span>{c.quiz}%</span></div>
+                    <div className="progress-label"><span>Average Score</span><span>{c.quiz}%</span></div>
                     <div className="progress-bar-bg">
                       <div className="progress-bar-fill" style={{ width: `${c.quiz}%`, background: getStatusColor(c.quiz) }}></div>
                     </div>
@@ -96,15 +131,6 @@ const StudentAnalyticsPage = () => {
             </div>
           </div>
 
-          <div className="content-card focus-card">
-             <div className="card-header"><AlertCircle size={20} color="#ef4444" /><h3>Recommended Focus</h3></div>
-             <ul className="focus-list">
-                <li>Review "Matrix Multiplications" in Linear Algebra</li>
-                <li>Complete "Inheritance" Quiz in Python</li>
-                <li>Watch 2 more lectures to reach your weekly goal</li>
-             </ul>
-          </div>
-
           {/* ASSIGNMENT TRACKER */}
           <div className="content-card">
             <div className="card-header">
@@ -112,7 +138,7 @@ const StudentAnalyticsPage = () => {
               <h3 style={{ margin: 0 }}>Assignment Tracker</h3>
             </div>
             <div className="assignment-list" style={{ marginTop: '20px' }}>
-              {assignments.map((asgn, i) => (
+              {data.assignments.map((asgn, i) => (
                 <div key={i} className="asgn-item">
                   <div className="asgn-info">
                     <p className="asgn-title">{asgn.title}</p>
@@ -127,9 +153,8 @@ const StudentAnalyticsPage = () => {
               ))}
             </div>
           </div>
-        </div>
 
-        
+        </div>
       </div>
     </div>
   );

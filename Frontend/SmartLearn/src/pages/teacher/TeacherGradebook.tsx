@@ -15,6 +15,8 @@ interface StudentGrade {
   assignments_marks: number;
   quizzes_marks: number;
   exam_marks: number;
+  score: number;
+  grade: string;
 }
 
 interface Course {
@@ -29,7 +31,6 @@ const GradeBookPage = () => {
   const [selectedCourse, setSelectedCourse] = useState<string>("");
   const [loading, setLoading] = useState(true);
   
-  // --- Dynamic Stats State ---
   const [dynamicStats, setDynamicStats] = useState({
     avgGrade: "0%",
     passRate: "0%"
@@ -37,20 +38,16 @@ const GradeBookPage = () => {
 
   const navigate = useNavigate();
 
-  // --- Grade Calculation Logic ---
-  const calculateTotal = (row: StudentGrade) => {
-    return ((row.assignments_marks || 0) + (row.quizzes_marks || 0) + (row.exam_marks || 0)) / 3;
+  // Student Portal wala Color Logic
+  const getProgressColor = (score: number) => {
+    const s = Number(score) || 0;
+    if (s >= 80) return "#10b981"; // Green
+    if (s >= 70) return "#f59e0b"; // Orange/Yellow
+    if (s >= 60) return "#fb923c"; // Dark Orange
+    if (s >= 50) return "#eab308"; // Yellow
+    return "#ef4444"; // Red
   };
 
-  const getGradeInfo = (percentage: number) => {
-    if (percentage >= 80) return { label: 'A', class: styles.gradeA };
-    if (percentage >= 70) return { label: 'B', class: styles.gradeB };
-    if (percentage >= 60) return { label: 'C', class: styles.gradeC };
-    if (percentage >= 50) return { label: 'D', class: styles.gradeD };
-    return { label: 'F', class: styles.gradeF };
-  };
-
-  // --- Function to update stats based on current grades ---
   const updateStats = (currentGrades: StudentGrade[]) => {
     if (currentGrades.length === 0) {
       setDynamicStats({ avgGrade: "0%", passRate: "0%" });
@@ -61,9 +58,9 @@ const GradeBookPage = () => {
     let passCount = 0;
 
     currentGrades.forEach(student => {
-      const score = calculateTotal(student);
+      const score = student.score || 0;
       totalSum += score;
-      if (score >= 50) passCount++; // 50% passing threshold
+      if (score >= 50) passCount++; 
     });
 
     const avg = (totalSum / currentGrades.length).toFixed(1);
@@ -121,7 +118,7 @@ const GradeBookPage = () => {
         
         const fetchedGrades = Array.isArray(res.data) ? res.data : [];
         setGrades(fetchedGrades);
-        updateStats(fetchedGrades); // Update boxes immediately
+        updateStats(fetchedGrades); 
       } catch (err: any) {
         console.error("Error fetching gradebook:", err);
         if (err.response?.status === 401) navigate('/login');
@@ -138,10 +135,9 @@ const GradeBookPage = () => {
       alert("No data to export");
       return;
     }
-    const headers = ["Student Name,Student ID,Assignments (%),Quizzes (%),Final Exam (%),Total (%)"];
+    const headers = ["Student Name,Student ID,Assignments (%),Quizzes (%),Final Exam (%),Total (%),Grade"];
     const rows = grades.map(row => {
-      const total = calculateTotal(row).toFixed(1);
-      return `${row.student_name},${row.student_id_num},${row.assignments_marks || 0},${row.quizzes_marks || 0},${row.exam_marks || 0},${total}`;
+      return `${row.student_name},${row.student_id_num},${row.assignments_marks || 0},${row.quizzes_marks || 0},${row.exam_marks || 0},${row.score},${row.grade}`;
     });
     const csvContent = "data:text/csv;charset=utf-8," + headers.concat(rows).join("\n");
     const encodedUri = encodeURI(csvContent);
@@ -216,8 +212,7 @@ const GradeBookPage = () => {
                 </thead>
                 <tbody>
                   {filteredGrades.length > 0 ? filteredGrades.map((row) => {
-                    const totalPercent = calculateTotal(row);
-                    const gradeInfo = getGradeInfo(totalPercent);
+                    const studentColor = getProgressColor(row.score);
                     return (
                       <tr key={row.id}>
                         <td>
@@ -229,10 +224,24 @@ const GradeBookPage = () => {
                         <td><div className={styles.scoreBadge}>{row.assignments_marks || 0}%</div></td>
                         <td><div className={styles.scoreBadge}>{row.quizzes_marks || 0}%</div></td>
                         <td><div className={styles.scoreBadge}>{row.exam_marks || 0}%</div></td>
-                        <td><span className={styles.totalText}>{totalPercent.toFixed(1)}%</span></td>
                         <td>
-                          <span className={`${styles.gradeBadge} ${gradeInfo.class}`}>
-                            {gradeInfo.label}
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            <span style={{ fontWeight: 850, color: studentColor }}>{row.score}%</span>
+                            <div style={{ width: '60px', height: '4px', background: '#f1f5f9', borderRadius: '10px', overflow: 'hidden' }}>
+                              <div style={{ width: `${row.score}%`, height: '100%', background: studentColor }}></div>
+                            </div>
+                          </div>
+                        </td>
+                        <td>
+                          <span className={styles.gradeBadge} style={{ 
+                            color: studentColor, 
+                            backgroundColor: `${studentColor}15`,
+                            padding: '6px 18px',
+                            borderRadius: '50px',
+                            fontSize: '0.75rem',
+                            fontWeight: 800
+                          }}>
+                            {row.grade}
                           </span>
                         </td>
                         <td>

@@ -56,9 +56,9 @@ const StudentGradebookPage = () => {
 
   const getProgressColor = (score) => {
     const s = Number(score) || 0;
-    if (s >= 85) return "#10b981"; 
-    if (s >= 75) return "#f59e0b"; 
-    if (s >= 65) return "#fb923c"; 
+    if (s >= 80) return "#10b981"; 
+    if (s >= 70) return "#f59e0b"; 
+    if (s >= 60) return "#fb923c"; 
     if (s >= 50) return "#eab308"; 
     return "#ef4444";
   };
