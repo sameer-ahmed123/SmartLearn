@@ -51,7 +51,8 @@ const StudentDashboardPage = () => {
   useEffect(() => {
     const fetchMetrics = async () => {
       try {
-        const response = await apiClient.get('/dashboard/metrics/');
+        const response = await apiClient.get('/dashboard/metrics/student/');
+        console.log(response)
         setMetrics(response.data.metrics);
       } catch (error) { console.error(error); } finally { setLoading(false); }
     };

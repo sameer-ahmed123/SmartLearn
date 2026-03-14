@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Lecture, ContentSource, Course
+from .models import Lecture, ContentSource, Course,Enrollment
 
 # Register your models here.
 @admin.register(ContentSource)
@@ -17,3 +17,6 @@ class LectureAdmin(admin.ModelAdmin):
     list_display = ('topic', 'generated_by', 'validated_by', 'validation_status', 'created_at')
     list_filter = ('validation_status', 'created_at')
     search_fields = ("topic","summary_text")
+    
+    
+admin.site.register(Enrollment)

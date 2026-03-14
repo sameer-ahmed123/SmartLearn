@@ -344,4 +344,3 @@ def lecture_chat(request, id):
         return Response({"detail": f"AI Error: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
->>>>>> > origin/feature/analytics
