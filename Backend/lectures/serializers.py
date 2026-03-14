@@ -39,15 +39,19 @@ class CourseSerializer(serializers.ModelSerializer):
     content_source_count = serializers.SerializerMethodField()
     lecture_count = serializers.SerializerMethodField()
     is_enrolled = serializers.SerializerMethodField() # Student check ke liye
+    enrolled_count = serializers.SerializerMethodField() # <--- NEW FIELD ADDED
 
     class Meta:
         model = Course
         fields = [
             'id', 'teacher', 'teacher_name', 'title', 'description', 
             'thumbnail', 'status', 'created_at', 'lecture_count', 
-            'content_source_count', 'is_enrolled'
+            'content_source_count', 'is_enrolled', 'enrolled_count' # <--- ADDED TO FIELDS
         ]
         read_only_fields = ['teacher', 'created_at']
+
+    def get_enrolled_count(self, obj): # <--- NEW METHOD ADDED
+        return Enrollment.objects.filter(course=obj).count()
 
     def get_content_source_count(self, obj):
         return obj.content_sources.count()
