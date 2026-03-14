@@ -1,119 +1,182 @@
-/* src/components/Dashboard/teacher/CreateCourseModal.module.css */
-
 .overlay {
     position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.5); /* Dimmed background */
+    inset: 0;
+    background-color: rgba(15, 23, 42, 0.75);
+    backdrop-filter: blur(4px);
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 1000; /* Ensure it sits on top of everything */
+    z-index: 2000;
 }
 
 .modal {
-    background: white;
-    padding: 30px;
-    border-radius: 8px;
+    /* Base Variables (Light Mode) */
+    --modal-bg: #ffffff;
+    --modal-text: #1e293b;
+    --modal-border: #e2e8f0;
+    --input-bg: #ffffff;
+    --label-opacity: 0.9;
+    
+    background: var(--modal-bg);
+    padding: 32px;
+    border-radius: 24px;
     width: 90%;
-    max-width: 500px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-    animation: fadeIn 0.2s ease-out;
+    max-width: 520px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    border: 1px solid var(--modal-border);
+    animation: modalPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* --- UNIVERSAL DARK MODE SUPPORT --- */
+/* Yeh block attribute [data-theme='dark'] aur classes (.dark, .dark-mode) dono ko handle karega */
+:global([data-theme='dark']) .modal,
+:global(.dark) .modal,
+:global(.dark-mode) .modal {
+    --modal-bg: #1e293b;
+    --modal-text: #f8fafc;
+    --modal-border: #334155;
+    --input-bg: #0f172a;
+    --label-opacity: 1;
 }
 
 .header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
-    border-bottom: 1px solid #eee;
-    padding-bottom: 10px;
+    margin-bottom: 28px;
+}
+
+.titleArea {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.iconBox {
+    background: #6366f1;
+    color: white;
+    padding: 8px;
+    border-radius: 12px;
+    display: flex;
 }
 
 .header h2 {
     margin: 0;
-    color: #2c3e50;
-    font-size: 1.5rem;
+    color: var(--modal-text);
+    font-size: 1.4rem;
+    font-weight: 800;
 }
 
 .closeBtn {
-    background: none;
+    background: transparent;
     border: none;
-    font-size: 1.5rem;
+    color: #94a3b8;
     cursor: pointer;
-    color: #7f8c8d;
+    transition: 0.2s;
+    padding: 5px;
+}
+
+.closeBtn:hover {
+    color: #ef4444;
 }
 
 .formGroup {
-    margin-bottom: 20px;
+    margin-bottom: 24px;
 }
 
 .formGroup label {
-    display: block;
-    margin-bottom: 8px;
-    font-weight: 600;
-    color: #34495e;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: var(--modal-text);
+    opacity: var(--label-opacity);
 }
 
-.formGroup input, .formGroup textarea {
-    color: #434343;
+.input, .textarea {
     width: 100%;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
+    padding: 14px;
+    background: var(--input-bg);
+    border: 2px solid var(--modal-border);
+    border-radius: 12px;
     font-size: 1rem;
-    box-sizing: border-box; /* Fixes padding width issues */
+    color: var(--modal-text);
+    transition: all 0.2s ease;
 }
 
-.formGroup input:focus, .formGroup textarea:focus {
-    border-color: #3498db;
+.input:focus, .textarea:focus {
+    border-color: #6366f1;
     outline: none;
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
 }
 
 .error {
-    color: #e74c3c;
-    background-color: #fdedec;
-    padding: 10px;
-    border-radius: 4px;
-    margin-bottom: 15px;
-    font-size: 0.9rem;
+    color: #ef4444;
+    background-color: rgba(239, 68, 68, 0.1);
+    padding: 12px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border: 1px solid rgba(239, 68, 68, 0.2);
 }
 
 .actions {
     display: flex;
     justify-content: flex-end;
-    gap: 10px;
-    margin-top: 10px;
+    gap: 12px;
+    margin-top: 30px;
 }
 
 .cancelBtn {
-    padding: 10px 20px;
-    background: #ecf0f1;
-    color: #34495e;
-    border: none;
-    border-radius: 4px;
+    padding: 12px 24px;
+    background: transparent;
+    color: #64748b;
+    border: 2px solid var(--modal-border);
+    border-radius: 12px;
     cursor: pointer;
-    font-weight: 600;
+    font-weight: 700;
+    transition: 0.2s;
+}
+
+/* Dark mode ke liye cancel button ka text color adjust */
+:global([data-theme='dark']) .cancelBtn,
+:global(.dark) .cancelBtn,
+:global(.dark-mode) .cancelBtn {
+    color: #94a3b8;
+}
+
+.cancelBtn:hover {
+    background: var(--modal-border);
+    color: var(--modal-text);
 }
 
 .submitBtn {
-    padding: 10px 20px;
-    background: #27ae60;
+    padding: 12px 24px;
+    background: #6366f1;
     color: white;
     border: none;
-    border-radius: 4px;
+    border-radius: 12px;
     cursor: pointer;
-    font-weight: 600;
+    font-weight: 700;
+    transition: all 0.3s ease;
+}
+
+.submitBtn:hover:not(:disabled) {
+    background: #4f46e5;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.4);
 }
 
 .submitBtn:disabled {
-    background: #95a5a6;
+    background: #94a3b8;
     cursor: not-allowed;
+    opacity: 0.7;
 }
 
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-20px); }
-    to { opacity: 1; transform: translateY(0); }
+@keyframes modalPop {
+    from { opacity: 0; transform: scale(0.9) translateY(10px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
 }

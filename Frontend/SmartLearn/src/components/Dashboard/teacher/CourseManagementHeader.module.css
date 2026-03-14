@@ -1,73 +1,155 @@
-.headerContainer {
-    background-color: white;
-    padding: 25px;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    margin-bottom: 30px; /* Space between header and table */
+.headerWrapper {
+    background: var(--card, white);
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+    margin-bottom: 30px;
+    border: 1px solid var(--border, #f1f5f9);
+}
+
+:global(.dark) .headerWrapper {
+    background: #1e293b;
+    border-color: #334155;
+}
+
+.banner {
+    /* Solid background color ya gradient yahan se hata diya gaya hai */
+    padding: 45px 35px; /* Thoda padding badhaya hai taake image aur khul kar dikhe */
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
-    border: 1px solid #e0e0e0;
+    align-items: center;
+    color: white;
+    position: relative;
 }
 
-.infoSection {
+.courseIdentity {
+    display: flex;
+    align-items: center;
+    gap: 20px;
     flex: 1;
-    margin-right: 20px;
 }
 
-.title {
-    margin: 0 0 10px 0;
-    color: #2c3e50;
-    font-size: 1.8rem;
+.iconCircle {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 15px;
+    border-radius: 18px;
+    backdrop-filter: blur(8px);
+}
+
+.textDetails h1 {
+    margin: 0;
+    font-size: 2rem; /* Thoda bara kiya hai prominent look ke liye */
+    font-weight: 800;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3); /* Text ko image ke upar uthane ke liye shadow */
 }
 
 .description {
-    color: #7f8c8d;
-    line-height: 1.5;
-    margin: 0;
+    margin: 5px 0 0 0;
+    opacity: 0.95;
+    font-size: 1rem;
+    max-width: 650px;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.3);
 }
 
-.controlSection {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 15px;
-    min-width: 200px;
-}
-
-.statusGroup {
+.statusBadge {
     display: flex;
     align-items: center;
-    gap: 10px;
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: #34495e;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 100px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    background: rgba(0, 0, 0, 0.3); /* Dark mode badge for image contrast */
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-.statusSelect {
-    padding: 8px 12px;
-    border-radius: 4px;
-    border: 1px solid #ccc;
+.published { color: #5eead4; border-color: #5eead4; }
+.draft { color: #fcd34d; border-color: #fcd34d; }
+.archived { color: #cbd5e1; border-color: #cbd5e1; }
+
+.controlsBar {
+    padding: 20px 35px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--card, white);
+}
+
+.statusPicker {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.statusPicker label {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--muted-foreground, #64748b);
+    text-transform: uppercase;
+}
+
+.selectWrapper {
+    position: relative;
+    width: 180px;
+}
+
+.styledSelect {
+    width: 100%;
+    appearance: none;
+    padding: 10px 15px;
+    background: var(--muted, #f8fafc);
+    border: 1px solid var(--border, #e2e8f0);
+    border-radius: 12px;
     font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--foreground, #1e293b);
     cursor: pointer;
 }
 
-/* Dynamic styling based on status */
-.statusSelect.draft { border-color: #f39c12; color: #d35400; background-color: #fdf2e9; }
-.statusSelect.published { border-color: #27ae60; color: #27ae60; background-color: #eafaf1; }
-.statusSelect.archived { border-color: #7f8c8d; color: #7f8c8d; background-color: #f4f6f7; }
+:global(.dark) .styledSelect {
+    background: #0f172a;
+    color: white;
+}
+
+.selectArrow {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    color: #94a3b8;
+}
 
 .deleteBtn {
-    background: none;
-    border: 1px solid #e74c3c;
-    color: #e74c3c;
-    padding: 8px 15px;
-    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #fff1f2;
+    color: #e11d48;
+    border: 1px solid #fecdd3;
+    padding: 10px 20px;
+    border-radius: 12px;
+    font-weight: 700;
     cursor: pointer;
-    font-size: 0.85rem;
-    transition: all 0.2s;
+    transition: 0.2s;
 }
 
 .deleteBtn:hover {
-    background-color: #fdedec;
+    background: #e11d48;
+    color: white;
+}
+
+.loadingLine {
+    height: 3px;
+    width: 100%;
+    background: #6366f1;
+    animation: loading 1.5s infinite linear;
+    transform-origin: 0% 50%;
+}
+
+@keyframes loading {
+    0% { transform: scaleX(0); }
+    50% { transform: scaleX(0.5); }
+    100% { transform: scaleX(1); }
 }

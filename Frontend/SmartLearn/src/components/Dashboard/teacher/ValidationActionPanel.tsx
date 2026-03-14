@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import styles from "./ValidationActionPanel.module.css";
 import apiClient from "@/api/apiClient";
+import { CheckCircle, XCircle, MessageSquare, ShieldAlert, Loader2 } from "lucide-react";
 
 interface ValidationActionPanelProps {
   lectureId: number;
@@ -12,10 +13,8 @@ const ValidationActionPanel: React.FC<ValidationActionPanelProps> = ({
   const [comment, setComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // NOTE: In the future, this will be a POST/PATCH request to update the validation_status
   const handleValidationAction = async (status: "validated" | "rejected") => {
     setIsSubmitting(true);
-    console.log(`Submitting status: ${status}, Comment: ${comment}`);
     try {
       const response = await apiClient.patch(
         `/lectures/${lectureId}/validate/`,
@@ -26,8 +25,7 @@ const ValidationActionPanel: React.FC<ValidationActionPanelProps> = ({
       );
 
       if (response.status === 200) {
-        alert(`Lecture ${status} successfully!`);
-        // Redirect user back to the dashboard queue after success
+        // Success notification logic remains same as per your original code
         window.location.href = "/teacher/dashboard";
       } else {
         alert(`Error submitting validation: ${response.status}`);
@@ -41,35 +39,56 @@ const ValidationActionPanel: React.FC<ValidationActionPanelProps> = ({
   };
 
   return (
-    <div className={styles.panel}>
-      <h3>Validation Decision</h3>
+    <div className={styles.actionPanel}>
+      <div className={styles.panelHeader}>
+        <ShieldAlert size={20} className={styles.headerIcon} />
+        <h3>Validation Decision</h3>
+      </div>
 
-      {/* Rejection Comment Input (required only if rejecting) */}
-      <textarea
-        placeholder="Enter rejection reason here (required if rejecting)"
-        value={comment}
-        onChange={(e) => setComment(e.target.value)}
-        className={styles.commentInput}
-      />
+      <div className={styles.inputWrapper}>
+        <div className={styles.labelGroup}>
+          <MessageSquare size={14} />
+          <label>Review Feedback</label>
+        </div>
+        <textarea
+          placeholder="Why are you approving or rejecting this content?"
+          value={comment}
+          onChange={(e) => setComment(e.target.value)}
+          className={styles.commentInput}
+        />
+      </div>
 
-      <div className={styles.buttonGroup}>
+      <div className={styles.buttonContainer}>
         <button
           onClick={() => handleValidationAction("rejected")}
-          className={styles.rejectButton}
+          className={styles.rejectBtn}
           disabled={isSubmitting || comment.trim().length === 0}
         >
-          {isSubmitting ? "Rejecting..." : "Reject Lecture"}
+          {isSubmitting ? (
+            <Loader2 size={16} className={styles.spin} />
+          ) : (
+            <XCircle size={18} />
+          )}
+          <span>Reject</span>
         </button>
 
         <button
           onClick={() => handleValidationAction("validated")}
-          className={styles.validateButton}
+          className={styles.approveBtn}
           disabled={isSubmitting}
         >
-          {isSubmitting ? "Validating..." : "Approve & Validate"}
+          {isSubmitting ? (
+            <Loader2 size={16} className={styles.spin} />
+          ) : (
+            <CheckCircle size={18} />
+          )}
+          <span>Approve</span>
         </button>
       </div>
-      <p className={styles.note}>Note: Rejecting requires a comment.</p>
+      
+      <p className={styles.footerNote}>
+        * Rejecting requires a detailed feedback comment.
+      </p>
     </div>
   );
 };

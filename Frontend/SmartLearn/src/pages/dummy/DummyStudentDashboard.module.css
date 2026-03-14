@@ -1,118 +1,217 @@
-.container {
-  padding: 20px;
-  color: #2c3e50;
+.pageWrapper {
+    background-color: var(--background); 
+    min-height: 100vh; 
+    transition: background-color 0.3s; 
+    color: var(--foreground); 
 }
 
-.hero {
-  background: linear-gradient(135deg, #3498db, #8e44ad);
-  color: white;
-  padding: 40px;
-  border-radius: 12px;
-  margin-bottom: 30px;
-  box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
-}
-.hero h1 {
-  margin: 0 0 10px 0;
-}
-.hero p {
-  margin: 0;
-  opacity: 0.9;
+.topHeader { 
+    height: 70px; 
+    background: var(--card); 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    padding: 0 30px; 
+    border-bottom: 1px solid var(--border); 
 }
 
-.mainGrid {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 30px;
-}
-@media (max-width: 768px) {
-  .mainGrid {
-    grid-template-columns: 1fr;
-  }
-}
-
-.courseCard {
-  background: white;
-  padding: 20px;
-  border-radius: 12px;
-  margin-bottom: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-}
-.courseHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
-}
-.courseHeader h3 {
-  margin: 0;
-  font-size: 1.1rem;
-}
-.percent {
-  font-weight: bold;
-  color: #3498db;
+/* SearchBox styling remains for other pages but hidden in dashboard as per request */
+.searchBox { 
+    display: flex; 
+    align-items: center; 
+    background: var(--secondary); 
+    padding: 8px 15px; 
+    border-radius: 10px; 
+    width: 300px; 
 }
 
-.progressBarBg {
-  height: 8px;
-  background: #eee;
-  border-radius: 4px;
-  overflow: hidden;
-  margin-bottom: 10px;
-}
-.progressBarFill {
-  height: 100%;
-  background: #2ecc71;
-  border-radius: 4px;
-}
-.nextLesson {
-  color: #7f8c8d;
-  font-size: 0.9rem;
-  margin-bottom: 15px;
+.searchBox input { 
+    background: transparent; 
+    border: none; 
+    outline: none; 
+    color: var(--foreground); 
+    margin-left: 10px; 
 }
 
-.resumeBtn {
-  background: #3498db;
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: 600;
+.dashboardGrid { 
+    display: grid; 
+    grid-template-columns: 1fr 320px; 
+    gap: 24px; 
+    padding: 24px; 
+    max-width: 1440px; 
+    margin: 0 auto; 
 }
 
-.deadlineCard {
-  background: white;
-  padding: 20px;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+/* UPDATED WELCOME BANNER WITH GRADIENT */
+.welcomeBanner { 
+    background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+    padding: 40px; 
+    border-radius: 24px; 
+    display: flex; 
+    justify-content: space-between; 
+    border: none;
+    color: white; /* Gradient par text white behtar dikhega */
+    position: relative;
+    overflow: hidden;
 }
-.deadlineItem {
-  display: flex;
-  align-items: center;
-  padding: 15px 0;
-  border-bottom: 1px solid #eee;
+
+.highlight { 
+    color: #fff; 
+    font-weight: 800;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
-.deadlineItem:last-child {
-  border-bottom: none;
+
+.bannerTitle {
+    font-size: 2rem;
+    margin-bottom: 10px;
 }
-.deadlineIcon {
-  background: #fdf2e9;
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  margin-right: 15px;
-  font-size: 1.2rem;
+
+.bannerSub {
+    opacity: 0.9;
+    font-size: 1.1rem;
 }
-.deadlineItem h4 {
-  margin: 0 0 5px 0;
-  font-size: 0.95rem;
+
+/* AI Tip inside banner */
+.aiTip {
+    margin-top: 20px;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    padding: 10px 15px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.9rem;
 }
-.deadlineItem p {
-  margin: 0;
-  color: #e74c3c;
-  font-size: 0.85rem;
-  font-weight: 500;
+
+.statsRow { 
+    display: grid; 
+    grid-template-columns: repeat(4, 1fr); 
+    gap: 20px; 
+    margin: 24px 0; 
+}
+
+.statCard { 
+    background: var(--card); 
+    padding: 20px; 
+    border-radius: 18px; 
+    border: 1px solid var(--border); 
+    display: flex; 
+    align-items: center; 
+    gap: 15px; 
+    transition: transform 0.2s;
+}
+
+.statCard:hover {
+    transform: translateY(-5px);
+}
+
+.card { 
+    background: var(--card); 
+    padding: 24px; 
+    border-radius: 20px; 
+    border: 1px solid var(--border); 
+    margin-bottom: 24px; 
+}
+
+/* CALENDAR STYLES */
+.calTitle { 
+    font-size: 16px; 
+    font-weight: 700; 
+    margin-bottom: 15px; 
+    color: var(--foreground); 
+}
+
+.calendarGrid { 
+    display: grid; 
+    grid-template-columns: repeat(7, 1fr); 
+    gap: 5px; 
+    text-align: center; 
+}
+
+.calHead { 
+    font-size: 11px; 
+    font-weight: 700; 
+    color: var(--muted-foreground); 
+    padding-bottom: 10px; 
+}
+
+.calDay { 
+    font-size: 12px; 
+    padding: 8px 0; 
+    color: var(--foreground); 
+    border-radius: 8px; 
+    cursor: pointer;
+}
+
+.calDay:hover {
+    background: var(--secondary);
+}
+
+.calActive { 
+    background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+    color: white; 
+    border-radius: 8px; 
+    font-size: 12px; 
+    padding: 8px 0; 
+    font-weight: 700; 
+}
+
+.calEmpty { 
+    padding: 8px 0; 
+}
+
+/* CIRCULAR PROGRESS STYLES */
+.circleBox { 
+    display: flex; 
+    justify-content: center; 
+    margin: 20px 0; 
+}
+
+.circle { 
+    width: 100px; 
+    height: 100px; 
+    border-radius: 50%; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); /* Applied here too */
+}
+
+.circleInner { 
+    width: 80px; 
+    height: 80px; 
+    background: var(--card); 
+    border-radius: 50%; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    font-weight: 700; 
+}
+
+/* Header Profile styles */
+.userProfile {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.userName {
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.userText {
+    text-align: right;
+}
+
+/* Loader */
+.loader {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--primary);
 }

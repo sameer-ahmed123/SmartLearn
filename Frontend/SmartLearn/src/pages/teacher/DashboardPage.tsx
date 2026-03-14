@@ -1,243 +1,261 @@
-// OVERALL TEACHER_DASHBOARD
-// ASSEMBELS STATS --- UPLOAD FORM --- VALIDATION QUEUE
 import { useState, useEffect } from "react";
-import StatsCard from "../../components/Dashboard/shared/StatsCard";
-import LectureValidationQueueTable from "@/components/Dashboard/teacher/LectureValidationQueueTable";
-import CreateCourseModal from "../../components/Dashboard/teacher/CreateCourseModal";
-import CourseListCard from "@/components/Dashboard/teacher/CourseListCard";
+import { 
+  Users, CheckCircle, Clock, 
+  GraduationCap, Star,
+  ChevronLeft, ChevronRight, BookOpen
+} from "lucide-react"; 
 import styles from "./TeacherDashboard.module.css";
+import { 
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  AreaChart, Area 
+} from 'recharts';
 import apiClient from "@/api/apiClient";
-import type { CourseSummary } from "@/types/Courses/Types";
-import { Link } from "react-router-dom";
+import { useAuthStore } from "@/store/useAuthStore";
 
-interface MetricsData {
-  total_courses: number;
-  total_lectures_generated: number;
-  pending_validation_count: number;
-  total_validated_lectures: number;
-}
+// Mock Data
+const assignmentRecord = [
+    { name: 'Wk 1', marked: 45, pending: 5 },
+    { name: 'Wk 2', marked: 30, pending: 20 },
+    { name: 'Wk 3', marked: 50, pending: 0 },
+    { name: 'Wk 4', marked: 25, pending: 25 },
+];
 
-const DummyChart = () => (
-  <svg viewBox="0 0 100 100" width="150" height="150">
-    <circle
-      cx="50"
-      cy="50"
-      r="40"
-      fill="transparent"
-      stroke="#e0e0e0"
-      strokeWidth="20"
-    />
-    <circle
-      cx="50"
-      cy="50"
-      r="40"
-      fill="transparent"
-      stroke="#3498db"
-      strokeWidth="20"
-      strokeDasharray="180 251"
-      transform="rotate(-90 50 50)"
-    />
-    <circle
-      cx="50"
-      cy="50"
-      r="40"
-      fill="transparent"
-      stroke="#f1c40f"
-      strokeWidth="20"
-      strokeDasharray="50 251"
-      transform="rotate(168 50 50)"
-    />
-    <text
-      x="50"
-      y="55"
-      textAnchor="middle"
-      fontSize="12"
-      fill="#2c3e50"
-      fontWeight="bold"
-    >
-      Stats
-    </text>
-  </svg>
-);
+const quizPerformance = [
+    { subject: 'Quiz 1', avgScore: 75 },
+    { subject: 'Quiz 2', avgScore: 68 },
+    { subject: 'Quiz 3', avgScore: 82 },
+    { subject: 'Quiz 4', avgScore: 70 },
+];
+
+const weeklyTeacherActivity = [
+    { name: 'Mon', hours: 6 }, { name: 'Tue', hours: 8 }, { name: 'Wed', hours: 5 },
+    { name: 'Thu', hours: 9 }, { name: 'Fri', hours: 4 }, { name: 'Sat', hours: 2 }, { name: 'Sun', hours: 1 },
+];
+
+const studentProgressData = [
+    { name: 'Amelia', progress: 75, color: '#4f46e5', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Amelia' },
+    { name: 'Johen', progress: 64, color: '#f59e0b', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Johen' },
+    { name: 'Micheal', progress: 59, color: '#10b981', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Micheal' },
+    { name: 'Amanda', progress: 45, color: '#ef4444', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Amanda' },
+];
 
 const TeacherDashboardPage = () => {
-  const [metrics, setMetrics] = useState<MetricsData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [courses, setCourses] = useState<CourseSummary[]>([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  // const role = useAuthStore((state) => state.role);
+  const [metrics, setMetrics] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [viewDate, setViewDate] = useState(new Date());
 
-  const handleCourseCreated = (newCourse: CourseSummary) => {
-    // Add the new course to the top of the list
-    setCourses((prev) => [newCourse, ...prev]);
-    // Also optionally update the 'total_courses' metric locally to avoid a refetch
-    if (metrics) {
-      setMetrics({ ...metrics, total_courses: metrics.total_courses + 1 });
-    }
-  };
+  const user = useAuthStore((state) => state.user);
+  const displayName = user?.full_name || "User";
+
+  const handlePrevMonth = () => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() - 1, 1));
+  const handleNextMonth = () => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1));
 
   useEffect(() => {
-    const fetchMetrics = async () => {
+    const fetchDashboardData = async () => {
       try {
-        const response = await apiClient.get("/dashboard/metrics/teacher/", {});
-        const course_response = await apiClient.get("/lectures/courses");
-
-        if (!response.status || !course_response.status) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+        const response = await apiClient.get('/dashboard/metrics/teacher/');
+        if (response.data) {
+          setMetrics(response.data);
         }
-
-        const data: MetricsData = response.data;
-        const course_data: CourseSummary[] = course_response.data;
-        console.log(course_data);
-        setMetrics(data);
-        setCourses(course_data);
-      } catch (err) {
-        console.error("Failed to fetch dashboard metrics:", err);
-        setError("Failed to load dashboard data.");
+      } catch (error) {
+        console.error("Dashboard Fetch Error:", error);
       } finally {
-        setIsLoading(false);
+        setLoading(false);
       }
     };
-
-    fetchMetrics();
+    fetchDashboardData();
   }, []);
 
-  if (isLoading) return <p>Loading Dashboard...</p>;
-  if (error) return <p>Error: {error}</p>;
+  const getLectureStatsData = () => {
+    return [
+      { name: 'Total Courses', count: metrics?.total_courses ?? 0, fill: '#f59e0b' },
+      { name: 'Generated', count: metrics?.total_lectures_generated ?? 0, fill: '#4f46e5' },
+      { name: 'Pending', count: metrics?.pending_validation_count ?? 0, fill: '#ef4444' },
+      { name: 'Validated', count: metrics?.total_validated_lectures ?? 0, fill: '#10b981' },
+    ];
+  };
+
+  const renderCalendar = () => {
+    const year = viewDate.getFullYear();
+    const month = viewDate.getMonth();
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const now = new Date();
+    const isCurrentMonth = now.getFullYear() === year && now.getMonth() === month;
+    const days = [];
+    for (let i = 0; i < firstDay; i++) days.push(<span key={`empty-${i}`} className={styles.calEmpty}></span>);
+    for (let i = 1; i <= daysInMonth; i++) {
+      days.push(
+        <span key={i} className={(isCurrentMonth && i === now.getDate()) ? styles.calActive : styles.calDay}>
+          {i}
+        </span>
+      );
+    }
+    return days;
+  };
+
+  if (loading) return <div className={styles.loader}>Loading Teacher Portal...</div>;
 
   return (
-    <>
-      {/* Header can be added in future */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "20px",
-        }}
-      >
-        <h2 className={styles.sectionTitle}>My Courses</h2>
-        <button
-          onClick={() => setIsModalOpen(true)}
-          style={{
-            padding: "10px 20px",
-            backgroundColor: "#3498db",
-            color: "white",
-            border: "none",
-            borderRadius: "6px",
-            cursor: "pointer",
-            fontWeight: "bold",
-          }}
-        >
-          + Create New Course
-        </button>
-      </div>
-      <h1 className={styles.pageTitle}>Teacher Dashboard Overview</h1>
-
-      <div className={styles.statsGrid}>
-        <StatsCard
-          title="Total Courses"
-          value={metrics?.total_courses ?? 0}
-          icon="📚"
-          color="#2980b9"
-        />
-        <StatsCard
-          title="Lectures Generated"
-          value={metrics?.total_lectures_generated ?? 0}
-          icon="💡"
-          color="#27ae60"
-        />
-        <StatsCard
-          title="Pending Validation"
-          value={metrics?.pending_validation_count ?? 0}
-          icon="⏳"
-          color="#f39c12"
-        />
-        <StatsCard
-          title="Validated Lectures"
-          value={metrics?.total_validated_lectures ?? 0}
-          icon="✅"
-          color="#8e44ad"
-        />
-      </div>
-
-      <h2 className={styles.sectionTitle}>My Courses and Student Stats</h2>
-      <div className={styles.dashboardSplitSection}>
-        {/* LEFT SIDE: Course Grid (2 Columns) */}
-        <div className={styles.courseGrid}>
-          {courses.length > 0 ? (
-            courses.map((course) => (
-              <Link key={course.id} to={`/teacher/course/${course.id}`}>
-                <CourseListCard course={course} />
-              </Link>
-            ))
-          ) : (
-            <p>No Courses available. Create your first Course</p>
-          )}
+    <div className={styles.pageWrapper}>
+      <main className={styles.mainContainer}>
+        {/* Welcome Banner */}
+        <div className={styles.welcomeBanner}>
+          <div className={styles.bannerLeft}>
+              <h2 className={styles.bannerTitle}>Welcome back, Prof. <span className={styles.highlight}>{displayName}!</span></h2>
+              <p className={styles.bannerSub}>
+                Your students completed <span className={styles.boldText}>80%</span> of the tasks. 
+                Progress is <span className={styles.successText}>very good!</span>
+              </p>
+          </div>
+          <GraduationCap size={120} className={styles.capIcon} />
         </div>
 
-        {/* RIGHT SIDE: Chart Card */}
-        <div className={styles.chartCard}>
-          <div className={styles.chartTitle}>Course Engagement</div>
-
-          <div style={{ marginBottom: "25px" }}>
-            <DummyChart />
-          </div>
-
-          {/* New Stats Grid Layout */}
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: "10px",
-              width: "100%",
-              paddingTop: "20px",
-              borderTop: "1px solid #eee",
-            }}
-          >
-            <div style={{ textAlign: "center" }}>
-              <div
-                style={{
-                  fontSize: "1.5rem",
-                  fontWeight: "bold",
-                  color: "#2c3e50",
-                }}
-              >
-                142
-              </div>
-              <div style={{ fontSize: "0.8rem", color: "#7f8c8d" }}>
-                Active Students
-              </div>
+        {/* Stats Row */}
+        <div className={styles.statsRow}>
+          {[
+            { label: 'TOTAL STUDENTS', val: 142, icon: <Users />, color: '#4f46e5' },
+            { label: 'ACTIVE COURSES', val: metrics?.total_courses ?? 0, icon: <BookOpen />, color: '#f59e0b' },
+            { label: 'AVG ATTENDANCE', val: '88%', icon: <CheckCircle />, color: '#10b981' },
+            { label: 'PENDING TASKS', val: metrics?.pending_validation_count ?? 0, icon: <Clock />, color: '#ef4444' },
+          ].map((stat, idx) => (
+            <div key={idx} className={styles.statCard}>
+              <div className={styles.statIcon} style={{ color: stat.color, background: `${stat.color}15` }}>{stat.icon}</div>
+              <div className={styles.statInfo}><p>{stat.label}</p><h3>{stat.val}</h3></div>
             </div>
-            <div style={{ textAlign: "center" }}>
-              <div
-                style={{
-                  fontSize: "1.5rem",
-                  fontWeight: "bold",
-                  color: "#27ae60",
-                }}
-              >
-                85%
-              </div>
-              <div style={{ fontSize: "0.8rem", color: "#7f8c8d" }}>
-                Completion
-              </div>
+          ))}
+        </div>
+
+        {/* ROW 1: Assignment & Quiz */}
+        <div className={styles.twoColumnGrid}>
+          <div className={styles.card}>
+            <h3 className={styles.cardTitle}>Assignment Record</h3>
+            <div style={{ height: '200px' }}>
+                <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={assignmentRecord}>
+                        <XAxis dataKey="name" hide />
+                        <Tooltip />
+                        <Bar dataKey="marked" fill="#4f46e5" radius={4} />
+                        <Bar dataKey="pending" fill="#cbd5e1" radius={4} />
+                    </BarChart>
+                </ResponsiveContainer>
+            </div>
+          </div>
+          <div className={styles.card}>
+            <h3 className={styles.cardTitle}>Quiz Performance</h3>
+            <div style={{ height: '200px' }}>
+                <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={quizPerformance}>
+                        <Tooltip />
+                        <Area type="monotone" dataKey="avgScore" stroke="#10b981" fill="#10b98120" strokeWidth={3} />
+                    </AreaChart>
+                </ResponsiveContainer>
             </div>
           </div>
         </div>
-      </div>
 
-      <h2 className={styles.sectionTitle}>Lecture Validation Queue</h2>
-      <LectureValidationQueueTable />
+        {/* ROW 2: Lecture Progress & Calendar */}
+        <div className={styles.unevenGrid}>
+          <div className={styles.card}>
+            <h3 className={styles.cardTitle}>Lecture Progress Analysis</h3>
+            <div style={{ height: '250px', marginTop: '10px' }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={getLectureStatsData()}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eee" />
+                  <XAxis dataKey="name" fontSize={11} axisLine={false} tickLine={false} />
+                  <YAxis axisLine={false} tickLine={false} />
+                  <Tooltip 
+                    cursor={{fill: '#f1f5f9'}} 
+                    contentStyle={{borderRadius: '8px', border:'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)'}} 
+                  />
+                  {/* Legend removed here to hide "count" */}
+                  <Bar dataKey="count" radius={[6, 6, 0, 0]} barSize={60} animationDuration={1500} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
 
-      {/* Modal for creating Course */}
-      <CreateCourseModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSuccess={handleCourseCreated}
-      />
-    </>
+          <div className={styles.card}>
+            <div className={styles.calendarHeader}>
+              <h3 className={styles.calTitle}>{viewDate.toLocaleString('default', { month: 'long', year: 'numeric' })}</h3>
+              <div className={styles.calendarNav}>
+                <button onClick={handlePrevMonth} className={styles.navBtn}><ChevronLeft size={14} /></button>
+                <button onClick={handleNextMonth} className={styles.navBtn}><ChevronRight size={14} /></button>
+              </div>
+            </div>
+            <div className={styles.calendarGrid}>{['S','M','T','W','T','F','S'].map(d => <span key={d} className={styles.calHead}>{d}</span>)}{renderCalendar()}</div>
+          </div>
+        </div>
+
+        {/* ROW 3: Coverage, Circle, Goal */}
+        <div className={styles.threeColumnGrid}>
+           <div className={styles.card}>
+              <h3 className={styles.cardTitle}>Syllabus Coverage</h3>
+              <div className={styles.linearProg}>
+                 <div className={styles.progLabel}><span>Advanced Java</span><span>70%</span></div>
+                 <div className={styles.progBar}><div style={{width: '70%', background: '#4f46e5'}}></div></div>
+                 <div className={styles.progLabel} style={{marginTop:'15px'}}><span>Data Structures</span><span>45%</span></div>
+                 <div className={styles.progBar}><div style={{width: '45%', background: '#10b981'}}></div></div>
+              </div>
+           </div>
+           <div className={`${styles.card} ${styles.centerText}`}>
+              <h3 className={styles.cardTitle}>Overall Performance</h3>
+              <div className={styles.circleContainer}>
+                  <svg viewBox="0 0 36 36" className={styles.circularChart}>
+                    <path className={styles.circleBg} d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                    <path className={styles.circle} strokeDasharray="82, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                  </svg>
+                  <div className={styles.percentage}>82%</div>
+              </div>
+           </div>
+           <div className={styles.goalCard}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}><Star size={20} fill="white" /><h4>Monthly Goal</h4></div>
+              <p>Content: {metrics?.total_lectures_generated ?? 0}/10 uploaded</p>
+              <div className={styles.miniProgBar}><div style={{ width: '80%', background: 'white', height: '100%' }}></div></div>
+           </div>
+        </div>
+
+        {/* ROW 4: Weekly Hours + Student Progress */}
+        <div className={styles.twoColumnGrid} style={{marginTop: '24px'}}>
+           <div className={styles.card}>
+              <h3 className={styles.cardTitle}>Weekly Active Hours</h3>
+              <div style={{ height: '250px' }}>
+                 <ResponsiveContainer width="100%" height="100%">
+                   <BarChart data={weeklyTeacherActivity}>
+                     <XAxis dataKey="name" axisLine={false} tickLine={false} />
+                     <YAxis axisLine={false} tickLine={false} />
+                     <Tooltip cursor={{fill: '#f8fafc'}} />
+                     <Bar dataKey="hours" fill="#8b5cf6" radius={[6, 6, 0, 0]} barSize={60} />
+                   </BarChart>
+                 </ResponsiveContainer>
+              </div>
+           </div>
+
+           <div className={styles.card}>
+            <h3 className={styles.cardTitle}>Students Progress</h3>
+            <div className={styles.studentList}>
+                {studentProgressData.map((student, idx) => (
+                    <div key={idx} className={styles.studentItem}>
+                        <img src={student.avatar} alt={student.name} className={styles.studentAvatar} />
+                        <div className={styles.studentInfo}>
+                            <div className={styles.studentHeader}>
+                                <span className={styles.studentName}>{student.name}</span>
+                                <span className={styles.studentPercent} style={{ color: student.color }}>{student.progress}%</span>
+                            </div>
+                            <div className={styles.progressTrack}>
+                                <div 
+                                    className={styles.progressFill} 
+                                    style={{ width: `${student.progress}%`, backgroundColor: student.color }}
+                                ></div>
+                            </div>
+                        </div>
+                    </div>
+                ))}
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
   );
 };
 

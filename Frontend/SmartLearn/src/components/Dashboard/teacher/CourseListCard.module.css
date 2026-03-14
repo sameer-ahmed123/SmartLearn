@@ -1,126 +1,135 @@
-/* src/components/Dashboard/teacher/CourseListCard.module.css */
-
 .card {
-  background-color: #ffffff;
-  color: #434343;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  padding: 20px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  background: var(--card, #ffffff); 
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 20px;
+  overflow: hidden; /* Image corners round karne ke liye */
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   flex-direction: column;
-  height: 100%; /* Ensures cards in a grid row are same height */
-  justify-content: space-between;
+  height: 100%;
 }
 
 .card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-  border-color: #3498db;
+  transform: translateY(-8px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
-/* --- Header Section --- */
-.header {
+/* Image Section */
+.courseThumb {
+  height: 180px;
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+  background: #f1f5f9;
+}
+
+.thumbImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.card:hover .thumbImage {
+  transform: scale(1.05);
+}
+
+.statusBadge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  font-size: 0.65rem;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-weight: 800;
+  text-transform: uppercase;
+  backdrop-filter: blur(4px);
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+/* Content Layout */
+.cardContent {
+  padding: 20px;
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 12px;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.header {
+  margin-bottom: 10px;
 }
 
 .title {
   margin: 0;
-  font-size: 1.1rem;
-  color: #2c3e50;
-  font-weight: 700;
+  font-size: 1.15rem;
+  color: var(--foreground, #1e293b);
+  font-weight: 800;
   line-height: 1.4;
-  flex: 1; /* Allows title to take up available space */
-  margin-right: 10px;
 }
 
-.status {
-  font-size: 0.75rem;
-  padding: 3px 8px;
-  border-radius: 12px;
-  background-color: #ecf0f1;
-  color: #7f8c8d;
-  text-transform: uppercase;
-  font-weight: 700;
-  white-space: nowrap;
-  letter-spacing: 0.5px;
-}
-
-.statusPublished {
-  padding: 3px 8px;
-  border-radius: 12px;
-  background-color: #81ffbe;
-  color: #03513b;
-  border: 1px solid #a7f3d0;
-}
-
-.statusDraft {
-  padding: 3px 8px;
-  border-radius: 12px;
-  background-color: #ffd8a5;
-  color: #c2410c;
-  border: 1px solid #fed7aa;
-}
-
-.statusArchived {
-  padding: 3px 8px;
-  border-radius: 12px;
-  background-color: #c7c8cb;
-  color: #555b64;
-  border: 1px solid #e5e7eb;
-}
-
-.statusRejected {
-  padding: 3px 8px;
-  border-radius: 12px;
-  background-color: #fee2e2;
-  color: #b91c1c;
-  border: 1px solid #fecaca;
-}
-
-/* --- Content Section --- */
 .description {
-  color: #7f8c8d;
-  font-size: 0.9rem;
-  line-height: 1.5;
-  margin-bottom: 20px;
-  flex-grow: 1; /* Pushes the stats/actions to the bottom */
+  color: var(--muted-foreground, #64748b);
+  font-size: 0.875rem;
+  line-height: 1.6;
+  margin-bottom: 15px;
+  flex-grow: 1;
 }
 
 .statsRow {
   display: flex;
-  gap: 15px;
-  margin-bottom: 20px;
+  justify-content: space-between;
   padding-top: 15px;
-  border-top: 1px solid #f0f0f0;
-  font-size: 0.85rem;
-  color: #34495e;
-  font-weight: 500;
+  margin-bottom: 18px;
+  border-top: 1px solid var(--border, #f1f5f9);
+  color: var(--muted-foreground, #64748b);
 }
 
-/* --- Actions Section --- */
-.actions {
+.statItem {
   display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
 }
 
+/* Status Colors Overrides */
+.statusPublished {
+  background-color: rgba(16, 185, 129, 0.9);
+  color: white;
+}
+
+.statusDraft {
+  background-color: rgba(245, 158, 11, 0.9);
+  color: white;
+}
+
+/* Button Styling */
 .manageBtn {
   display: block;
   width: 100%;
   text-align: center;
-  background-color: #3498db;
-  color: white;
+  background: linear-gradient(to right, #3b82f6, #2563eb);
+  color: white !important;
+  padding: 12px 0;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 0.9rem;
   text-decoration: none;
-  padding: 10px 0;
-  border-radius: 6px;
-  font-weight: 600;
-  font-size: 0.95rem;
-  transition: background-color 0.2s;
+  transition: all 0.2s;
+  border: none;
 }
 
 .manageBtn:hover {
-  background-color: #2980b9;
+  background: linear-gradient(to right, #2563eb, #1d4ed8);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+/* Dark Mode visibility adjustments */
+:global(.dark) .card {
+  background: var(--card, #1e293b);
+}
+
+:global(.dark) .statsRow {
+  border-color: #334155;
 }

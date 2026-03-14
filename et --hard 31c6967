@@ -1,0 +1,29 @@
+[33mdff4459[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mfeature/grades[m[33m, [m[1;31morigin/feature/grades[m[33m)[m HEAD@{0}: reset: moving to HEAD
+[33mdff4459[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mfeature/grades[m[33m, [m[1;31morigin/feature/grades[m[33m)[m HEAD@{1}: commit: feat: added new updates
+[33m31c6967[m[33m ([m[1;31morigin/feature/frontend_updates_chatbot[m[33m, [m[1;31morigin/feature/frontend_update_chatbot[m[33m, [m[1;32mfeature/frontend_updates_chatbot[m[33m, [m[1;32mfeature/frontend_update_chatbot[m[33m)[m HEAD@{2}: checkout: moving from feature/frontend_updates_chatbot to feature/grades
+[33m31c6967[m[33m ([m[1;31morigin/feature/frontend_updates_chatbot[m[33m, [m[1;31morigin/feature/frontend_update_chatbot[m[33m, [m[1;32mfeature/frontend_updates_chatbot[m[33m, [m[1;32mfeature/frontend_update_chatbot[m[33m)[m HEAD@{3}: checkout: moving from feature/frontend_update_chatbot to feature/frontend_updates_chatbot
+[33m31c6967[m[33m ([m[1;31morigin/feature/frontend_updates_chatbot[m[33m, [m[1;31morigin/feature/frontend_update_chatbot[m[33m, [m[1;32mfeature/frontend_updates_chatbot[m[33m, [m[1;32mfeature/frontend_update_chatbot[m[33m)[m HEAD@{4}: commit: feat: added new updates and chatbot
+[33m9728905[m[33m ([m[1;31morigin/feature/frontend_update1[m[33m, [m[1;32mfeature/frontend_update1[m[33m)[m HEAD@{5}: checkout: moving from feature/frontend_update1 to feature/frontend_update_chatbot
+[33m9728905[m[33m ([m[1;31morigin/feature/frontend_update1[m[33m, [m[1;32mfeature/frontend_update1[m[33m)[m HEAD@{6}: commit: feat: added new updates1
+[33m461cd37[m[33m ([m[1;31morigin/feature/frontend_updates[m[33m, [m[1;32mfeature/frontend_updates[m[33m)[m HEAD@{7}: checkout: moving from feature/frontend_updates to feature/frontend_update1
+[33m461cd37[m[33m ([m[1;31morigin/feature/frontend_updates[m[33m, [m[1;32mfeature/frontend_updates[m[33m)[m HEAD@{8}: commit: feat: added new updates
+[33me2ce516[m[33m ([m[1;31morigin/feature/frontend_update[m[33m, [m[1;32mfeature/frontend_update[m[33m)[m HEAD@{9}: checkout: moving from feature/frontend_update to feature/frontend_updates
+[33me2ce516[m[33m ([m[1;31morigin/feature/frontend_update[m[33m, [m[1;32mfeature/frontend_update[m[33m)[m HEAD@{10}: pull origin feature/frontend_update: Fast-forward
+[33m7f7ec10[m HEAD@{11}: commit: feat: added new updates with dark mode
+[33me419d04[m[33m ([m[1;31morigin/feature/frontend[m[33m, [m[1;32mfeature/frontend[m[33m)[m HEAD@{12}: checkout: moving from feature/frontend to feature/frontend_update
+[33me419d04[m[33m ([m[1;31morigin/feature/frontend[m[33m, [m[1;32mfeature/frontend[m[33m)[m HEAD@{13}: commit: feat: added student and teacher portals with dark mode
+[33m0be279f[m[33m ([m[1;31morigin/feature/quiz-assignment-portal[m[33m, [m[1;32mfeature/translation[m[33m, [m[1;32mfeature/quiz-assignment-portal[m[33m)[m HEAD@{14}: checkout: moving from feature/quiz-assignment-portal to feature/frontend
+[33m0be279f[m[33m ([m[1;31morigin/feature/quiz-assignment-portal[m[33m, [m[1;32mfeature/translation[m[33m, [m[1;32mfeature/quiz-assignment-portal[m[33m)[m HEAD@{15}: checkout: moving from feature/translation to feature/quiz-assignment-portal
+[33m0be279f[m[33m ([m[1;31morigin/feature/quiz-assignment-portal[m[33m, [m[1;32mfeature/translation[m[33m, [m[1;32mfeature/quiz-assignment-portal[m[33m)[m HEAD@{16}: commit: Added Teacher and Student Quiz/Assignment pages with Dark Mode support
+[33m094d1e8[m[33m ([m[1;31morigin/feature/translation[m[33m)[m HEAD@{17}: pull origin feature/translation: Fast-forward
+[33m050c6b0[m[33m ([m[1;32mfeature/backend-frontend-sync[m[33m)[m HEAD@{18}: checkout: moving from feature/backend-frontend-sync to feature/translation
+[33m050c6b0[m[33m ([m[1;32mfeature/backend-frontend-sync[m[33m)[m HEAD@{19}: commit: Added Translation Widget
+[33m479c5a5[m[33m ([m[1;31morigin/feature/translation-and-ai[m[33m, [m[1;31morigin/feature/full-update[m[33m, [m[1;32mfeature/translation-and-ai[m[33m, [m[1;32mfeature/full-update[m[33m)[m HEAD@{20}: checkout: moving from feature/full-update to feature/backend-frontend-sync
+[33m479c5a5[m[33m ([m[1;31morigin/feature/translation-and-ai[m[33m, [m[1;31morigin/feature/full-update[m[33m, [m[1;32mfeature/translation-and-ai[m[33m, [m[1;32mfeature/full-update[m[33m)[m HEAD@{21}: checkout: moving from feature/translation-and-ai to feature/full-update
+[33m479c5a5[m[33m ([m[1;31morigin/feature/translation-and-ai[m[33m, [m[1;31morigin/feature/full-update[m[33m, [m[1;32mfeature/translation-and-ai[m[33m, [m[1;32mfeature/full-update[m[33m)[m HEAD@{22}: checkout: moving from 479c5a5c71cd113292d78f0f16c964998530860b to feature/translation-and-ai
+[33m479c5a5[m[33m ([m[1;31morigin/feature/translation-and-ai[m[33m, [m[1;31morigin/feature/full-update[m[33m, [m[1;32mfeature/translation-and-ai[m[33m, [m[1;32mfeature/full-update[m[33m)[m HEAD@{23}: commit: Updated App.tsx and DashboardLayout for Translation
+[33m02f9ebe[m[33m ([m[1;31morigin/Frontend_UI_Changes[m[33m)[m HEAD@{24}: checkout: moving from master to origin/Frontend_UI_Changes
+[33mace1cc6[m[33m ([m[1;32mmaster[m[33m)[m HEAD@{25}: pull: Fast-forward
+[33m7e68f96[m HEAD@{26}: pull: Fast-forward
+[33m47085ac[m HEAD@{27}: pull: Fast-forward
+[33mbff8666[m HEAD@{28}: clone: from https://github.com/sameer-ahmed123/SmartLearn.git

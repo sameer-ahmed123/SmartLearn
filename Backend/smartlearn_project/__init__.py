@@ -1,5 +1,5 @@
-import pymysql
 
+import pymysql
 # Loads Celery app when our Django Project starts 
 from .celery import app as celery_app
 

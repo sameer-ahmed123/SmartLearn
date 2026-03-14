@@ -3,10 +3,14 @@ import "./Auth.css";
 import apiClient from "@/api/apiClient";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useNavigate } from "react-router-dom";
+import { Eye, EyeOff } from "lucide-react"; // Icon import kiya
 
 export function LoginForm() {
   const [credentials, setCredentials] = useState({ email: "", password: "" });
-  const [error, setError] = useState(""); // Error state add ki
+  const [error, setError] = useState("");
+  
+  // Password toggle ke liye state
+  const [showPassword, setShowPassword] = useState(false);
 
   const login = useAuthStore((state) => state.login);
   const navigate = useNavigate();
@@ -17,16 +21,14 @@ export function LoginForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(""); // Purana error clear karein
+    setError("");
 
     const { email, password } = credentials;
 
-    // 1. Fields empty check
     if (!email || !password) {
       return setError("Email and Password are required!");
     }
 
-    // 2. Email format check
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       return setError("Please enter a valid email address.");
@@ -38,14 +40,12 @@ export function LoginForm() {
       login(user, access, refresh);
       navigate("/dashboard");
     } catch {
-      // Alert ki jagah UI par error dikhayein
       setError("Invalid Email or Password. Please try again.");
     }
   };
 
   return (
     <form onSubmit={handleSubmit}>
-      {/* Error Message UI par dikhane ke liye box */}
       {error && (
         <div
           className="error-box"
@@ -77,13 +77,35 @@ export function LoginForm() {
 
       <div className="input-field">
         <label>Password</label>
-        <input
-          type="password"
-          name="password"
-          placeholder="Enter password"
-          onChange={handleChange}
-          required
-        />
+        {/* Eye icon ko adjust karne ke liye relative wrapper */}
+        <div style={{ position: "relative" }}>
+          <input
+            type={showPassword ? "text" : "password"}
+            name="password"
+            placeholder="Enter password"
+            onChange={handleChange}
+            required
+            style={{ paddingRight: "40px", width: "100%" }}
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            style={{
+              position: "absolute",
+              right: "10px",
+              top: "50%",
+              transform: "translateY(-50%)",
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              color: "#666",
+              display: "flex",
+              alignItems: "center"
+            }}
+          >
+            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+          </button>
+        </div>
       </div>
 
       <button type="submit" className="submit-button">

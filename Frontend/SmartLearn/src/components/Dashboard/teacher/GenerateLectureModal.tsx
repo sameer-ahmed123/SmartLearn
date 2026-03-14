@@ -1,12 +1,13 @@
 import React, { useState, useRef } from 'react';
+import { X, Upload, Sparkles, FileText, AlertCircle, CheckCircle2, Wand2 } from 'lucide-react';
 import apiClient from '../../../api/apiClient';
 import styles from './GenerateLectureModal.module.css';
 
 interface GenerateLectureModalProps {
     isOpen: boolean;
     onClose: () => void;
-    courseId: number;      // Needed for the ID in the POST request
-    courseTitle: string;   // NEW: Needed for the Display Field
+    courseId: number;      
+    courseTitle: string;   
     onSuccess: () => void;
 }
 
@@ -17,7 +18,6 @@ const GenerateLectureModal: React.FC<GenerateLectureModalProps> = ({
     const [file, setFile] = useState<File | null>(null);
     const [isUploading, setIsUploading] = useState(false);
     
-    // NEW: State for inline success message
     const [successMsg, setSuccessMsg] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
     
@@ -40,32 +40,28 @@ const GenerateLectureModal: React.FC<GenerateLectureModalProps> = ({
 
         setIsUploading(true);
         setError(null);
-        setSuccessMsg(null); // Clear previous success messages
+        setSuccessMsg(null); 
 
         const formData = new FormData();
         formData.append('course', courseId.toString());
-        formData.append('ai_prompt', aiPrompt); // Backend maps this to 'topic'
+        formData.append('ai_prompt', aiPrompt); 
         formData.append('raw_file', file);
 
         try {
             const response = await apiClient.post('/lectures/content-sources/', formData);
 
             if (response.status === 201 || response.status === 202) {
-                // SUCCESS LOGIC: Set the success message instead of alerting
                 setSuccessMsg("Upload Successful! AI generation has started in the background.");
                 
-                // Optional: Clear form immediately
                 setAiPrompt('');
                 setFile(null);
 
-                // Optional: Close modal automatically after 2 seconds
                 setTimeout(() => {
-                    onSuccess(); // Refresh parent list
-                    onClose();   // Close modal
-                    setSuccessMsg(null); // Reset for next time
+                    onSuccess(); 
+                    onClose();   
+                    setSuccessMsg(null); 
                 }, 2000);
             }
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (err: any) {
             console.error("Upload failed:", err);
             setError("Failed to upload. Please try again.");
@@ -77,53 +73,66 @@ const GenerateLectureModal: React.FC<GenerateLectureModalProps> = ({
     return (
         <div className={styles.overlay}>
             <div className={styles.modal}>
-                <div className={styles.header}>
-                    <h2>Generate New Lecture</h2>
-                    <button onClick={onClose} className={styles.closeBtn}>&times;</button>
+                {/* HEADER WITH GRADIENT STRIP */}
+                <div className={styles.modalHeader}>
+                    <div className={styles.headerContent}>
+                        <div className={styles.iconBox}>
+                            <Wand2 size={24} color="white" />
+                        </div>
+                        <div>
+                            <h2>Generate Lecture</h2>
+                            <p>AI-powered content creation</p>
+                        </div>
+                    </div>
+                    <button onClick={onClose} className={styles.closeIcon}>
+                        <X size={20} />
+                    </button>
                 </div>
 
-                <form onSubmit={handleSubmit} className={styles.form}>
-                    {/* ERROR MESSAGE AREA */}
-                    {error && <div  className={styles.error}>{error}</div>}
+                <form onSubmit={handleSubmit} className={styles.formBody}>
+                    {/* FEEDBACK MESSAGES */}
+                    {error && <div className={styles.errorBox}><AlertCircle size={18} /> {error}</div>}
+                    {successMsg && <div className={styles.successBox}><CheckCircle2 size={18} /> {successMsg}</div>}
                     
-                    {/* NEW: SUCCESS MESSAGE AREA */}
-                    {successMsg && <div style={{color:"green"}} className={styles.success}>{successMsg}</div>}
-                    
-                    {/* FIELD 1: Course (Read Only) */}
-                    <div className={styles.formGroup}>
+                    {/* COURSE INFO CARD (READ ONLY) */}
+                    <div className={styles.infoCard}>
                         <label>Target Course</label>
-                        <input 
-                            type="text" 
-                            value={courseTitle} 
-                            disabled 
-                            className={styles.readOnlyInput}
-                        />
+                        <h3>{courseTitle}</h3>
                     </div>
 
-                    {/* FIELD 2: AI Prompt */}
-                    <div className={styles.formGroup}>
+                    {/* AI PROMPT INPUT */}
+                    <div className={styles.inputGroup}>
                         <label>AI Prompt / Topic</label>
-                        <textarea 
-                            value={aiPrompt}
-                            onChange={(e) => setAiPrompt(e.target.value)}
-                            placeholder="e.g., Explain the basics of Recursion using Python examples. Keep it beginner-friendly."
-                            rows={3}
-                            required 
-                            autoFocus
-                        />
+                        <div className={styles.textareaWrapper}>
+                            <Sparkles size={16} className={styles.sparkleIcon} />
+                            <textarea 
+                                value={aiPrompt}
+                                onChange={(e) => setAiPrompt(e.target.value)}
+                                placeholder="Describe what you want the AI to generate..."
+                                rows={3}
+                                required 
+                                autoFocus
+                            />
+                        </div>
                     </div>
 
-                    {/* FIELD 3: Source Material */}
-                    <div className={styles.formGroup}>
-                        <label>Source Material (PDF/Text)</label>
+                    {/* FILE UPLOAD ZONE */}
+                    <div className={styles.inputGroup}>
+                        <label>Source Material</label>
                         <div 
-                            className={styles.fileDropZone}
+                            className={`${styles.dropZone} ${file ? styles.hasFile : ''}`}
                             onClick={() => fileInputRef.current?.click()}
                         >
                             {file ? (
-                                <span className={styles.fileName}>📄 {file.name}</span>
+                                <div className={styles.fileInfo}>
+                                    <FileText size={28} />
+                                    <span>{file.name}</span>
+                                </div>
                             ) : (
-                                <span>Click to upload a document</span>
+                                <div className={styles.uploadPlaceholder}>
+                                    <Upload size={24} />
+                                    <span>Upload PDF or Document</span>
+                                </div>
                             )}
                             <input 
                                 type="file" 
@@ -135,13 +144,14 @@ const GenerateLectureModal: React.FC<GenerateLectureModalProps> = ({
                         </div>
                     </div>
 
-                    <div className={styles.actions}>
-                        <button type="button" onClick={onClose} className={styles.cancelBtn}>
+                    {/* ACTIONS */}
+                    <div className={styles.modalFooter}>
+                        <button type="button" onClick={onClose} className={styles.cancelLink}>
                             Cancel
                         </button>
                         <button 
                             type="submit" 
-                            className={styles.submitBtn} 
+                            className={styles.generateBtn} 
                             disabled={isUploading || !file || !aiPrompt || successMsg !== null}
                         >
                             {isUploading ? 'Processing...' : 'Start Generation'}

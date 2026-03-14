@@ -457,8 +457,7 @@ def generate_assignment_json(script, context,num_questions=5):
 
     except Exception as e:
         logger.error(f"Assignment Generation LLM Error: {e}")
-        raise Exception(f"Failed to generate assignment: {e}")
-    
+        raise Exception(f"Failed to generate assignment: {e}")    
     
 
 

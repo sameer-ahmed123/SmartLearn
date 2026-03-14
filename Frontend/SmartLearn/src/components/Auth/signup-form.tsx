@@ -3,6 +3,7 @@ import "./Auth.css";
 import apiClient from "@/api/apiClient";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useNavigate } from "react-router-dom";
+import { Eye, EyeOff } from "lucide-react"; // Icons for password toggle
 
 type FormDataType = {
   full_name: string;
@@ -21,7 +22,11 @@ export function SignupForm() {
     confirmPassword: "",
   });
 
-  const [error, setError] = useState(""); // Error message dikhane ke liye state
+  // Password visibility states
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const [error, setError] = useState(""); 
   const login = useAuthStore((state) => state.login);
   const navigate = useNavigate();
 
@@ -37,39 +42,33 @@ export function SignupForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(""); // Naye submit par purana error clear karein
+    setError(""); 
 
     const { full_name, email, role, password, confirmPassword } = formData;
 
-    // 1. Empty Fields Check
     if (!full_name || !email || !role || !password || !confirmPassword) {
       return setError("All fields are required!");
     }
 
-    // 2. Email validation (Rule #3)
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       return setError("Please provide a valid email format.");
     }
 
-    // 3. Must be at least 8 characters (Rule #1)
     if (password.length < 8) {
       return setError("Password should be at least 8 characters long.");
     }
 
-    // 4. At least one number (Rule #5)
     if (!/\d/.test(password)) {
       return setError("Password should contain at least one number.");
     }
 
-    // 5. Special characters check (Rule #4)
     if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
       return setError(
         "Password should contain at least one special character."
       );
     }
 
-    // 6. Same password and confirmation (Rule #2)
     if (password !== confirmPassword) {
       return setError("Password and Confirm Password must be the same.");
     }
@@ -86,15 +85,12 @@ export function SignupForm() {
       login(user, access, refresh);
       navigate("/");
     } catch {
-      // Backend se aane wala error UI par dikhana
-      // Backend se ane wale Error ?? plz dont do this ...
       setError("Signup failed! Try again.");
     }
   };
 
   return (
     <form onSubmit={handleSubmit}>
-      {/* Agar error ho toh yahan red text mein nazar aaye */}
       {error && (
         <div
           className="error-box"
@@ -146,24 +142,66 @@ export function SignupForm() {
 
       <div className="input-field">
         <label>Password</label>
-        <input
-          type="password"
-          name="password"
-          placeholder="••••••••"
-          onChange={handleChange}
-          required
-        />
+        <div style={{ position: "relative" }}>
+          <input
+            type={showPassword ? "text" : "password"}
+            name="password"
+            placeholder="••••••••"
+            onChange={handleChange}
+            required
+            style={{ paddingRight: "40px", width: "100%" }}
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            style={{
+              position: "absolute",
+              right: "10px",
+              top: "50%",
+              transform: "translateY(-50%)",
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              color: "#666",
+              display: "flex",
+              alignItems: "center"
+            }}
+          >
+            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+          </button>
+        </div>
       </div>
 
       <div className="input-field">
         <label>Confirm Password</label>
-        <input
-          type="password"
-          name="confirmPassword"
-          placeholder="••••••••"
-          onChange={handleChange}
-          required
-        />
+        <div style={{ position: "relative" }}>
+          <input
+            type={showConfirmPassword ? "text" : "password"}
+            name="confirmPassword"
+            placeholder="••••••••"
+            onChange={handleChange}
+            required
+            style={{ paddingRight: "40px", width: "100%" }}
+          />
+          <button
+            type="button"
+            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+            style={{
+              position: "absolute",
+              right: "10px",
+              top: "50%",
+              transform: "translateY(-50%)",
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              color: "#666",
+              display: "flex",
+              alignItems: "center"
+            }}
+          >
+            {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+          </button>
+        </div>
       </div>
 
       <button type="submit" className="submit-button">

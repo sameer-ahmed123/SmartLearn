@@ -7,4 +7,5 @@ export interface CourseSummary {
     created_at: string;
     lecture_count: number;
     content_source_count: number;
+    image_url?: string;
 }

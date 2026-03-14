@@ -1,72 +1,180 @@
-.container {
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  padding: 20px;
+.assessmentWrapper {
+    animation: fadeIn 0.5s ease-out;
 }
 
-.table {
-  width: 100%;
-  border-collapse: collapse;
-}
-.table th,
-.table td {
-  color: #434343;
-  padding: 12px 15px;
-  text-align: left;
-  border-bottom: 1px solid #f2f2f2;
-}
-.table th {
-  background-color: #f8f9fa;
-  color: #34495e;
-  font-weight: 700;
-  text-transform: uppercase;
-  font-size: 0.9rem;
-}
-.table tbody tr:hover {
-  background-color: #fefefe;
+.tableCard {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+    border: 1px solid #f1f5f9;
+    overflow: hidden;
+    transition: background 0.3s;
 }
 
+:global(.dark) .tableCard {
+    background: #1e293b;
+    border-color: #334155;
+}
+
+.modernTable {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.modernTable th {
+    background: #f8fafc;
+    padding: 18px 24px;
+    color: #64748b;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+:global(.dark) .modernTable th {
+    background: #0f172a;
+    color: #94a3b8;
+    border-color: #334155;
+}
+
+.headerIcon {
+    margin-right: 8px;
+    vertical-align: middle;
+    color: #6366f1;
+}
+
+.modernTable td {
+    padding: 20px 24px;
+    border-bottom: 1px solid #f1f5f9;
+    color: #475569;
+}
+
+:global(.dark) .modernTable td {
+    border-color: #334155;
+    color: #cbd5e1;
+}
+
+.topicName {
+    font-weight: 600;
+    color: #1e293b;
+    font-size: 0.95rem;
+}
+
+:global(.dark) .topicName {
+    color: #f8fafc;
+}
+
+.centerAlign {
+    text-align: right;
+}
+
+/* BUTTONS */
 .generateBtn {
-  background-color: #9b59b6; /* Purple for Ai */
-  color: white;
-  border: none;
-  padding: 8px 15px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: 600;
-  transition: background 0.2s;
+    background: linear-gradient(135deg, #8b5cf6 0%, #d946ef 100%);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.2);
+    transition: 0.3s;
 }
 
-.generateBtn:hover {
-  background-color: #8e44ad;
+.generateBtn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(139, 92, 246, 0.3);
 }
+
 .generateBtn:disabled {
-  background-color: #bdc3c7;
-  cursor: not-allowed;
+    background: #e2e8f0;
+    color: #94a3b8;
+    cursor: not-allowed;
+    box-shadow: none;
 }
 
 .viewBtn {
-  background-color: transparent;
-  border: 1px solid #3498db;
-  color: #3498db;
-  padding: 8px 15px;
-  border-radius: 4px;
-  cursor: pointer;
+    background: #eff6ff;
+    color: #3b82f6;
+    border: 1px solid #dbeafe;
+    padding: 10px 20px;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: 0.2s;
 }
 
+.viewBtn:hover {
+    background: #3b82f6;
+    color: white;
+}
+
+/* BADGES */
 .badgeSuccess {
-  background: #d4edda;
-  color: #155724;
-  padding: 4px 8px;
-  border-radius: 12px;
-  font-size: 0.8rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #ecfdf5;
+    color: #10b981;
+    padding: 6px 14px;
+    border-radius: 100px;
+    font-size: 0.75rem;
+    font-weight: 700;
 }
 
-.badgePending {
-  background: #f8f9fa;
-  color: #636c72;
-  padding: 4px 8px;
-  border-radius: 12px;
-  font-size: 0.8rem;
+.badgeProcessing {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #fff7ed;
+    color: #f97316;
+    padding: 6px 14px;
+    border-radius: 100px;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.badgeNone {
+    background: #f1f5f9;
+    color: #94a3b8;
+    padding: 6px 14px;
+    border-radius: 100px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+:global(.dark) .badgeNone {
+    background: #0f172a;
+    color: #64748b;
+}
+
+.spin {
+    animation: spin 1s linear infinite;
+}
+
+.emptyRow {
+    text-align: center;
+    padding: 40px !important;
+    color: #94a3b8;
+    font-style: italic;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
 }

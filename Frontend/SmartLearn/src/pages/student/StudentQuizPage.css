@@ -1,0 +1,233 @@
+.quiz-container {
+    max-width: 800px;
+    margin: 40px auto;
+    padding: 20px;
+    background-color: var(--background, #f8fafc);
+    min-height: 100vh;
+    transition: all 0.3s ease;
+}
+
+/* Dark Mode Global Support - Synced with Student Portal */
+:global(.dark) .quiz-container {
+    --background: #0f172a;
+    --foreground: #f8fafc;
+    --card: #1e293b;
+    --border: #334155;
+    --muted: #0f172a;
+    --muted-foreground: #94a3b8;
+}
+
+.quiz-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 30px;
+}
+
+.quiz-card, .result-card {
+    background: white;
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+    border: 1px solid var(--border, transparent);
+}
+
+.progress-bar {
+    height: 8px;
+    background: #f1f5f9;
+    border-radius: 10px;
+    margin-bottom: 30px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: #6366f1;
+    transition: width 0.3s ease;
+}
+
+.question-header {
+    display: flex;
+    gap: 15px;
+    align-items: flex-start;
+    margin-bottom: 30px;
+}
+
+.question-text {
+    font-size: 1.5rem;
+    color: #1e293b;
+    margin: 0;
+    line-height: 1.4;
+}
+
+.options-grid {
+    display: grid;
+    gap: 15px;
+}
+
+.option-btn {
+    display: flex;
+    align-items: center;
+    padding: 18px;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    background: transparent;
+    text-align: left;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.option-btn:hover {
+    border-color: #6366f1;
+    background: rgba(99, 102, 241, 0.05);
+}
+
+.option-btn.selected {
+    border-color: #6366f1;
+    background: rgba(99, 102, 241, 0.1);
+    font-weight: 600;
+}
+
+.option-label {
+    width: 32px;
+    height: 32px;
+    background: #f1f5f9;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 15px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    flex-shrink: 0;
+}
+
+.next-btn {
+    margin-top: 40px;
+    width: 100%;
+    padding: 16px;
+    background: #6366f1;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.next-btn:hover:not(:disabled) {
+    background: #4f46e5;
+}
+
+.next-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.result-card {
+    text-align: center;
+}
+
+.score-display {
+    margin: 20px 0;
+    font-weight: bold;
+}
+
+.final-score {
+    color: #6366f1;
+    font-size: 3.5rem;
+}
+
+.total-score {
+    font-size: 2rem;
+}
+
+/* --- REVIEW BREAKDOWN STYLES --- */
+.review-breakdown {
+    margin-top: 40px;
+    text-align: left;
+    border-top: 1px solid #e2e8f0;
+    padding-top: 30px;
+    max-height: 450px;
+    overflow-y: auto;
+    padding-right: 10px;
+}
+
+.review-item {
+    padding: 20px;
+    border-radius: 15px;
+    margin-bottom: 15px;
+    border: 1px solid #e2e8f0;
+}
+
+.review-item.is-correct {
+    background-color: rgba(22, 163, 74, 0.05);
+}
+
+.review-item.is-wrong {
+    background-color: rgba(220, 38, 38, 0.05);
+}
+
+.review-question-row {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    margin-bottom: 12px;
+}
+
+.icon-c { color: #16a34a; }
+.icon-w { color: #dc2626; }
+
+.review-answers-row {
+    font-size: 0.95rem;
+    padding-left: 30px;
+}
+
+.correct-text {
+    color: #16a34a;
+    font-weight: 600;
+    margin-top: 8px;
+}
+
+.result-actions {
+    display: flex;
+    gap: 15px;
+    margin-top: 30px;
+}
+
+.finish-btn {
+    flex: 1;
+    padding: 14px;
+    border-radius: 10px;
+    font-weight: 600;
+    background: #6366f1;
+    color: white;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+/* Loading/Error State Styling */
+.quiz-loading-state, .quiz-error-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 60vh;
+    gap: 1rem;
+    color: var(--muted-foreground);
+    background-color: var(--background);
+}
+
+@media (max-width: 640px) {
+    .quiz-card { padding: 20px; }
+    .question-text { font-size: 1.2rem; }
+}

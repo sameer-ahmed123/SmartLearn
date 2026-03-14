@@ -4,7 +4,7 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(0, 0, 0, 0.7); /* Slightly darker for better contrast */
   display: flex;
   justify-content: center;
   align-items: center;
@@ -12,19 +12,20 @@
 }
 
 .modal {
-  background: white;
+  background: var(--card, #ffffff); /* Dark mode background */
   width: 90%;
   max-width: 800px;
-  height: 90vh; /* Tall modal */
+  height: 90vh;
   border-radius: 8px;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border, #eee);
 }
 
 .header {
   padding: 20px;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--border, #eee);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -32,7 +33,7 @@
 
 .header h2 {
   margin: 0;
-  color: #2c3e50;
+  color: var(--foreground, #2c3e50); /* White text in dark mode */
 }
 
 .closeBtn {
@@ -45,16 +46,16 @@
 
 .content {
   flex: 1;
-  overflow-y: auto; /* Scrollable content */
+  overflow-y: auto;
   padding: 20px;
-  background-color: #f8f9fa;
+  background-color: var(--muted, #f8f9fa); /* Darker background in content area */
 }
 
 .questionCard {
-  background: white;
+  background: var(--card, #ffffff);
   padding: 20px;
   border-radius: 8px;
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--border, #e0e0e0);
   margin-bottom: 20px;
 }
 
@@ -75,13 +76,15 @@
   margin-bottom: 5px;
   font-size: 0.9rem;
   font-weight: 600;
-  color: #34495e;
+  color: var(--foreground, #34495e);
 }
 
 .textArea {
   width: 100%;
   padding: 10px;
-  border: 1px solid #bdc3c7;
+  border: 1px solid var(--border, #bdc3c7);
+  background-color: var(--card, #ffffff);
+  color: var(--foreground, #000000);
   border-radius: 4px;
   font-size: 1rem;
   min-height: 60px;
@@ -103,16 +106,18 @@
 .optionInput {
   flex: 1;
   padding: 8px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border, #ddd);
+  background-color: var(--card, #ffffff);
+  color: var(--foreground, #000000);
   border-radius: 4px;
 }
 
 .successMessage {
-  background-color: #d4edda;
-  color: #155724;
+  background-color: rgba(40, 167, 69, 0.2);
+  color: #2ecc71;
   padding: 10px 15px;
   margin: 10px 20px;
-  border: 1px solid #c3e6cb;
+  border: 1px solid #28a745;
   border-radius: 4px;
   text-align: center;
   font-weight: bold;
@@ -121,14 +126,8 @@
 }
 
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .correctLabel {
@@ -140,16 +139,52 @@
 
 .footer {
   padding: 20px;
-  border-top: 1px solid #eee;
+  border-top: 1px solid var(--border, #eee);
   display: flex;
   justify-content: flex-end;
+  align-items: center; /* Centering items vertically */
   gap: 10px;
 }
 
+/* --- NEW STATUS PICKER STYLES --- */
+.statusPicker {
+  margin-right: auto; /* Pushes the dropdown to the left side of the footer */
+  display: flex;
+  align-items: center;
+}
+
+.selectWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.styledSelect {
+  appearance: none;
+  background: var(--card, #ffffff);
+  border: 1px solid var(--border, #ccc);
+  padding: 8px 30px 8px 12px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  outline: none;
+  color: var(--foreground, #333);
+  min-width: 150px;
+}
+
+.selectArrow {
+  position: absolute;
+  right: 10px;
+  pointer-events: none;
+  color: #7f8c8d;
+}
+/* -------------------------------- */
+
 .cancelBtn {
   padding: 10px 20px;
-  border: 1px solid #ccc;
-  background: white;
+  border: 1px solid var(--border, #ccc);
+  background: var(--muted, #ffffff);
+  color: var(--foreground, #333);
   border-radius: 4px;
   cursor: pointer;
 }

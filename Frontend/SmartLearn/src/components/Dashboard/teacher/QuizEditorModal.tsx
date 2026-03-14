@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { ChevronDown } from "lucide-react"; // Dropdown icon ke liye
 import apiClient from "../../../api/apiClient";
 import styles from "./QuizEditorModal.module.css";
 import type { Question } from "@/types/Assesment/Types";
@@ -17,11 +18,12 @@ const QuizEditorModal = ({
   onSaveSuccess,
 }: QuizEditorModalProps) => {
   const [questions, setQuestions] = useState<Question[]>([]);
+  const [status, setStatus] = useState<string>("draft"); // Status state
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false); // Status loading state
   const [successMessage, setSuccessMessage] = useState("");
 
-  // 1. Fetch Data when modal opens
   useEffect(() => {
     if (isOpen && quizId) {
       setLoading(true);
@@ -29,6 +31,7 @@ const QuizEditorModal = ({
         .get(`/assessments/quiz/${quizId}/`)
         .then((res) => {
           setQuestions(res.data.quiz_data || []);
+          setStatus(res.data.status || "draft"); // Backend se current status lena
         })
         .catch((err) => {
           console.error("Failed to load quiz", err);
@@ -39,11 +42,26 @@ const QuizEditorModal = ({
     }
   }, [isOpen, quizId, onClose]);
 
-  // 2. Handle Text Changes (Question or Option)
+  // Status change handler
+  const handleStatusChange = async (newStatus: string) => {
+    if (!quizId) return;
+    setIsUpdatingStatus(true);
+    try {
+      const response = await apiClient.patch(`/assessments/quiz/${quizId}/`, {
+        status: newStatus,
+      });
+      setStatus(response.data.status);
+    } catch (error) {
+      console.error("Failed to update status:", error);
+      alert("Failed to update quiz status.");
+    } finally {
+      setIsUpdatingStatus(false);
+    }
+  };
+
   const handleQuestionChange = (
     index: number,
     field: string,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     value: any,
     optionIndex?: number
   ) => {
@@ -58,7 +76,6 @@ const QuizEditorModal = ({
     setQuestions(updated);
   };
 
-  // 3. Save Changes
   const handleSave = async () => {
     if (!quizId) return;
     setSaving(true);
@@ -86,7 +103,6 @@ const QuizEditorModal = ({
   return (
     <div className={styles.overlay}>
       <div className={styles.modal}>
-        {/* Header */}
         <div className={styles.header}>
           <h2>Edit Quiz Content</h2>
           <button className={styles.closeBtn} onClick={onClose}>
@@ -97,7 +113,6 @@ const QuizEditorModal = ({
           <div className={styles.successMessage}>{successMessage}</div>
         )}
 
-        {/* Content */}
         <div className={styles.content}>
           {loading ? (
             <p>Loading questions...</p>
@@ -106,7 +121,6 @@ const QuizEditorModal = ({
               <div key={qIndex} className={styles.questionCard}>
                 <div className={styles.cardHeader}>Question {qIndex + 1}</div>
 
-                {/* Question Text */}
                 <div className={styles.inputGroup}>
                   <label className={styles.label}>Question Text</label>
                   <textarea
@@ -118,7 +132,6 @@ const QuizEditorModal = ({
                   />
                 </div>
 
-                {/* Options */}
                 <label className={styles.label}>
                   Options (Select the correct answer)
                 </label>
@@ -158,8 +171,24 @@ const QuizEditorModal = ({
           )}
         </div>
 
-        {/* Footer */}
         <div className={styles.footer}>
+          {/* DUMMY DROPDOWN ADDED BEFORE CANCEL BUTTON */}
+          <div className={styles.statusPicker}>
+            <div className={styles.selectWrapper}>
+              <select
+                value={status}
+                onChange={(e) => handleStatusChange(e.target.value)}
+                disabled={isUpdatingStatus || loading}
+                className={styles.styledSelect}
+              >
+                <option value="draft">Draft (Private)</option>
+                <option value="published">Published (Live)</option>
+                <option value="archived">Archived</option>
+              </select>
+              <ChevronDown className={styles.selectArrow} size={14} />
+            </div>
+          </div>
+
           <button className={styles.cancelBtn} onClick={onClose}>
             Cancel
           </button>

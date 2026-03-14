@@ -1,0 +1,195 @@
+.room-wrapper {
+    display: flex;
+    height: calc(100vh - 80px);
+    /* Dark mode variables use kiye hain */
+    background: var(--background, #0f172a); 
+    color: var(--foreground, white);
+    overflow: hidden;
+}
+
+.video-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    position: relative;
+    background: var(--background);
+}
+
+.video-grid {
+    flex: 1;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 15px;
+    align-content: center;
+}
+
+.video-card {
+    /* Card variable use kiya taake theme ke sath match kare */
+    background: var(--card, #1e293b);
+    border-radius: 16px;
+    position: relative;
+    aspect-ratio: 16/9;
+    overflow: hidden;
+    border: 1px solid var(--border, rgba(255, 255, 255, 0.1));
+}
+
+.video-placeholder {
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    /* Soft gradient jo background ke sath blend ho */
+    background: radial-gradient(circle, var(--muted) 0%, var(--background) 100%);
+}
+
+.avatar-big {
+    width: 80px;
+    height: 80px;
+    background: #6366f1; /* Brand color constant rakha hai */
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 2rem;
+    font-weight: bold;
+    color: white;
+}
+
+.video-overlay-info {
+    position: absolute;
+    bottom: 15px;
+    left: 15px;
+    background: rgba(0, 0, 0, 0.6); /* Text ko readable rakhne ke liye dark overlay */
+    padding: 6px 14px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    color: white;
+}
+
+.room-controls {
+    height: 100px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    background: var(--background);
+}
+
+.icon-btn {
+    width: 55px;
+    height: 55px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--foreground);
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.2s;
+}
+
+.icon-btn:hover {
+    background: var(--muted);
+    transform: scale(1.05);
+}
+
+.icon-btn.off {
+    background: #ef4444;
+    color: white;
+    border-color: #ef4444;
+}
+
+.icon-btn.action {
+    background: #6366f1;
+    color: white;
+    border-radius: 14px;
+}
+
+.end-call-btn {
+    background: #ef4444;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+/* SIDEBAR STYLING */
+.room-sidebar {
+    width: 380px;
+    background: var(--card);
+    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+}
+
+.tab {
+    flex: 1;
+    padding: 18px;
+    background: none;
+    border: none;
+    color: var(--foreground);
+    opacity: 0.6;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.tab.active {
+    opacity: 1;
+    color: #6366f1;
+    border-bottom: 3px solid #6366f1;
+}
+
+.sidebar-content {
+    padding: 20px;
+    flex: 1;
+    overflow-y: auto;
+    color: var(--foreground);
+}
+
+.member-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 18px;
+    padding: 10px;
+    border-radius: 12px;
+    background: var(--muted);
+}
+
+.member-avatar {
+    width: 40px;
+    height: 40px;
+    background: #6366f1;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+}
+
+.chat-input {
+    width: 100%;
+    padding: 12px;
+    background: var(--background);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--foreground);
+    margin-top: 10px;
+}

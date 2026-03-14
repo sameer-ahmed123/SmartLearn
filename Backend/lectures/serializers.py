@@ -1,6 +1,6 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
-from .models import Lecture, Course, ContentSource
+from .models import Lecture, Course, ContentSource, Enrollment  # Enrollment add kiya
 
 User = get_user_model()
 
@@ -34,21 +34,38 @@ class CourseCreateSerializer(serializers.ModelSerializer):
 
 class CourseSerializer(serializers.ModelSerializer):
     teacher = TeacherDetailSerializer(read_only=True)
+    # ADDED: teacher_name for frontend display
+    teacher_name = serializers.ReadOnlyField(source='teacher.full_name')
     content_source_count = serializers.SerializerMethodField()
     lecture_count = serializers.SerializerMethodField()
+    is_enrolled = serializers.SerializerMethodField()  # Student check ke liye
+    enrolled_count = serializers.SerializerMethodField()  # <--- NEW FIELD ADDED
 
     class Meta:
         model = Course
         fields = [
-            'id', 'teacher', 'title', 'description', 'status', 'created_at', 'lecture_count', 'content_source_count',
+            'id', 'teacher', 'teacher_name', 'title', 'description',
+            'thumbnail', 'status', 'created_at', 'lecture_count',
+            'content_source_count', 'is_enrolled', 'enrolled_count'  # <--- ADDED TO FIELDS
+
         ]
         read_only_fields = ['teacher', 'created_at']
+
+    def get_enrolled_count(self, obj):  # <--- NEW METHOD ADDED
+        return Enrollment.objects.filter(course=obj).count()
 
     def get_content_source_count(self, obj):
         return obj.content_sources.count()
 
     def get_lecture_count(self, obj):
         return Lecture.objects.filter(content_source__course=obj).count()
+
+    def get_is_enrolled(self, obj):
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            # Check if student is enrolled
+            return Enrollment.objects.filter(student=request.user, course=obj).exists()
+        return False
 
 
 ######
@@ -102,7 +119,7 @@ class LectureSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'topic', 'video_url', 'summary_text',
             'validation_status', 'rejection_comment',
-            'generated_by', 'generated_by_email', 'created_at', 'content_source', 
+            'generated_by', 'generated_by_email', 'created_at', 'content_source',
             'quiz_data', 'quiz_id',                 # <-- Included Quiz fields
             'assignment_data', 'assignment_id',     # <-- Included Assignment fields
         ]
@@ -190,8 +207,9 @@ class LectureValidationActionSerializer(serializers.ModelSerializer):
     """
     class Meta:
         model = Lecture
-        fields = ['validation_status', 'rejection_comment','video_url','video_status']
-        read_only_fields = ['id', 'topic', 'video_url','video_status'
+        fields = ['validation_status', 'rejection_comment',
+                  'video_url', 'video_status']
+        read_only_fields = ['id', 'topic', 'video_url', 'video_status'
                             'summary_text', 'content_source']
 
     def validate(self, data):
@@ -255,8 +273,12 @@ class CourseLectureListItem(serializers.ModelSerializer):
         return None
 
     def get_review_url(self, obj):
+        # Yahan hum check kar sakte hain ke request student ki taraf se hai ya teacher ki
+        request = self.context.get('request')
+        if request and hasattr(request.user, 'role') and request.user.role == 'student':
+            return f"/student/lecture/{obj.id}/review"
         return f"/teacher/lecture/{obj.id}/review"
-    
+
     def get_assignment_data(self, obj):
         if hasattr(obj, 'assignment'):
             return obj.assignment.assignment_data
@@ -266,3 +288,21 @@ class CourseLectureListItem(serializers.ModelSerializer):
         if hasattr(obj, 'assignment'):
             return obj.assignment.id
         return None
+
+######
+# SERIALIZERS RELATED TO ENROLLMENT (NEW)
+######
+
+
+class EnrollmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Enrollment
+        fields = ['id', 'course', 'enrolled_at']
+        read_only_fields = ['enrolled_at']
+
+    def validate(self, data):
+        user = self.context['request'].user
+        if Enrollment.objects.filter(student=user, course=data['course']).exists():
+            raise serializers.ValidationError(
+                "You are already enrolled in this course.")
+        return data

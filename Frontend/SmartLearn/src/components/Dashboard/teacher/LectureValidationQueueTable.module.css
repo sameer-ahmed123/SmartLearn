@@ -1,89 +1,116 @@
-/* src/components/Dashboard/teacher/LectureValidationQueueTable.module.css */
-
 .tableContainer {
-  background-color: #ffffff;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  overflow-x: auto; /* Makes table scrollable on small screens */
-  max-height: 500px;
-  overflow-y: auto;
+    background-color: var(--card, #111827);
+    border-radius: 16px;
+    border: 1px solid var(--border, #374151);
+    overflow-x: auto;
+    max-height: 500px;
+    overflow-y: auto;
 }
+
+/* Scrollbar Styling */
 .tableContainer::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+    width: 6px;
+    height: 6px;
 }
 .tableContainer::-webkit-scrollbar-track {
-  background: #f0f0f0; /* A light, subtle track color */
+    background: transparent;
 }
 .tableContainer::-webkit-scrollbar-thumb {
-  /*
-    The width is defined by the scrollbar's overall width (5px).
-    We define the visual style for the dragable part here.
-  */
-  background-color: #999999;
-  border-radius: 10px; /* Makes the ends rounded */
-  border: 1px solid #f0f0f0; /* Adds a thin border to separate it from the track */
+    background-color: #4b5563;
+    border-radius: 10px;
 }
-.tableContainer::-webkit-scrollbar-thumb:hover {
-  background-color: #555555;
-}
+
 .table {
-  width: 100%;
-  border-collapse: collapse;
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 800px;
 }
 
 .table thead th {
-  text-align: left;
-  padding: 15px;
-  background-color: #f5f5f5;
-  color: #555;
-  font-weight: 600;
-  text-transform: uppercase;
-  font-size: 0.8rem;
+    text-align: left;
+    padding: 18px 20px;
+    background-color: rgba(255, 255, 255, 0.02);
+    color: #9ca3af;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    border-bottom: 1.5px solid var(--border, #374151);
 }
 
 .table tbody td {
-  padding: 15px;
-  border-bottom: 1px solid #eeeeee;
-  color: #333;
-  font-size: 0.9rem;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border, #1f2937);
+    color: var(--foreground, #ffffff);
+    font-size: 0.9rem;
 }
 
 .table tbody tr:hover {
-  background-color: #f9f9f9;
+    background-color: rgba(255, 255, 255, 0.03);
+}
+
+.topicCell {
+    font-weight: 600;
+    color: #f3f4f6 ;
+}
+
+.courseBadge {
+    background: rgba(99, 102, 241, 0.1);
+    color: #818cf8;
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 500;
 }
 
 .statusPill {
-  display: inline-block;
-  padding: 4px 10px;
-  border-radius: 20px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: #f39c12; /* Match the pending color */
-  background-color: #fdebd0;
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #fbbf24; /* Pending Color */
+    background-color: rgba(251, 191, 36, 0.1);
+    border: 1px solid rgba(251, 191, 36, 0.2);
 }
 
 .reviewLink {
-  color: #3498db;
-  text-decoration: none;
-  font-weight: 500;
-  transition: color 0.2s;
+    color: #6366f1;
+    text-decoration: none;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: 0.2s;
 }
 
 .reviewLink:hover {
-  text-decoration: underline;
-  color: #2980b9;
+    color: #818cf8;
+    transform: translateX(3px);
 }
 
 .noData {
-  text-align: center;
-  padding: 40px 20px;
-  font-style: italic;
-  color: #7f8c8d;
+    text-align: center;
+    padding: 60px 20px;
+    background: var(--card, #111827);
+    border-radius: 16px;
+    border: 1px dashed var(--border, #374151);
+    color: #6b7280;
+}
+
+.noDataIcon {
+    margin-bottom: 15px;
+    opacity: 0.5;
+    color: #6366f1;
+}
+
+.errorState, .loadingState {
+    padding: 40px;
+    text-align: center;
+    color: #9ca3af;
 }
 
 .error {
-  color: #e74c3c;
-  padding: 20px;
-  font-weight: 600;
+    color: #ef4444;
+    font-weight: 600;
 }

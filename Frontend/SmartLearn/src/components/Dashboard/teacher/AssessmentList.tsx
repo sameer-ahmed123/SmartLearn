@@ -1,19 +1,27 @@
 // src/components/Dashboard/teacher/AssessmentList.tsx
 
 import { useState } from "react";
+import { Sparkles, FileCheck, Eye, Loader2, BookOpen, AlertCircle } from "lucide-react";
 import apiClient from "../../../api/apiClient";
 import QuizEditorModal from "./QuizEditorModal";
 import AssignmentEditorModal from "./AssignmentEditorModal";
 import styles from "./AssessmentList.module.css";
 
 interface AssessmentProps {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   lectures: any[];
   onRefresh: () => void;
+  isAssignmentOnly?: boolean;
+  isQuizOnly?: boolean; 
 }
 
-const AssessmentList = ({ lectures, onRefresh }: AssessmentProps) => {
-  // We only track this to disable the button right after they click it
+// Default values set kar di hain taake agar props na milein toh column hide na hon
+const AssessmentList = ({ 
+  lectures = [], 
+  onRefresh, 
+  isAssignmentOnly = false, 
+  isQuizOnly = false 
+}: AssessmentProps) => {
+  
   const [generatingQuizId, setGeneratingQuizId] = useState<number | null>(null);
   const [generatingAssignmentId, setGeneratingAssignmentId] = useState<number | null>(null);
   
@@ -24,94 +32,152 @@ const AssessmentList = ({ lectures, onRefresh }: AssessmentProps) => {
     (l) => l.validation_status === "validated"
   );
 
-  // --- SUPER SIMPLE TRIGGER (NO POLLING) ---
+
   const handleGenerateAssessment = async (lectureId: number, type: 'quiz' | 'assignment') => {
-    // 1. Instantly lock the button so they don't click it twice
+
     if (type === 'quiz') setGeneratingQuizId(lectureId);
     if (type === 'assignment') setGeneratingAssignmentId(lectureId);
     
     try {
-      // 2. Tell the backend to start the Celery worker
+
+
       await apiClient.post("/assessments/generate/", {
         lecture_id: lectureId,
         type: type, 
       });
-      // 3. Just let it run in the background! The user can refresh later.
+
       alert(`${type} generation started! It takes about 1-2 minutes. Refresh the page later to view it.`);
+      onRefresh(); // Refresh the list to catch the 'generating' status if backend sends it
     } catch (error) {
       console.error("Gen failed", error);
       alert(`Failed to start ${type} generation.`);
+    } finally {
       if (type === 'quiz') setGeneratingQuizId(null);
       if (type === 'assignment') setGeneratingAssignmentId(null);
-    } 
+    }
   };
 
   return (
-    <div className={styles.container}>
-      <table className={styles.table}>
-        <thead>
-          <tr>
-            <th>Lecture Topic</th>
-            <th>Quiz</th>
-            <th>Assignment</th>
-          </tr>
-        </thead>
-        <tbody>
-          {ValidatedLectures.map((lecture) => (
-            <tr key={lecture.id}>
-              <td>{lecture.topic}</td>
+    <div className={styles.assessmentWrapper}>
+      <div className={styles.tableCard}>
+        <table className={styles.modernTable}>
+          <thead>
+            <tr>
+              <th>
+                <BookOpen size={14} className={styles.headerIcon} />
+                Lecture Topic
+              </th>
+              
+              {!isAssignmentOnly && (
+                <th style={{ textAlign: 'center' }}>
+                  <Sparkles size={14} className={styles.headerIcon} />
+                  Quiz
+                </th>
+              )}
 
-              {/* QUIZ ACTIONS */}
-              <td>
-                {lecture.quiz_data ? (
-                  <button
-                    className={styles.viewBtn}
-                    onClick={() => setEditingQuizId(lecture.quiz_id)}
-                  >
-                    View Quiz
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => handleGenerateAssessment(lecture.id, 'quiz')}
-                    disabled={generatingQuizId === lecture.id}
-                    className={styles.generateBtn}
-                  >
-                    {generatingQuizId === lecture.id ? "Started! (Refresh later)" : "✨ Create Quiz"}
-                  </button>
-                )}
-              </td>
-
-              {/* ASSIGNMENT ACTIONS */}
-              <td>
-                {lecture.assignment_data ? (
-                  <button
-                    className={styles.viewBtn}
-                    style={{ backgroundColor: '#8e44ad', borderColor: '#8e44ad', color: 'white' }}
-                    onClick={() => {
-                      if (!lecture.assignment_id) {
-                          alert("Backend Error: assignment_id is missing from the API response!");
-                      } else {
-                          setEditingAssignmentId(lecture.assignment_id);
-                      }
-                    }}
-                  >
-                    View Assignment
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => handleGenerateAssessment(lecture.id, 'assignment')}
-                    disabled={generatingAssignmentId === lecture.id}
-                    className={styles.generateBtn}
-                    style={{ backgroundColor: '#8e44ad', color: 'white' }} 
-                  >
-                    {generatingAssignmentId === lecture.id ? "Started! (Refresh later)" : "✨ Create Assignment"}
-                  </button>
-                )}
-              </td>
+              {!isQuizOnly && (
+                <th style={{ textAlign: 'center' }}>
+                  <FileCheck size={14} className={styles.headerIcon} />
+                  Assignment
+                </th>
+              )}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {ValidatedLectures.length > 0 ? (
+              ValidatedLectures.map((lecture) => (
+                <tr key={lecture.id}>
+                  <td className={styles.topicName}>
+                    {lecture.topic}
+                  </td>
+
+                  {/* QUIZ ACTIONS */}
+                  {!isAssignmentOnly && (
+                    <td style={{ textAlign: 'center' }}>
+                      {/* logic: check quiz_id or quiz_data presence */}
+                      {(lecture.quiz_id || (lecture.quiz_data && Object.keys(lecture.quiz_data).length > 0)) ? (
+                        <button
+                          className={styles.viewBtn}
+                          onClick={() => {
+                            if (lecture.quiz_id) {
+                              setEditingQuizId(lecture.quiz_id);
+                            } else {
+                              alert("Quiz ID missing from data.");
+                            }
+                          }}
+                        >
+                          <Eye size={16} /> View Quiz
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => handleGenerateAssessment(lecture.id, 'quiz')}
+                          disabled={generatingQuizId === lecture.id || lecture.quiz_status === 'generating'}
+                          className={styles.generateBtn}
+                        >
+                          {generatingQuizId === lecture.id || lecture.quiz_status === 'generating' ? (
+                            <><Loader2 size={16} className={styles.spin} /> Generating...</>
+                          ) : (
+                            <><Sparkles size={16} /> Create Quiz</>
+                          )}
+                        </button>
+                      )}
+                    </td>
+                  )}
+
+                  {/* ASSIGNMENT ACTIONS */}
+                  {!isQuizOnly && (
+                    <td style={{ textAlign: 'center' }}>
+                      {/* logic: check assignment_id or assignment_data presence */}
+                      {(lecture.assignment_id || (lecture.assignment_data && Object.keys(lecture.assignment_data).length > 0)) ? (
+                        <button
+                          className={styles.viewBtn}
+                          style={{ 
+                            background: '#f5f3ff', 
+                            color: '#8b5cf6', 
+                            borderColor: '#ddd6fe' 
+                          }}
+                          onClick={() => {
+                            if (lecture.assignment_id) {
+                              setEditingAssignmentId(lecture.assignment_id);
+                            } else {
+                              alert("Assignment ID missing from data.");
+                            }
+                          }}
+                        >
+                          <FileCheck size={16} /> View Assignment
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => handleGenerateAssessment(lecture.id, 'assignment')}
+                          disabled={generatingAssignmentId === lecture.id || lecture.assignment_status === 'generating'}
+                          className={styles.generateBtn}
+                          style={{ background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)' }}
+                        >
+                          {generatingAssignmentId === lecture.id || lecture.assignment_status === 'generating' ? (
+                            <><Loader2 size={16} className={styles.spin} /> Generating...</>
+                          ) : (
+                            <><Sparkles size={16} /> Create Assignment</>
+                          )}
+                        </button>
+                      )}
+                    </td>
+                  )}
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={(isAssignmentOnly || isQuizOnly) ? 2 : 3} className={styles.emptyRow}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                    <AlertCircle size={18} />
+                    No validated lectures found.
+                  </div>
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
       
       {/* Modals */}
       {editingQuizId && (
