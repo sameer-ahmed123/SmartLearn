@@ -646,7 +646,7 @@ def student_gradebook_summary(request):
         "courses": final_course_list
     })
 
-# --- Updated to match frontend analytics dashboard ---
+# --- Updated student_analytics to match frontend expectations ---
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def student_analytics(request):
@@ -664,8 +664,27 @@ def student_analytics(request):
     for enrollment in enrolled_courses:
         course = enrollment.course
         course_quiz_avg = QuizSubmission.objects.filter(user=user, quiz__lecture__content_source__course=course).aggregate(avg=Avg('score'))['avg'] or 0
+        # Basic logic for watch progress
         watch_progress = 70 if course_quiz_avg > 50 else 30
-        courses_data.append({"name": course.title, "watch": watch_progress, "quiz": round(course_quiz_avg, 1)})
+        courses_data.append({
+            "name": course.title, 
+            "watch": watch_progress, 
+            "quiz": round(course_quiz_avg, 1) # Matches 'q.quiz' in frontend
+        })
+
+    # --- UPDATED KEYS TO MATCH FRONTEND & ADDED FALLBACKS ---
+    quiz_perf_data = []
+    recent_quizzes = QuizSubmission.objects.filter(user=user).select_related('quiz__lecture').order_by('-submitted_at')[:5]
+    for qsub in recent_quizzes:
+        # Fallback agar topic na ho
+        topic_name = "Unit Quiz"
+        if qsub.quiz.lecture and qsub.quiz.lecture.topic:
+            topic_name = qsub.quiz.lecture.topic
+
+        quiz_perf_data.append({
+            "name": topic_name,       # frontend 'q.name' mang raha hai
+            "quiz": float(qsub.score) # frontend 'q.quiz' mang raha hai
+        })
 
     active_assignments = []
     all_asg = Assignment.objects.filter(lecture__content_source__course__enrollments__student=user, status='published').order_by('-deadline')[:3]
@@ -696,6 +715,7 @@ def student_analytics(request):
             "grade": grade
         },
         "courses": courses_data,
+        "quizzes_performance": quiz_perf_data,  # Now has 'name' and 'quiz' keys
         "assignments": active_assignments,
         "recommendations": [
             f"Review topics in {courses_data[0]['name']}" if courses_data else "Review your weak areas", 

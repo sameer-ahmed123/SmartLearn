@@ -247,7 +247,6 @@ const GradeBookPage = () => {
                         <td>
                           <div className={styles.actionCell}>
                             <button className={styles.circleEdit} onClick={() => navigate(`/teacher/student-report/${row.id}?course_id=${selectedCourse}`)}><Edit2 size={14} /></button>
-                            <button className={styles.circleDelete}><Trash2 size={14} /></button>
                           </div>
                         </td>
                       </tr>

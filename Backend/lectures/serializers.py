@@ -40,15 +40,33 @@ class CourseSerializer(serializers.ModelSerializer):
     lecture_count = serializers.SerializerMethodField()
     is_enrolled = serializers.SerializerMethodField() # Student check ke liye
     enrolled_count = serializers.SerializerMethodField() # <--- NEW FIELD ADDED
+    completion_percentage = serializers.SerializerMethodField() # <--- REAL DATA FOR BARS
 
     class Meta:
         model = Course
         fields = [
             'id', 'teacher', 'teacher_name', 'title', 'description', 
             'thumbnail', 'status', 'created_at', 'lecture_count', 
-            'content_source_count', 'is_enrolled', 'enrolled_count' # <--- ADDED TO FIELDS
+            'content_source_count', 'is_enrolled', 'enrolled_count',
+            'completion_percentage' # <--- ADDED TO FIELDS
         ]
         read_only_fields = ['teacher', 'created_at']
+
+    def get_completion_percentage(self, obj):
+        """
+        Calculates real-time percentage based on validated lectures vs total content sources.
+        """
+        total_sources = obj.content_sources.count()
+        if total_sources == 0:
+            return 0
+        
+        # Sirf wo lectures count karein jo 'validated' hain
+        validated_lectures = Lecture.objects.filter(
+            content_source__course=obj, 
+            validation_status='validated'
+        ).count()
+        
+        return int((validated_lectures / total_sources) * 100)
 
     def get_enrolled_count(self, obj): # <--- NEW METHOD ADDED
         return Enrollment.objects.filter(course=obj).count()

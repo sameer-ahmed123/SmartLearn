@@ -1,8 +1,7 @@
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from lectures.models import Lecture, Course
-# Agar aapke paas StudentProgress model hai toh yahan import karein
+from lectures.models import Lecture, Course, Enrollment
 
 # 1. ORIGINAL FUNCTION (DO NOT CHANGE NAME)
 @api_view(['GET'])
@@ -29,11 +28,18 @@ def teacher_dashboard_metric(request):
         validation_status='validated'
     ).count()
 
+    # Syllabus Coverage Logic (Percentage for the progress bar)
+    # Calculation: (Validated / Total) * 100
+    syllabus_coverage = 0
+    if total_lectures > 0:
+        syllabus_coverage = int((total_validated_lectures / total_lectures) * 100)
+
     return Response({
         "total_courses": total_courses,
         "total_lectures_generated": total_lectures,
         "pending_validation_count": pending_validation_count,
         "total_validated_lectures": total_validated_lectures,
+        "syllabus_coverage": syllabus_coverage,  # Frontend ki bar ke liye
     })
 
 # 2. NEW FUNCTION FOR STUDENT (Separate method)
@@ -45,13 +51,39 @@ def student_dashboard_metric(request):
     """
     user = request.user
     
-    # Yahan student ki logic likhein (e.g., enrolled courses, progress)
-    # Example placeholders:
-    enrolled_courses = 0 # Course.objects.filter(students=user).count()
-    completed_lectures = 0 
+    # 1. Enrolled Courses count for current student
+    courses = Course.objects.filter(enrollments__student=user)
+    enrolled_courses_count = courses.count()
+    
+    # 2. Total Validated Lectures in those courses (Lecture -> ContentSource -> Course)
+    student_lectures = Lecture.objects.filter(
+        content_source__course__in=courses,
+        validation_status='validated'
+    )
+    total_lectures_count = student_lectures.count()
+
+    # 3. Add Real Logic for Quizzes and Assignments
+    # Filter use kiya hai taake sirf wahi count hon jo null nahi hain
+    total_quizzes = student_lectures.filter(quiz__isnull=False).count()
+    
+    # Ye line ab student ke enrolled courses ke saare validated lectures ke assignments ginegi
+    total_assignments = student_lectures.filter(assignment__isnull=False).count()
+
+    # 4. Dynamic Course Progress List for UI bars
+    course_progress_list = []
+    for course in courses:
+        # Aap yahan apna tracking logic add kar sakte hain, abhi 0% set hai
+        course_progress_list.append({
+            "name": course.title,
+            "progress": 0  
+        })
     
     return Response({
-        "enrolled_courses": enrolled_courses,
-        "completed_lectures": completed_lectures,
-        "message": "Student metrics logic goes here"
+        "enrolled_courses": enrolled_courses_count,
+        "completed_lectures": total_lectures_count,
+        "completed_quizzes": total_quizzes,
+        "pending_assignments": total_assignments,
+        "full_name": getattr(user, 'full_name', user.username),
+        "course_progress": course_progress_list,
+        "message": "Student metrics fetched successfully"
     })

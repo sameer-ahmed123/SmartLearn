@@ -107,7 +107,7 @@ const StudentGradebookPage = () => {
         <div className="dashboard-banner grade-banner">
           <div>
             <h2 style={{ margin: 0, fontSize: '2.2rem' }}>Academic Gradebook</h2>
-            <p style={{ opacity: 0.9 }}>Quizzes aur Assignments ki bunyaad par aapki performance.</p>
+            <p style={{ opacity: 0.9 }}>Tracking your progress through Quizzes and Assignments.</p>
           </div>
           <div className="gpa-badge">
             <span className="gpa-label">OVERALL GPA</span>

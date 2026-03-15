@@ -3,29 +3,29 @@ import {
   PlayCircle, Clock, CheckCircle, 
   BookOpen, Lock, MessageCircle, Star, GraduationCap, Plus, X, Users 
 } from "lucide-react"; 
-import { useNavigate } from "react-router-dom"; // Added navigate for routing
+import { useNavigate } from "react-router-dom"; 
 import "./StudentLecturePage.css"; 
 import apiClient from "@/api/apiClient";
 
 const StudentLecturePage = () => {
-  const navigate = useNavigate(); // Hook initialize kiya
+  const navigate = useNavigate(); 
   const [selectedLecture, setSelectedLecture] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [availableCourses, setAvailableCourses] = useState<any[]>([]); 
   const [courses, setCourses] = useState<any[]>([]); 
+  const [metrics, setMetrics] = useState<any>(null); // Dashboard metrics ke liye state
   const [loading, setLoading] = useState(false);
 
-  // 1. Static Images for Courses (Different Placeholder images)
+  // 1. Static Images for Courses
   const courseImages = [
-    "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=500&q=80", // Tech
-    "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=500&q=80", // Laptop
-    "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=500&q=80", // Robot
-    "https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?w=500&q=80", // Developer
-    "https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=500&q=80", // Team
-    "https://images.unsplash.com/photo-1518770660439-4636190af475?w=500&q=80", // Electronics
+    "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=500&q=80",
+    "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=500&q=80",
+    "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=500&q=80",
+    "https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?w=500&q=80",
+    "https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=500&q=80",
+    "https://images.unsplash.com/photo-1518770660439-4636190af475?w=500&q=80",
   ];
 
-  // 2. Logic to generate a different image for each course based on its ID
   const getCourseImage = (courseId: number) => {
     if (!courseId) return courseImages[0];
     const index = courseId % courseImages.length;
@@ -43,14 +43,24 @@ const StudentLecturePage = () => {
     }
   };
 
+  // Dashboard metrics fetch karne ka logic
+  const fetchDashboardMetrics = async () => {
+    try {
+      const res = await apiClient.get('/dashboard/metrics/student/');
+      setMetrics(res.data);
+    } catch (err) {
+      console.error("Failed to fetch dashboard metrics", err);
+    }
+  };
+
   useEffect(() => {
     fetchCoursesData();
+    fetchDashboardMetrics();
   }, []);
 
   const handleRegister = async (course: any) => {
     try {
       setLoading(true);
-      // Enrollment check: Matching serializer logic
       await apiClient.post("lectures/courses/", { course: course.id }); 
       await fetchCoursesData(); 
       setIsModalOpen(false);
@@ -96,13 +106,13 @@ const StudentLecturePage = () => {
           <GraduationCap size={180} className="banner-bg-icon" />
         </div>
 
-        {/* STATS GRID */}
+        {/* STATS GRID - REAL VALUES FROM DASHBOARD LOGIC */}
         <div className="stats-grid">
           {[
             { label: 'COURSES', val: courses.length, icon: <BookOpen />, color: '#6366f1' },
-            { label: 'COMPLETED', val: '12', icon: <CheckCircle />, color: '#10b981' },
-            { label: 'HOURS', val: '45h', icon: <Clock />, color: '#f59e0b' },
-            { label: 'POINTS', val: '850', icon: <Star />, color: '#a855f7' },
+            { label: 'LECTURES', val: metrics?.completed_lectures || 0, icon: <PlayCircle />, color: '#f59e0b' },
+            { label: 'COMPLETED', val: '0', icon: <CheckCircle />, color: '#10b981' },
+            { label: 'PENDING', val: '0', icon: <Clock />, color: '#ef4444' },
           ].map((s, i) => (
             <div key={i} className="stat-item-card" style={cardStyle}>
               <div className="stat-icon-box" style={{ color: s.color, background: `${s.color}15` }}>{s.icon}</div>
@@ -167,7 +177,6 @@ const StudentLecturePage = () => {
                   <span className="badge">Enrolled</span>
                 </div>
                 <div className="course-body" style={{ padding: '15px' }}>
-                  {/* Fixed Title Display */}
                   <h3 className="course-title" style={{ color: 'var(--foreground)', fontSize: '1.2rem', fontWeight: 'bold', margin: '0 0 8px 0' }}>
                     {course.title}
                   </h3>

@@ -136,6 +136,12 @@
     border: 1px solid var(--border, transparent);
 }
 
+.asgn-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
 .asgn-title { font-weight: 700; font-size: 0.95rem; margin: 0; color: var(--foreground); }
 
 .asgn-progress-container {
@@ -143,9 +149,11 @@
     height: 8px;
     background: var(--border, #e2e8f0);
     border-radius: 10px;
+    margin-top: 10px;
+    overflow: hidden;
 }
 
-.asgn-progress-bar { height: 100%; border-radius: 10px; }
+.asgn-progress-bar { height: 100%; border-radius: 10px; transition: width 0.5s ease; }
 
 .heatmap-grid {
     display: grid;
@@ -181,16 +189,15 @@
 
 /* Focus Card ki main styling */
 .focus-card {
-    border-top: 5px solid #ef4444 !important; /* Top par red alert border */
+    border-top: 5px solid #ef4444 !important;
     background: var(--card, #ffffff);
     transition: transform 0.2s ease;
 }
 
 .focus-card:hover {
-    transform: translateY(-5px); /* Hover par thoda sa move hoga */
+    transform: translateY(-5px);
 }
 
-/* Header ke andar icon aur text ki spacing */
 .focus-card .card-header {
     display: flex;
     align-items: center;
@@ -205,18 +212,17 @@
     font-weight: 700;
 }
 
-/* List ki styling */
 .focus-list {
-    list-style: none; /* Default bullets hata diye */
+    list-style: none;
     padding: 0;
     margin: 0;
 }
 
 .focus-list li {
     position: relative;
-    padding: 12px 15px 12px 35px; /* Left padding bullets ke liye */
+    padding: 12px 15px 12px 35px;
     margin-bottom: 10px;
-    background: var(--muted, #fff5f5); /* Light red/gray tint background */
+    background: var(--muted, #fff5f5);
     border-radius: 12px;
     font-size: 0.9rem;
     font-weight: 500;
@@ -225,12 +231,11 @@
     transition: background 0.2s;
 }
 
-/* Custom Checkmark ya Bullet design */
 .focus-list li::before {
     content: "•";
     position: absolute;
     left: 15px;
-    color: #ef4444; /* Bullet color matching the theme */
+    color: #ef4444;
     font-weight: bold;
     font-size: 1.5rem;
     top: 50%;
@@ -238,10 +243,9 @@
 }
 
 .focus-list li:hover {
-    background: rgba(239, 68, 68, 0.1); /* Hover par thoda dark ho jayega */
+    background: rgba(239, 68, 68, 0.1);
 }
 
-/* Dark Mode adjustment agar aap use kar rahe hain */
 [data-theme='dark'] .focus-list li {
     background: rgba(239, 68, 68, 0.05);
     color: #e2e8f0;
