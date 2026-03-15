@@ -243,6 +243,9 @@ class CourseLectureListItem(serializers.ModelSerializer):
     quiz_id = serializers.SerializerMethodField()
     assignment_data = serializers.SerializerMethodField()
     assignment_id = serializers.SerializerMethodField()
+    
+    quiz_status = serializers.CharField(source='quiz.status', read_only=True)
+    assignment_status = serializers.CharField(source='assignment.status', read_only=True)
 
     class Meta:
         model = Lecture
@@ -256,8 +259,10 @@ class CourseLectureListItem(serializers.ModelSerializer):
             'review_url',
             'quiz_data',
             'quiz_id',
+            'quiz_status',
             'assignment_data',
             'assignment_id',
+            'assignment_status',
             'video_status',
             'video_url',
         ]

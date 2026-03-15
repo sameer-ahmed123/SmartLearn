@@ -5,7 +5,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
-from .models import Course, ContentSource, Lecture, Enrollment  # Enrollment add kiya
+from .models import Course, ContentSource, Lecture, Enrollment 
 from .serializers import (
     ContentSourceSerializer, ContentSourceCreateSerializer, CourseLectureListItem,
     # EnrollmentSerializer add kiya
@@ -293,54 +293,4 @@ def course_lecture_list(request, course_id):
     serializer = CourseLectureListItem(
         lecture_list, many=True, context={'request': request})
     return Response(serializer.data, status=status.HTTP_200_OK)
-
-
-# --- RE-FIXED CHATBOT: Final Stability Logic ---
-@api_view(['POST'])
-@permission_classes([IsAuthenticated, CanViewLecture])
-def lecture_chat(request, id):
-    lecture = get_object_or_404(Lecture, id=id)
-    user_query = request.data.get('message')
-
-    if not user_query:
-        return Response({"detail": "Message is required."}, status=status.HTTP_400_BAD_REQUEST)
-
-    api_key = os.environ.get("GEMINI_API_KEY")
-    if not api_key:
-        return Response({"detail": "Gemini API Key missing."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-    try:
-        genai.configure(api_key=api_key)
-
-        # 404 Error se bachne ke liye available models list karna
-        available_model_names = [m.name for m in genai.list_models()]
-
-        # Priority check
-        if 'models/gemini-1.5-flash-latest' in available_model_names:
-            selected_model = 'gemini-1.5-flash-latest'
-        elif 'models/gemini-1.5-flash' in available_model_names:
-            selected_model = 'gemini-1.5-flash'
-        elif 'models/gemini-pro' in available_model_names:
-            selected_model = 'gemini-pro'
-        else:
-            selected_model = [m.name for m in genai.list_models(
-            ) if 'generateContent' in m.supported_generation_methods][0]
-
-        model = genai.GenerativeModel(selected_model)
-
-        lecture_context = lecture.summary_text if lecture.summary_text else "No summary available."
-        prompt = (
-            f"You are a helpful AI tutor for this course lecture: {lecture.topic}.\n"
-            f"Context: {lecture_context}\n\n"
-            f"Student Question: {user_query}\n"
-            f"Please answer precisely based on the context above."
-        )
-
-        response = model.generate_content(prompt)
-        return Response({"text": response.text}, status=status.HTTP_200_OK)
-
-    except Exception as e:
-        print(f"AI ERROR: {str(e)}")
-        return Response({"detail": f"AI Error: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
 

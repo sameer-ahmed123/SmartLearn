@@ -9,7 +9,7 @@ class ContentSourceAdmin(admin.ModelAdmin):
 
 @admin.register(Course)
 class CourseAdmin(admin.ModelAdmin):
-    list_display = ("title","teacher","description","status","created_at")
+    list_display = ("id","title","teacher","description","status","created_at")
     list_filter = ("status","teacher")
     search_fields = ("title", "teacher",)
 @admin.register(Lecture)

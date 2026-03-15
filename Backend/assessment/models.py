@@ -72,6 +72,8 @@ class AssignmentSubmission(models.Model):
     # Score ko FloatField kar diya hai taake grading calculation asaan ho
     score = models.FloatField(null=True, blank=True)
     feedback = models.TextField(null=True, blank=True)
+    is_graded = models.BooleanField(default=False)
+    is_overridden = models.BooleanField(default=False)
 
     class Meta:
         unique_together = ('user', 'assignment')

@@ -32,7 +32,7 @@ SECRET_KEY = 'django-insecure-b#l*+n)$8c%e&$wk9qlr=(6s$k7n_+!cch4y^l7b8cx!$oddro
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get("DEBUG")
 ALLOWED_HOSTS = []
-
+X_FRAME_OPTIONS = 'SAMEORIGIN'
 
 # Application definition
 
@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'ai_core',
     'notifications',
     'dashboard',
+    'chatbot',
     #### Packages/Libraries ####
     'rest_framework',
     'corsheaders',

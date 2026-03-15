@@ -12,8 +12,6 @@ from .views import (
     lecture_detail,
     lecture_validation_queue,
     lecture_validate_action,
-    # NEW: AI Chatbot
-    lecture_chat
 )
 
 app_name = "lectures"
@@ -37,7 +35,5 @@ urlpatterns = [
     path('<int:id>/', lecture_detail, name='lecture-detail'),
     path('pending/', lecture_validation_queue, name='lecture-validation-queue'),
     path('<int:id>/validate/', lecture_validate_action, name='lecture-validate-action'),
-    
-    # --- AI CHAT ENDPOINT ---
-    path('<int:id>/chat/', lecture_chat, name='lecture-chat'),
+
 ]
