@@ -19,7 +19,7 @@ const AnalyticsPage = () => {
   const [analyticsData, setAnalyticsData] = useState({
     stats: [],
     courses: [],
-    lectureProgress: [], // Real data from backend
+    lectureProgress: [],
     submissions: {
       assignment: { onTime: 0, late: 0, pending: 0 },
       quiz: { completed: 0, missed: 0, avgGrade: "N/A" },
@@ -31,12 +31,21 @@ const AnalyticsPage = () => {
 
   const months = ["January 2026", "February 2026", "March 2026", "April 2026"];
 
+  // 1. Icon Mapping: Yeh ensure karega ke labels ke mutabiq sahi icon dikhe
+  const iconMap = {
+    'AVG GRADE': <TrendingUp size={20} />,
+    'PASS RATE': <Award size={20} />,
+    'ACTIVE STUDENTS': <Users size={20} />,
+    'COURSES': <BookOpen size={20} />
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
         // Backend API call with month parameter
         const response = await apiClient.get(`/dashboard/teacher-analytics/?month=${selectedMonth}`);
+
         setAnalyticsData(response.data);
       } catch (error) {
         console.error("Error fetching analytics:", error);
@@ -44,11 +53,9 @@ const AnalyticsPage = () => {
         setLoading(false);
       }
     };
-
     fetchData();
-  }, [selectedMonth]); // Month change hote hi API hit hogi
+  }, [selectedMonth]);
 
-  // Logic: Agar backend se lectureProgress array aa raha hai to wo dikhao, warna empty chart nahi balkay loading state dikhao
   const barChartData = analyticsData.lectureProgress.length > 0 
     ? analyticsData.lectureProgress 
     : [
@@ -65,11 +72,12 @@ const AnalyticsPage = () => {
     { name: 'Emma Davis', progress: 92, color: '#f43f5e' },
   ];
 
-  const stats = analyticsData.stats.length > 0 ? analyticsData.stats : [
-    { label: 'AVG GRADE', val: '0%', icon: <TrendingUp size={20} />, color: '#6366f1' },
-    { label: 'PASS RATE', val: '0%', icon: <Award size={20} />, color: '#10b981' },
-    { label: 'ACTIVE STUDENTS', val: '0', icon: <Users size={20} />, color: '#f59e0b' },
-    { label: 'COURSES', val: '0', icon: <BookOpen size={20} />, color: '#f43f5e' },
+  // Default stats fallback
+  const displayStats = analyticsData.stats.length > 0 ? analyticsData.stats : [
+    { label: 'AVG GRADE', val: '0%', color: '#6366f1' },
+    { label: 'PASS RATE', val: '0%', color: '#10b981' },
+    { label: 'ACTIVE STUDENTS', val: '0', color: '#f59e0b' },
+    { label: 'COURSES', val: '0', color: '#f43f5e' },
   ];
 
   const passVal = analyticsData.passPercentage || 0;
@@ -91,10 +99,11 @@ const AnalyticsPage = () => {
         </div>
 
         <div className={styles.statsRow}>
-          {stats.map((stat, idx) => (
+          {displayStats.map((stat, idx) => (
             <div key={idx} className={styles.statCard}>
+              {/* Yahan icon mapping se uthaya ja raha hai */}
               <div className={styles.statIconCircle} style={{ color: stat.color, background: `${stat.color}15` }}>
-                {stat.icon}
+                {iconMap[stat.label] || <TrendingUp size={20} />}
               </div>
               <div className={styles.statInfo}>
                 <p>{stat.label}</p>

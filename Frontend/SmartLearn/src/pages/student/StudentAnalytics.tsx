@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { 
   TrendingUp, Clock, Target, PlayCircle, 
   CheckCircle2, AlertCircle, BarChart3, ArrowUpRight,
-  Zap, Layers, Award, FileText 
+  Zap, Layers, Award, FileText, BookOpen
 } from "lucide-react";
 import "./StudentAnalytics.css";
 import apiClient from "@/api/apiClient";
@@ -17,6 +17,7 @@ const StudentAnalyticsPage = () => {
         const response = await apiClient.get("dashboard/student-analytics/", {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
         });
+        console.log(response.data)
         setData(response.data);
         setLoading(false);
       } catch (error) {
@@ -28,11 +29,12 @@ const StudentAnalyticsPage = () => {
   }, []);
 
   const getStatusColor = (score) => {
-    if (score >= 80) return "#10b981"; 
-    if (score >= 70) return "#f59e0b"; 
-    if (score >= 60) return "#fb923c"; 
-    if (score >= 50) return "#eab308";
-    return "#ef4444";                 
+    const numScore = parseFloat(score);
+    if (numScore >= 80) return "#10b981"; 
+    if (numScore >= 70) return "#f59e0b"; 
+    if (numScore >= 60) return "#fb923c"; 
+    if (numScore >= 50) return "#eab308";
+    return "#ef4444";                  
   };
 
   if (loading) return <div className="loading">Loading Analytics...</div>;
@@ -56,10 +58,10 @@ const StudentAnalyticsPage = () => {
         {/* TOP METRICS GRID */}
         <div className="stats-grid">
           {[
-            { label: "Course Completion", value: `${data.stats.completion}%`, icon: <CheckCircle2 />, color: "#10b981", trend: data.stats.completion_trend },
-            { label: "Avg. Quiz Score", value: `${data.stats.avg_quiz}%`, icon: <Target />, color: "#6366f1", trend: data.stats.quiz_trend },
-            { label: "Study Hours", value: `${data.stats.study_hours}h`, icon: <Clock />, color: "#f59e0b", trend: data.stats.hours_trend },
-            { label: "Overall Progress", value: data.stats.grade, icon: <Award />, color: "#8b5cf6", trend: "Top 10%" },
+            { label: "Course Completion", value: `${data.stats?.completion || 0}%`, icon: <CheckCircle2 />, color: "#10b981", trend: data.stats?.completion_trend },
+            { label: "Avg. Quiz Score", value: `${data.stats?.avg_quiz || 0}%`, icon: <Target />, color: "#6366f1", trend: data.stats?.quiz_trend },
+            { label: "Study Hours", value: `${data.stats?.study_hours || 0}h`, icon: <Clock />, color: "#f59e0b", trend: data.stats?.hours_trend },
+            { label: "Current GPA / Grade", value: data.stats?.grade || "N/A", icon: <Award />, color: "#8b5cf6", trend: "Top Progress" },
           ].map((m, i) => (
             <div key={i} className="stat-item-card analytics-card">
               <div className="card-top">
@@ -81,24 +83,28 @@ const StudentAnalyticsPage = () => {
         {/* MAIN ANALYTICS SECTION */}
         <div className="analytics-main-grid">
           
-          {/* COURSE PERFORMANCE (Ab sirf Video Progress hai) */}
+          {/* COURSE PERFORMANCE */}
           <div className="content-card">
             <div className="card-header">
               <PlayCircle size={22} color="#6366f1" />
               <h3 style={{ margin: 0 }}>Course Progress</h3>
             </div>
             <div className="performance-list">
-              {data.courses.map((c, idx) => (
-                <div key={idx} className="performance-item">
-                  <div className="item-info"><span className="course-title">{c.name}</span></div>
-                  <div className="progress-group">
-                    <div className="progress-label"><span>Video Watch Time</span><span>{c.watch}%</span></div>
-                    <div className="progress-bar-bg">
-                      <div className="progress-bar-fill" style={{ width: `${c.watch}%`, background: '#6366f1' }}></div>
+              {data.courses?.length > 0 ? (
+                data.courses.map((c, idx) => (
+                  <div key={idx} className="performance-item">
+                    <div className="item-info"><span className="course-title">{c.name}</span></div>
+                    <div className="progress-group">
+                      <div className="progress-label"><span>Lecture Watch Progress</span><span>{c.watch}%</span></div>
+                      <div className="progress-bar-bg">
+                        <div className="progress-bar-fill" style={{ width: `${c.watch}%`, background: '#6366f1' }}></div>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))
+              ) : (
+                <p style={{ padding: '20px', color: '#64748b' }}>No courses enrolled yet.</p>
+              )}
             </div>
           </div>
 
@@ -106,51 +112,92 @@ const StudentAnalyticsPage = () => {
           <div className="content-card focus-card">
               <div className="card-header"><AlertCircle size={20} color="#ef4444" /><h3>Recommended Focus</h3></div>
               <ul className="focus-list">
-                {data.recommendations.map((rec, i) => <li key={i}>{rec}</li>)}
+                {data.recommendations?.map((rec, i) => <li key={i}>{rec}</li>)}
+                {(data.stats?.completion || 0) < 50 && <li>Increase your daily study time to meet course goals.</li>}
               </ul>
           </div>
 
-          {/* QUIZ PERFORMANCE CARD (Naya Section jo aapne manga) */}
+          {/* QUIZ PERFORMANCE - Layout from screenshot */}
           <div className="content-card">
             <div className="card-header">
               <Target size={22} color="#10b981" />
-              <h3 style={{ margin: 0 }}>Quiz Performance</h3>
+              <h3 style={{ margin: 0 }}>Recent Quiz Performance</h3>
             </div>
-            <div className="performance-list">
-              {data.courses.map((c, idx) => (
-                <div key={idx} className="performance-item">
-                  <div className="item-info"><span className="course-title">{c.name}</span></div>
-                  <div className="progress-group">
-                    <div className="progress-label"><span>Average Score</span><span>{c.quiz}%</span></div>
-                    <div className="progress-bar-bg">
-                      <div className="progress-bar-fill" style={{ width: `${c.quiz}%`, background: getStatusColor(c.quiz) }}></div>
+            <div className="performance-list" style={{ marginTop: '20px' }}>
+              {data.quizzes_performance?.length > 0 ? (
+                data.quizzes_performance.map((c, idx) => (
+                  <div key={idx} className="performance-item" style={{ marginBottom: '20px', borderBottom: '1px solid #f0f0f0', paddingBottom: '10px' }}>
+                    <div className="item-info" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                      <span className="course-title" style={{ fontWeight: '600', fontSize: '0.95rem', color: '#334155' }}>{c.name || "Average Score"}</span>
+                      <span style={{ fontSize: '0.85rem', fontWeight: 'bold', color: getStatusColor(c.quiz) }}>{c.quiz}%</span>
+                    </div>
+                    <div className="progress-group">
+                      <div className="progress-bar-bg" style={{ height: '8px', backgroundColor: '#e2e8f0', borderRadius: '4px', overflow: 'hidden' }}>
+                        <div 
+                          className="progress-bar-fill" 
+                          style={{ 
+                            width: `${c.quiz}%`, 
+                            height: '100%',
+                            background: getStatusColor(c.quiz),
+                            transition: 'width 1s ease-in-out'
+                          }}
+                        ></div>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))
+              ) : (
+                <p style={{ padding: '20px', color: '#64748b' }}>No quiz attempts yet.</p>
+              )}
             </div>
           </div>
 
-          {/* ASSIGNMENT TRACKER */}
+          {/* ASSIGNMENT TRACKER - Card Style from screenshot */}
           <div className="content-card">
             <div className="card-header">
               <FileText size={22} color="#f59e0b" />
               <h3 style={{ margin: 0 }}>Assignment Tracker</h3>
             </div>
             <div className="assignment-list" style={{ marginTop: '20px' }}>
-              {data.assignments.map((asgn, i) => (
-                <div key={i} className="asgn-item">
-                  <div className="asgn-info">
-                    <p className="asgn-title">{asgn.title}</p>
-                    <span className={`asgn-status`} style={{ color: asgn.deadline === 'Overdue' ? '#ef4444' : 'inherit', fontSize: '0.75rem', fontWeight: 700 }}>
-                      {asgn.deadline}
-                    </span>
+              {data.assignments?.length > 0 ? (
+                data.assignments.map((asgn, i) => (
+                  <div key={i} className="asgn-card" style={{ 
+                    padding: '15px', 
+                    borderRadius: '12px', 
+                    background: '#f8fafc', 
+                    marginBottom: '15px',
+                    border: '1px solid #e2e8f0'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <p style={{ margin: 0, fontWeight: '600', fontSize: '0.95rem', color: '#1e293b', flex: 1 }}>{asgn.title}</p>
+                      <span style={{ 
+                        fontSize: '0.7rem', 
+                        padding: '4px 8px', 
+                        borderRadius: '6px',
+                        background: asgn.progress === 100 ? '#dcfce7' : '#fee2e2',
+                        color: asgn.progress === 100 ? '#166534' : '#991b1b',
+                        fontWeight: '700',
+                        marginLeft: '10px'
+                      }}>
+                        {asgn.deadline}
+                      </span>
+                    </div>
+                    <div style={{ marginTop: '12px' }}>
+                      <div style={{ height: '6px', background: '#e2e8f0', borderRadius: '10px' }}>
+                        <div style={{ 
+                          width: `${asgn.progress}%`, 
+                          height: '100%', 
+                          background: asgn.progress === 100 ? '#10b981' : '#f59e0b',
+                          borderRadius: '10px',
+                          transition: 'width 0.6s cubic-bezier(0.4, 0, 0.2, 1)'
+                        }}></div>
+                      </div>
+                    </div>
                   </div>
-                  <div className="asgn-progress-container" style={{ marginTop: '10px' }}>
-                    <div className="asgn-progress-bar" style={{ width: `${asgn.progress}%`, background: asgn.progress === 100 ? '#10b981' : (asgn.progress < 20 ? '#ef4444' : '#f59e0b') }}></div>
-                  </div>
-                </div>
-              ))}
+                ))
+              ) : (
+                <p style={{ padding: '20px', color: '#64748b' }}>No assignments assigned.</p>
+              )}
             </div>
           </div>
 

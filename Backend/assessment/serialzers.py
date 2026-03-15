@@ -4,7 +4,8 @@ from .models import Quiz, QuizSubmission, Assignment, AssignmentSubmission
 class QuizSerializer(serializers.ModelSerializer):
     # Student portal cards ke liye extra fields
     course_name = serializers.CharField(source='lecture.content_source.course.title', read_only=True)
-    lecture_title = serializers.CharField(source='lecture.topic', read_only=True)
+    # --- UPDATED: Fallback added for lecture topic ---
+    lecture_title = serializers.SerializerMethodField()
     questions_count = serializers.SerializerMethodField()
     
     # --- ADDED: Student ka score fetch karne ke liye field ---
@@ -13,6 +14,11 @@ class QuizSerializer(serializers.ModelSerializer):
     class Meta:
         model = Quiz
         fields = '__all__'
+
+    def get_lecture_title(self, obj):
+        if obj.lecture and obj.lecture.topic:
+            return obj.lecture.topic
+        return "Unit Quiz"
 
     def get_questions_count(self, obj):
         if obj.quiz_data:
@@ -69,14 +75,6 @@ class AssignmentSerializer(serializers.ModelSerializer):
         model = Assignment
         fields = '__all__'
 
-    def get_questions_count(self, obj):
-        if obj.quiz_data:
-            if isinstance(obj.quiz_data, dict) and 'questions' in obj.quiz_data:
-                return len(obj.quiz_data['questions'])
-            elif isinstance(obj.quiz_data, list):
-                return len(obj.quiz_data)
-        return 0
-
     def get_submission_count(self, obj):
         # Teacher portal stats ke liye total submissions count
         return AssignmentSubmission.objects.filter(assignment=obj).count()
@@ -102,7 +100,7 @@ class AssignmentSubmissionSerializer(serializers.ModelSerializer):
     def get_student_name(self, obj):
         # Access the custom full_name field from your User model
         user = obj.user
-        if user.full_name and user.full_name.strip():
+        if hasattr(user, 'full_name') and user.full_name and user.full_name.strip():
             return user.full_name
         # Fallback to email if full_name is empty
         return user.email
