@@ -216,3 +216,45 @@
     gap: 4px;
     font-style: italic;
 }
+
+.reviewButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #0f172a;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.reviewButton:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.badgeVerified {
+  background-color: #dcfce7;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.badgeAI {
+  background-color: #f0f9ff;
+  color: #075985;
+  border: 1px solid #bae6fd;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.gradeValue {
+    font-weight: 600;
+    color: #0f172a;
+}

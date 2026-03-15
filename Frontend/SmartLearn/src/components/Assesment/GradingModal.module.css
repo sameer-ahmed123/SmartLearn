@@ -1,0 +1,243 @@
+/* Overlay to dim the background */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(4px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  padding: 20px;
+}
+
+/* Main Container - almost full screen for better viewing */
+.modalContainer {
+  background: var(--card, #ffffff);
+  width: 95%;
+  max-width: 1400px;
+  height: 90vh;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+/* Header */
+.modalHeader {
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border, #e2e8f0);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modalHeader h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: var(--foreground, #0f172a);
+}
+
+.closeBtn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #64748b;
+  padding: 4px;
+  border-radius: 50%;
+  transition: background 0.2s;
+}
+
+.closeBtn:hover {
+  background: #f1f5f9;
+}
+
+/* The Split View Logic */
+.splitView {
+  flex: 1;
+  display: flex;
+  height: calc(100% - 65px); /* Minus header height */
+}
+
+/* Left side: The PDF/Document */
+.docViewer {
+  flex: 1.5; /* Takes up more space */
+  background: #525659; /* Classic PDF viewer background */
+  border-right: 1px solid var(--border, #e2e8f0);
+}
+
+.iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+/* Right side: Grading controls */
+.gradingPanel {
+  flex: 1;
+  padding: 24px;
+  overflow-y: auto;
+  background: #fafafa;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.section h4 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  color: #334155;
+}
+
+/* AI Feedback Box */
+.aiFeedbackBox {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-left: 4px solid #3b82f6;
+  padding: 16px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: #475569;
+  white-space: pre-line; /* Keeps the AI's formatting/line breaks */
+}
+
+/* Manual Override Section */
+.overrideSection {
+  margin-top: auto; /* Pushes to bottom */
+  padding-top: 24px;
+  border-top: 2px dashed #e2e8f0;
+}
+
+.inputGroup {
+  margin-bottom: 16px;
+}
+
+.inputGroup label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 8px;
+  color: #64748b;
+}
+
+.scoreInput {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.saveBtn {
+  width: 100%;
+  background: #0f172a;
+  color: white;
+  padding: 14px;
+  border-radius: 8px;
+  border: none;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.saveBtn:hover {
+  background: #1e293b;
+}
+
+.saveBtn:disabled {
+  background: #94a3b8;
+  cursor: not-allowed;
+}
+
+/* Inside GradingModal.module.css */
+
+.headerInfo {
+    display: flex;
+    flex-direction: column;
+}
+
+.subHeader {
+    font-size: 0.85rem;
+    color: #64748b;
+}
+
+.scoreInputWrapper {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #fff;
+    border: 1px solid #cbd5e1;
+    padding: 4px 12px;
+    border-radius: 8px;
+}
+
+.scoreInput {
+    border: none !important; /* Remove individual border */
+    font-size: 1.5rem !important;
+    width: 80px !important;
+    font-weight: 700;
+    color: #0f172a;
+    padding: 4px !important;
+}
+
+.scoreInput:focus {
+    outline: none;
+}
+
+.maxMarkLabel {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #94a3b8;
+}
+
+.errorState {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #94a3b8;
+    background: #f8fafc;
+}
+
+.instruction {
+    font-size: 0.85rem;
+    color: #64748b;
+    margin-bottom: 16px;
+}
+
+.loadingPlaceholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 12px;
+  color: #64748b;
+  background: #f8fafc;
+}
+
+.spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid #e2e8f0;
+  border-top-color: #3b82f6;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

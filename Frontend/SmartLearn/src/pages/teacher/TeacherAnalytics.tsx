@@ -36,7 +36,7 @@ const AnalyticsPage = () => {
       try {
         setLoading(true);
         // Backend API call with month parameter
-        const response = await apiClient.get(`/assessments/teacher-analytics/?month=${selectedMonth}`);
+        const response = await apiClient.get(`/dashboard/teacher-analytics/?month=${selectedMonth}`);
         setAnalyticsData(response.data);
       } catch (error) {
         console.error("Error fetching analytics:", error);

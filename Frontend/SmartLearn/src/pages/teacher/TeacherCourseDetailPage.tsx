@@ -73,6 +73,8 @@ const TeacherCourseDetailPage = () => {
         ]);
         setCourse(courseRes.data);
         setLectures(lectureRes.data);
+        console.log("Lecture Data from API:", lectureRes);
+
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (err: any) {
         console.error("Failed to load course data:", err);

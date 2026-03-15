@@ -39,7 +39,7 @@ const StudentGradebookPage = () => {
     const fetchGradebook = async () => {
       try {
         setLoading(true);
-        const response = await apiClient.get('/assessments/student/gradebook-summary/');
+        const response = await apiClient.get('/dashboard/student/gradebook-summary/');
         const data = response.data;
         
         setGradeData(data.courses || []);

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { 
   ArrowLeft, Upload, FileText, CheckCircle, 
-  ClipboardList, Star, AlertCircle, Loader2, Award
+  ClipboardList, Star, AlertCircle, Loader2, Award, Clock
 } from "lucide-react";
 import apiClient from "@/api/apiClient";
 import styles from "./StudentAssignmentPage.module.css"; 
@@ -26,7 +26,6 @@ const StudentAssignmentPage = () => {
     setLoading(true);
     apiClient.get(`/assessments/assignment/${id}/`)
       .then(res => {
-        console.log("Assignment Data:", res.data); // Debugging ke liye
         setAssignment(res.data);
       })
       .catch(err => {
@@ -36,13 +35,22 @@ const StudentAssignmentPage = () => {
       .finally(() => setLoading(false));
   };
 
+  // --- DEADLINE LOGIC ---
+  const deadlineDate = assignment?.deadline ? new Date(assignment.deadline) : null;
+  const isLate = deadlineDate ? new Date() > deadlineDate : false;
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (isLate) return; // Prevention
     if (e.target.files && e.target.files.length > 0) {
       setFile(e.target.files[0]);
     }
   };
 
   const handleSubmit = async () => {
+    if (isLate) {
+      alert("The deadline has passed. Submissions are closed.");
+      return;
+    }
     if (!file) {
       alert("Please select a file to upload.");
       return;
@@ -59,19 +67,15 @@ const StudentAssignmentPage = () => {
       
       alert("Assignment submitted and graded by AI!");
 
-      // --- FIX: Force refresh or manually update state ---
       if (response.data.submission) {
         setAssignment((prev: any) => ({
           ...prev,
           user_submission: response.data.submission
         }));
       } else {
-        // Agar response mein data nahi aaya to dobara fetch karlein
         fetchAssignmentDetails();
       }
-      
       setFile(null);
-      
     } catch (err) {
       console.error("Submission error:", err);
       alert("Failed to submit assignment.");
@@ -91,8 +95,6 @@ const StudentAssignmentPage = () => {
 
   const data = assignment?.assignment_data;
   const totalMarks = data?.rubric?.reduce((acc: number, item: any) => acc + (Number(item.points) || 0), 0) || 0;
-  
-  // --- FIX: Logic to check if submission exists and has a score ---
   const submission = assignment?.user_submission; 
   const hasScore = submission && (submission.score !== null && submission.score !== undefined);
 
@@ -108,9 +110,16 @@ const StudentAssignmentPage = () => {
             <div className={styles.headerArea}>
               <div>
                 <h1 className={styles.title}>{data?.title || "Untitled Assignment"}</h1>
-                <span className={styles.typeTag}>
-                  {data?.submission_type === 'softcopy' ? 'Online Submission' : 'In-Person Submission'}
-                </span>
+                <div style={{ display: 'flex', gap: '10px', marginTop: '8px' }}>
+                    <span className={styles.typeTag}>
+                        {data?.submission_type === 'softcopy' ? 'Online Submission' : 'In-Person Submission'}
+                    </span>
+                    {/* Deadline Badge */}
+                    <span className={`${styles.typeTag} ${isLate ? styles.lateTag : styles.activeTag}`} style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                        <Clock size={12} />
+                        {isLate ? "Closed" : `Due: ${deadlineDate?.toLocaleString() || 'No Deadline'}`}
+                    </span>
+                </div>
               </div>
               <div className={styles.totalPointsBadge}>
                 <span className={styles.pointsLabel}>Total Marks</span>
@@ -118,7 +127,6 @@ const StudentAssignmentPage = () => {
               </div>
             </div>
 
-            {/* --- DISPLAY MARKS SECTION --- */}
             {hasScore && (
               <div className={styles.resultCard}>
                 <div className={styles.resultHeader}>
@@ -175,19 +183,30 @@ const StudentAssignmentPage = () => {
         </div>
 
         <div className={styles.actionColumn}>
-          <div className={styles.uploadCard}>
-            <h3>{submission ? "Update Submission" : "Submit Assignment"}</h3>
-            <p className={styles.subText}>Supported formats: PDF, DOCX</p>
+          <div className={`${styles.uploadCard} ${isLate ? styles.lockedCard : ''}`}>
+            <h3>{isLate ? "Submissions Closed" : submission ? "Update Submission" : "Submit Assignment"}</h3>
+            <p className={styles.subText}>
+                {isLate ? "The deadline for this assignment has passed." : "Supported formats: PDF, DOCX"}
+            </p>
             
-            <div className={`${styles.dropZone} ${file ? styles.activeZone : ''} ${submission ? styles.alreadySubmitted : ''}`}>
+            {/* --- MODIFIED DROPZONE --- */}
+            <div className={`
+                ${styles.dropZone} 
+                ${file ? styles.activeZone : ''} 
+                ${submission ? styles.alreadySubmitted : ''}
+                ${isLate ? styles.disabledZone : ''}
+            `}>
               <input 
                 type="file" 
                 id="assignment-file" 
                 onChange={handleFileChange} 
                 className={styles.hiddenInput} 
+                disabled={isLate} // Disable Input
               />
-              <label htmlFor="assignment-file" className={styles.uploadLabel}>
-                {submission && !file ? (
+              <label htmlFor="assignment-file" className={styles.uploadLabel} style={{ cursor: isLate ? 'not-allowed' : 'pointer' }}>
+                {isLate ? (
+                  <Clock size={48} color="#94a3b8" />
+                ) : submission && !file ? (
                   <CheckCircle size={48} className={styles.successIcon} />
                 ) : file ? (
                   <CheckCircle size={48} className={styles.successIcon} />
@@ -195,7 +214,7 @@ const StudentAssignmentPage = () => {
                   <Upload size={48} className={styles.uploadIcon} />
                 )}
                 <span className={styles.fileName}>
-                  {file ? file.name : submission ? "File submitted (Click to change)" : "Choose a file"}
+                  {isLate ? "Submission period ended" : file ? file.name : submission ? "File submitted (Click to change)" : "Choose a file"}
                 </span>
               </label>
             </div>
@@ -203,14 +222,17 @@ const StudentAssignmentPage = () => {
             <button 
               className={styles.submitBtn}
               onClick={handleSubmit}
-              disabled={!file || submitting}
+              disabled={!file || submitting || isLate} // Disable Button
+              style={isLate ? { background: '#94a3b8', cursor: 'not-allowed' } : {}}
             >
-              {submitting ? "AI is Grading..." : submission ? "Re-submit Work" : "Submit My Work"}
+              {isLate ? "Closed" : submitting ? "AI is Grading..." : submission ? "Re-submit Work" : "Submit My Work"}
             </button>
 
             <div className={styles.warningNote}>
               <AlertCircle size={14} />
-              <span>AI will grade your work immediately after upload.</span>
+              <span>
+                {isLate ? "You can no longer submit work for this lecture." : "AI will grade your work immediately after upload."}
+              </span>
             </div>
           </div>
         </div>

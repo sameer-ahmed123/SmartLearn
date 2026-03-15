@@ -112,7 +112,8 @@ const GradeBookPage = () => {
         const authData = localStorage.getItem('smartlearn-auth-storage');
         const token = authData ? JSON.parse(authData).state?.accessToken : null;
 
-        const res = await apiClient.get(`/assessments/teacher-gradebook-summary/?course_id=${selectedCourse}`, {
+        const res = await apiClient.get(`/dashboard/teacher/gradebook-summary/${selectedCourse}/`, {
+          
           headers: { 'Authorization': `Bearer ${token}` }
         });
         

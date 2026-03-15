@@ -14,7 +14,7 @@ const StudentAnalyticsPage = () => {
   useEffect(() => {
     const fetchAnalytics = async () => {
       try {
-        const response = await apiClient.get("assessments/student-analytics/", {
+        const response = await apiClient.get("dashboard/student-analytics/", {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
         });
         setData(response.data);

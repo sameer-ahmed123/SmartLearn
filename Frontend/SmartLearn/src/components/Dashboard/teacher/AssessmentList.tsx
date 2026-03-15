@@ -14,7 +14,6 @@ interface AssessmentProps {
   isQuizOnly?: boolean; 
 }
 
-// Default values set kar di hain taake agar props na milein toh column hide na hon
 const AssessmentList = ({ 
   lectures = [], 
   onRefresh, 
@@ -32,22 +31,18 @@ const AssessmentList = ({
     (l) => l.validation_status === "validated"
   );
 
-
   const handleGenerateAssessment = async (lectureId: number, type: 'quiz' | 'assignment') => {
-
     if (type === 'quiz') setGeneratingQuizId(lectureId);
     if (type === 'assignment') setGeneratingAssignmentId(lectureId);
     
     try {
-
-
       await apiClient.post("/assessments/generate/", {
         lecture_id: lectureId,
         type: type, 
       });
-
+      
       alert(`${type} generation started! It takes about 1-2 minutes. Refresh the page later to view it.`);
-      onRefresh(); // Refresh the list to catch the 'generating' status if backend sends it
+      onRefresh(); 
     } catch (error) {
       console.error("Gen failed", error);
       alert(`Failed to start ${type} generation.`);
@@ -55,6 +50,25 @@ const AssessmentList = ({
       if (type === 'quiz') setGeneratingQuizId(null);
       if (type === 'assignment') setGeneratingAssignmentId(null);
     }
+  };
+
+  // Helper function to render the color-coded status pill
+  const renderStatusPill = (status: string) => {
+    const isPublished = status === 'published';
+    return (
+      <span style={{
+        backgroundColor: isPublished ? '#dcfce7' : '#fef3c7',
+        color: isPublished ? '#166534' : '#92400e',
+        padding: '2px 10px',
+        borderRadius: '9999px',
+        fontSize: '0.75rem',
+        fontWeight: '600',
+        textTransform: 'capitalize',
+        display: 'inline-block'
+      }}>
+        {status || 'draft'}
+      </span>
+    );
   };
 
   return (
@@ -94,20 +108,23 @@ const AssessmentList = ({
                   {/* QUIZ ACTIONS */}
                   {!isAssignmentOnly && (
                     <td style={{ textAlign: 'center' }}>
-                      {/* logic: check quiz_id or quiz_data presence */}
                       {(lecture.quiz_id || (lecture.quiz_data && Object.keys(lecture.quiz_data).length > 0)) ? (
-                        <button
-                          className={styles.viewBtn}
-                          onClick={() => {
-                            if (lecture.quiz_id) {
-                              setEditingQuizId(lecture.quiz_id);
-                            } else {
-                              alert("Quiz ID missing from data.");
-                            }
-                          }}
-                        >
-                          <Eye size={16} /> View Quiz
-                        </button>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px' }}>
+                          {/* Added Status Pill Here */}
+                          {renderStatusPill(lecture.quiz_status)}
+                          <button
+                            className={styles.viewBtn}
+                            onClick={() => {
+                              if (lecture.quiz_id) {
+                                setEditingQuizId(lecture.quiz_id);
+                              } else {
+                                alert("Quiz ID missing from data.");
+                              }
+                            }}
+                          >
+                            <Eye size={16} /> View Quiz
+                          </button>
+                        </div>
                       ) : (
                         <button
                           onClick={() => handleGenerateAssessment(lecture.id, 'quiz')}
@@ -127,25 +144,28 @@ const AssessmentList = ({
                   {/* ASSIGNMENT ACTIONS */}
                   {!isQuizOnly && (
                     <td style={{ textAlign: 'center' }}>
-                      {/* logic: check assignment_id or assignment_data presence */}
                       {(lecture.assignment_id || (lecture.assignment_data && Object.keys(lecture.assignment_data).length > 0)) ? (
-                        <button
-                          className={styles.viewBtn}
-                          style={{ 
-                            background: '#f5f3ff', 
-                            color: '#8b5cf6', 
-                            borderColor: '#ddd6fe' 
-                          }}
-                          onClick={() => {
-                            if (lecture.assignment_id) {
-                              setEditingAssignmentId(lecture.assignment_id);
-                            } else {
-                              alert("Assignment ID missing from data.");
-                            }
-                          }}
-                        >
-                          <FileCheck size={16} /> View Assignment
-                        </button>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px' }}>
+                          {/* Added Status Pill Here */}
+                          {renderStatusPill(lecture.assignment_status)}
+                          <button
+                            className={styles.viewBtn}
+                            style={{ 
+                              background: '#f5f3ff', 
+                              color: '#8b5cf6', 
+                              borderColor: '#ddd6fe' 
+                            }}
+                            onClick={() => {
+                              if (lecture.assignment_id) {
+                                setEditingAssignmentId(lecture.assignment_id);
+                              } else {
+                                alert("Assignment ID missing from data.");
+                              }
+                            }}
+                          >
+                            <FileCheck size={16} /> View Assignment
+                          </button>
+                        </div>
                       ) : (
                         <button
                           onClick={() => handleGenerateAssessment(lecture.id, 'assignment')}
@@ -178,7 +198,6 @@ const AssessmentList = ({
         </table>
       </div>
 
-      
       {/* Modals */}
       {editingQuizId && (
         <QuizEditorModal

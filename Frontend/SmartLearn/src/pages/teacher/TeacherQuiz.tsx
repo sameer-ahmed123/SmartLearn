@@ -1,13 +1,16 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { 
   Plus, HelpCircle, Users, Calendar, 
   Search, ClipboardList, ArrowRight, Filter,
-  BookOpen, CheckCircle, Clock, Trophy, X, Settings, Loader2
+  BookOpen, CheckCircle, Clock, Trophy, X, Settings, Loader2, Edit2
 } from "lucide-react"; 
 import styles from "./TeacherQuiz.module.css";
 import apiClient from "@/api/apiClient";
 import type { CourseSummary } from "@/types/Courses/Types";
 import { useNavigate } from "react-router-dom";
+
+// Ensure this path matches where your modal actually lives!
+import QuizEditorModal from "@/components/Dashboard/teacher/QuizEditorModal"; 
 
 const TeacherQuiz = () => {
   const navigate = useNavigate();
@@ -15,7 +18,13 @@ const TeacherQuiz = () => {
   const [courses, setCourses] = useState<CourseSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  
+  // Create Flow Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
+  
+  // Edit Flow Modal State
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const [editingQuizId, setEditingQuizId] = useState<number | null>(null);
 
   const courseImages = [
     "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=200",
@@ -24,32 +33,39 @@ const TeacherQuiz = () => {
     "https://images.unsplash.com/photo-1501504905252-473c47e087f8?w=200"
   ];
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const [quizResponse, courseResponse] = await Promise.all([
-          apiClient.get("/assessments/teacher-quizzes/"),
-          apiClient.get("/lectures/courses")
-        ]);
-        
-        let quizData = [];
-        if (quizResponse.data.results && Array.isArray(quizResponse.data.results)) {
-          quizData = quizResponse.data.results;
-        } else if (Array.isArray(quizResponse.data)) {
-          quizData = quizResponse.data;
-        }
-
-        setQuizzes(quizData);
-        setCourses(courseResponse.data || []);
-        setLoading(false);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-        setLoading(false);
+  // Extracted fetchData so we can call it after a successful edit
+  const fetchData = useCallback(async () => {
+    try {
+      setLoading(true);
+      const [quizResponse, courseResponse] = await Promise.all([
+        apiClient.get("/assessments/teacher-quizzes/"), 
+        apiClient.get("/lectures/courses")
+      ]);
+      
+      let quizData = [];
+      if (quizResponse.data.results && Array.isArray(quizResponse.data.results)) {
+        quizData = quizResponse.data.results;
+      } else if (Array.isArray(quizResponse.data)) {
+        quizData = quizResponse.data;
       }
-    };
-    fetchData();
+
+      setQuizzes(quizData);
+      setCourses(courseResponse.data || []);
+      setLoading(false);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  const handleEditSuccess = () => {
+    setIsEditorOpen(false);
+    fetchData(); 
+  };
 
   const filteredQuizzes = quizzes.filter(q => 
     (q.title || q.topic || "").toLowerCase().includes(search.toLowerCase()) ||
@@ -78,6 +94,7 @@ const TeacherQuiz = () => {
         <ClipboardList size={140} className={styles.bgIcon} />
       </div>
 
+      {/* Select Course Modal (Create Flow) */}
       {isModalOpen && (
         <div className={styles.modalOverlay}>
           <div className={styles.modalContent}>
@@ -105,7 +122,17 @@ const TeacherQuiz = () => {
         </div>
       )}
 
-      {/* Stats Section with Actual Data */}
+      {/* Quiz Editor Modal (Edit Flow) */}
+      {isEditorOpen && (
+        <QuizEditorModal 
+          isOpen={isEditorOpen} 
+          onClose={() => setIsEditorOpen(false)} 
+          quizId={editingQuizId} 
+          onSaveSuccess={handleEditSuccess} 
+        />
+      )}
+
+      {/* Stats Section */}
       <div className={styles.statsRow}>
         <div className={styles.statCardBox}>
           <div className={styles.statIconContainer} style={{ background: 'rgba(99, 102, 241, 0.1)', color: '#6366f1' }}><BookOpen size={22} /></div>
@@ -150,41 +177,57 @@ const TeacherQuiz = () => {
                 {quiz.status || 'Active'}
               </span>
               <div className={styles.quizInfo}>
-                {/* Topic usually contains the lecture name or specific title */}
                 <h3>{quiz.title || quiz.topic || "Untitled Quiz"}</h3>
                 <p>{quiz.course_name || quiz.course_title || "Course Assessment"}</p>
               </div>
               <div className={styles.quizStatsGrid}>
-                {/* Exact Questions Count */}
                 <div className={styles.statItem}>
                   <HelpCircle size={16} />
                   <span>Qs: <b>{quiz.questions_count ?? quiz.quiz_data?.questions?.length ?? 0}</b></span>
                 </div>
-                {/* Actual Submission/Attempt Count */}
                 <div className={styles.statItem}>
                   <Users size={16} />
                   <span>Atms: <b>{quiz.submission_count || 0}</b></span>
                 </div>
-                {/* Deadline or Created Date */}
                 <div className={styles.statItem}>
                   <Calendar size={16} />
                   <span>Date: <b>{quiz.deadline ? new Date(quiz.deadline).toLocaleDateString() : (quiz.created_at ? new Date(quiz.created_at).toLocaleDateString() : 'N/A')}</b></span>
                 </div>
               </div>
               
-              <div 
-                className={styles.viewResults} 
-                onClick={() => {
-                  const targetId = quiz.lecture_id || quiz.lecture;
-                  if (targetId) {
-                    navigate(`/teacher/lecture/${targetId}/quiz`);
-                  } else {
-                    console.error("No lecture ID found for this quiz");
-                  }
-                }}
-              >
-                View Details <ArrowRight size={14} />
+              {/* Updated Actions Row: View Details + Edit Button */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '15px', paddingTop: '15px', borderTop: '1px solid #f1f5f9' }}>
+                <div 
+                  className={styles.viewResults} 
+                  style={{ margin: 0, borderTop: 'none', paddingTop: 0 }} // overriding existing class styles if needed
+                  onClick={() => {
+                    const targetId = quiz.lecture_id || quiz.lecture;
+                    if (targetId) {
+                      navigate(`/teacher/lecture/${targetId}/quiz`);
+                    } else {
+                      console.error("No lecture ID found for this quiz");
+                    }
+                  }}
+                >
+                  View Details <ArrowRight size={14} />
+                </div>
+                
+                <button 
+                  onClick={() => {
+                    setEditingQuizId(quiz.id);
+                    setIsEditorOpen(true);
+                  }}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: '5px', 
+                    background: 'transparent', border: 'none', 
+                    color: '#6366f1', cursor: 'pointer', 
+                    fontSize: '0.875rem', fontWeight: 600, padding: '5px'
+                  }}
+                >
+                  <Edit2 size={15} /> Edit
+                </button>
               </div>
+
             </div>
           ))
         ) : (
