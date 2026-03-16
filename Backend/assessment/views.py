@@ -8,17 +8,17 @@ from rest_framework.response import Response
 from rest_framework import status
 from .tasks import generate_assessment_task
 from django.utils import timezone
-from django.db.models import  Count
+from django.db.models import Count
 from django.contrib.auth import get_user_model
 import json
 from django.conf import settings
-from assessment.services import calculate_quiz_score,extract_text_from_file,grade_assignment_with_ai
+from assessment.services import calculate_quiz_score, extract_text_from_file, grade_assignment_with_ai
 
 try:
     from courses.models import Enrollment
 except ImportError:
     Enrollment = None
-from django.apps import apps # Add this import at the top of the file
+from django.apps import apps  # Add this import at the top of the file
 User = get_user_model()
 
 
@@ -163,13 +163,18 @@ def submit_quiz_score(request, quiz_id):
     if student_answers is None:
         return Response({"error": "No answers provided"}, status=400)
 
-    #Calculation logic services file me 
-    correct_count, total_questions, final_score = calculate_quiz_score(quiz.quiz_data, student_answers)
+    # Calculation logic services file me
+    correct_count, total_questions, final_score = calculate_quiz_score(
+        quiz.quiz_data, student_answers)
 
     submission, created = QuizSubmission.objects.update_or_create(
         user=request.user,
         quiz=quiz,
-        defaults={'score': final_score}
+        defaults={
+            'score': final_score,
+            'answers_data': student_answers,
+            'is_graded': True
+        }
     )
 
     return Response({
@@ -221,6 +226,7 @@ def student_assignment_list(request):
              "pending": assignments.count() - completed_count, "graded": graded_count}
     return Response({"assignments": assignment_list, "stats": stats})
 
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def submit_assignment(request, assignment_id):
@@ -233,7 +239,7 @@ def submit_assignment(request, assignment_id):
     if not file_obj:
         return Response({"error": "No file uploaded"}, status=400)
 
-    # 1. Save the file to database 
+    # 1. Save the file to database
     submission, created = AssignmentSubmission.objects.update_or_create(
         user=request.user,
         assignment=assignment,
@@ -242,17 +248,23 @@ def submit_assignment(request, assignment_id):
 
     try:
         # 2. Extract Text moved to services.py
-        extracted_text = extract_text_from_file(file_obj)
+        
+        extracted_text = extract_text_from_file(submission.file_upload)
+
+        if not extracted_text.strip():
+            raise ValueError(
+                "Could not extract any text from the document. Is it empty or an image-based PDF?")
 
         # 3. Grade with AI moved to services.py
         rubric = assignment.assignment_data.get('rubric', [])
         tasks = assignment.assignment_data.get('tasks', [])
-        
+
         ai_result = grade_assignment_with_ai(rubric, tasks, extracted_text)
 
         # 4. Save results
         submission.score = ai_result.get('score', 0)
-        submission.feedback = ai_result.get('feedback', 'No feedback provided.')
+        submission.feedback = ai_result.get(
+            'feedback', 'No feedback provided.')
         submission.save()
 
         return Response({
@@ -266,33 +278,52 @@ def submit_assignment(request, assignment_id):
             "message": "Submitted successfully, but AI auto-grading failed. A teacher will review it manually.",
             "error_detail": str(e)
         }, status=201)
-        
-        
+
+
 @api_view(['PATCH'])
 @permission_classes([IsAuthenticated])
 def teacher_assignment_update_score(request, id=None):
     submission = get_object_or_404(AssignmentSubmission, id=id)
     new_score = request.data.get('score')
-    
+
     if new_score is not None:
         submission.score = int(new_score)
         submission.is_graded = True
         submission.is_overridden = True  # <--- Logic: Human has touched this
         submission.save()
-        
+
         serializer = AssignmentSubmissionSerializer(submission)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
+def teacher_quiz_update_score(request, id=None):
 
+    submission = get_object_or_404(QuizSubmission, id=id)
+    new_score = request.data.get('score')
 
+    if new_score is None:
+        return Response({"error": "Score is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        submission.score = float(new_score)
+        submission.is_graded = True
+        submission.is_overridden = True
+        submission.save()
+
+        # Use your Quiz Submission Serializer
+        serializer = QuizSubmissionSerializer(submission)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    except ValueError:
+        return Response({"error": "Invalid score format"}, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def teacher_assignment_list(request):
     user = request.user
-    
+
     # 1. OPTIMIZATION: Fetch assignments AND count their submissions in ONE single query
     # Using 'assignmentsubmission' which is Django's default reverse relation name
     assignments = Assignment.objects.filter(
@@ -301,37 +332,36 @@ def teacher_assignment_list(request):
         'lecture__content_source__course', 'lecture'
     ).annotate(
         # The database does the counting for us and attaches it to 'sub_count'
-        sub_count=Count('assignmentsubmission', distinct=True) 
+        sub_count=Count('assignmentsubmission', distinct=True)
     )
-    
+
     assignment_list = []
 
     for asm in assignments:
         # 2. No more database hits inside this loop! We just read the annotated 'sub_count'
         title = asm.assignment_data.get('title', 'Assignment') if isinstance(
             asm.assignment_data, dict) else "Untitled"
-            
+
         assignment_list.append({
             "id": asm.id,
             "lecture_id": asm.lecture.id,
             "title": title,
             "course_name": asm.lecture.content_source.course.title,
-            "submission_count": asm.sub_count, # Fast memory read
+            "submission_count": asm.sub_count,  # Fast memory read
             "type": "assignment",
             "status": asm.status,
             "deadline": asm.deadline,
             "created_at": asm.created_at
         })
-        
-    return Response(assignment_list)
 
+    return Response(assignment_list)
 
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def teacher_quiz_list(request):
     user = request.user
-    
+
     # 1. OPTIMIZATION: Fetch quizzes and count their submissions in ONE query
     # We use 'quizsubmission' (Django's default reverse relation name)
     quizzes = Quiz.objects.filter(
@@ -342,7 +372,7 @@ def teacher_quiz_list(request):
         # The database does the heavy lifting and attaches 'sub_count' to each quiz
         sub_count=Count('quizsubmission', distinct=True)
     )
-    
+
     quiz_list = []
 
     for quiz in quizzes:
@@ -365,8 +395,9 @@ def teacher_quiz_list(request):
             "status": quiz.status,
             "created_at": quiz.created_at
         })
-        
+
     return Response(quiz_list)
+
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -403,5 +434,3 @@ def grade_assignment_submission(request, submission_id):
     submission.feedback = request.data.get('feedback', '')
     submission.save()
     return Response({"message": "Graded successfully", "score": submission.score})
-
-

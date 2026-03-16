@@ -63,11 +63,35 @@
   height: calc(100% - 65px); /* Minus header height */
 }
 
-/* Left side: The PDF/Document */
+/* The container for the left side */
 .docViewer {
-  flex: 1.5; /* Takes up more space */
-  background: #525659; /* Classic PDF viewer background */
-  border-right: 1px solid var(--border, #e2e8f0);
+  flex: 2;
+  height: 100%;
+  background: #f8fafc;
+  overflow: hidden; /* Prevent the container itself from growing */
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+/* The specific wrapper for Docx-preview */
+.docxWrapper {
+  flex: 1;
+  width: 100%;
+  overflow: auto; /* Enable vertical scrolling */
+  padding: 20px;
+  background-color: #ffffff;
+}
+
+/* Ensure docx-preview's internal container doesn't break layout */
+.docxWrapper :global(.docx-wrapper) {
+  background: transparent !important;
+  padding: 0 !important;
+}
+
+.docxWrapper :global(.docx) {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
+  margin-bottom: 20px !important;
 }
 
 .iframe {
@@ -79,12 +103,14 @@
 /* Right side: Grading controls */
 .gradingPanel {
   flex: 1;
+  min-width: 350px;
   padding: 24px;
   overflow-y: auto;
   background: #fafafa;
   display: flex;
   flex-direction: column;
   gap: 24px;
+  margin-bottom: 24px;
 }
 
 .section h4 {
@@ -240,4 +266,80 @@
 
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+
+.quizReview {
+  padding: 24px;
+  background: #ffffff;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.quizHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #f1f5f9;
+}
+
+.answerCard {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.questionNum {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #64748b;
+  margin-bottom: 8px;
+}
+
+.questionText {
+  font-weight: 500;
+  color: #1e293b;
+  margin-bottom: 12px;
+}
+
+.answerComparison {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.studentAnswer span, .correctAnswer span {
+  font-size: 0.7rem;
+  color: #94a3b8;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.correct { color: #10b981; font-weight: 600; }
+.incorrect { color: #ef4444; font-weight: 600; }
+
+.correctAnswer p {
+  color: #1e293b;
+  font-weight: 600;
+}
+
+
+.txtWrapper {
+  padding: 30px;
+  background: #fff;
+  height: 100%;
+  overflow-y: auto;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+.txtWrapper pre {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  color: #334155;
+  line-height: 1.6;
 }

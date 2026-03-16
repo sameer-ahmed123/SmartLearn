@@ -14,7 +14,8 @@ from assessment.views import (
     get_lecture_submissions,
     quiz_detail_by_lecture,
     get_quiz_submissions,
-    grade_assignment_submission
+    grade_assignment_submission,
+    teacher_quiz_update_score
 )
 
 app_name = "assessment"
@@ -54,5 +55,6 @@ urlpatterns = [
          grade_assignment_submission, name='grade-assignment-submission'),
     
     #---- manual grading for assingment
-    path('submissions/<int:id>/update-score/',teacher_assignment_update_score,name="manual-grade-assignment")
+    path('submissions/<int:id>/update-score/',teacher_assignment_update_score,name="manual-grade-assignment"),
+    path('quiz-submissions/<int:id>/update-score/', teacher_quiz_update_score, name="manual-grade-quiz"),
 ]

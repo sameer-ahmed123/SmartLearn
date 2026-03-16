@@ -27,7 +27,10 @@ class QuizSubmission(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL,
                              on_delete=models.CASCADE)
     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE)
+    answers_data = models.JSONField(default=list)
     score = models.FloatField()
+    is_overridden = models.BooleanField(default=False)
+    is_graded = models.BooleanField(default=True)
     submitted_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

@@ -61,35 +61,55 @@ def calculate_quiz_score(quiz_data, student_answers):
 
 
 def extract_text_from_file(file_obj):
-    """
-    Reads a Django UploadedFile (PDF, DOCX, TXT) and extracts the raw text.
-    """
     extracted_text = ""
     file_name = file_obj.name.lower()
 
+    # CRITICAL: Reset file pointer to start before reading
+    file_obj.seek(0)
+
     if file_name.endswith('.pdf'):
-        reader = PyPDF2.PdfReader(file_obj)
-        for page in reader.pages:
-            extracted_text += page.extract_text()
+        try:
+            reader = PyPDF2.PdfReader(file_obj)
+            for page in reader.pages:
+                text = page.extract_text()
+                if text:
+                    extracted_text += text
+        except Exception as e:
+            print(f"PDF Extraction error: {e}")
+
     elif file_name.endswith('.docx'):
-        doc = docx.Document(file_obj)
-        extracted_text = "\n".join([p.text for p in doc.paragraphs])
+        # python-docx works with file-like objects
+        try:
+            doc = docx.Document(file_obj)
+            extracted_text = "\n".join([p.text for p in doc.paragraphs])
+        except Exception as e:
+            print(f"DOCX Extraction error: {e}")
+
+    elif file_name.endswith('.doc'):
+        # NOTE: python-docx DOES NOT support .doc (legacy binary format)
+        # You would need a library like 'antiword' or 'textract' for this.
+        # For now, let's throw a clear error or skip.
+        raise ValueError(
+            "Legacy .doc format not supported. Please upload a .docx file.")
+
     else:
-        file_obj.seek(0)
-        extracted_text = file_obj.read().decode('utf-8', errors='ignore')
-
+        # Fallback for .txt or other raw text files
+        try:
+            extracted_text = file_obj.read().decode('utf-8', errors='ignore')
+        except Exception as e:
+            print(f"Text Extraction error: {e}")
+    
     return extracted_text
-
 
 
 def grade_assignment_with_ai(rubric, tasks, student_text):
     # 1. Re-initialize and specify the stable API version if possible
     genai.configure(api_key=settings.GEMINI_API_KEY)
-    
+
     # 2. Use 'gemini-1.5-flash-latest' which often maps more reliably in v1beta
     # than just 'gemini-1.5-flash'
-    model_id = 'models/gemini-2.5-flash' 
-    
+    model_id = 'models/gemini-2.5-flash'
+
     try:
         model = genai.GenerativeModel(
             model_name=model_id,
@@ -106,7 +126,7 @@ def grade_assignment_with_ai(rubric, tasks, student_text):
         """
 
         response = model.generate_content(prompt)
-        
+
         # With response_mime_type, response.text should be clean JSON
         return json.loads(response.text)
 
