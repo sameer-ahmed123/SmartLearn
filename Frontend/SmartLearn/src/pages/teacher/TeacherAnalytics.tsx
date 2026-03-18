@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { 
   TrendingUp, Users, BookOpen, 
   BarChart3, Award, Clock, AlertCircle, 
-  Layout, ChevronDown, CheckCircle2, ClipboardCheck
+  Layout, ChevronDown, CheckCircle2, ClipboardCheck,
+  Video
 } from 'lucide-react';
 import { 
   BarChart, Bar, XAxis, YAxis, ResponsiveContainer, 
@@ -13,7 +14,9 @@ import apiClient from '@/api/apiClient';
 
 const AnalyticsPage = () => {
   const [selectedMonth, setSelectedMonth] = useState("March 2026");
+  const [selectedCourse, setSelectedCourse] = useState("All Courses");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isCourseDropdownOpen, setIsCourseDropdownOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   
   const [analyticsData, setAnalyticsData] = useState({
@@ -31,7 +34,6 @@ const AnalyticsPage = () => {
 
   const months = ["January 2026", "February 2026", "March 2026", "April 2026"];
 
-  // 1. Icon Mapping: Yeh ensure karega ke labels ke mutabiq sahi icon dikhe
   const iconMap = {
     'AVG GRADE': <TrendingUp size={20} />,
     'PASS RATE': <Award size={20} />,
@@ -43,9 +45,7 @@ const AnalyticsPage = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        // Backend API call with month parameter
         const response = await apiClient.get(`/dashboard/teacher-analytics/?month=${selectedMonth}`);
-
         setAnalyticsData(response.data);
       } catch (error) {
         console.error("Error fetching analytics:", error);
@@ -66,13 +66,24 @@ const AnalyticsPage = () => {
       ];
 
   const studentProgressData = analyticsData.studentProgress.length > 0 ? analyticsData.studentProgress : [
-    { name: 'Alex Johnson', progress: 85, color: '#6366f1' },
-    { name: 'Maria Garcia', progress: 72, color: '#10b981' },
-    { name: 'James Wilson', progress: 45, color: '#f59e0b' },
-    { name: 'Emma Davis', progress: 92, color: '#f43f5e' },
+    { 
+      name: 'Alex Johnson', 
+      color: '#6366f1',
+      lectures: [
+        { title: 'React Hooks Deep Dive', progress: 85 },
+        { title: 'State Management', progress: 40 }
+      ]
+    },
+    { 
+      name: 'Maria Garcia', 
+      color: '#10b981',
+      lectures: [
+        { title: 'Advanced CSS', progress: 72 },
+        { title: 'Flexbox & Grid', progress: 95 }
+      ]
+    },
   ];
 
-  // Default stats fallback
   const displayStats = analyticsData.stats.length > 0 ? analyticsData.stats : [
     { label: 'AVG GRADE', val: '0%', color: '#6366f1' },
     { label: 'PASS RATE', val: '0%', color: '#10b981' },
@@ -101,7 +112,6 @@ const AnalyticsPage = () => {
         <div className={styles.statsRow}>
           {displayStats.map((stat, idx) => (
             <div key={idx} className={styles.statCard}>
-              {/* Yahan icon mapping se uthaya ja raha hai */}
               <div className={styles.statIconCircle} style={{ color: stat.color, background: `${stat.color}15` }}>
                 {iconMap[stat.label] || <TrendingUp size={20} />}
               </div>
@@ -230,25 +240,54 @@ const AnalyticsPage = () => {
         </div>
 
         <div className={styles.card}>
-            <h3 className={styles.cardTitle}>Students Progress</h3>
+            <div className={styles.cardHeader} style={{ marginBottom: '20px' }}>
+                <h3 className={styles.cardTitle}>Student Video Progress</h3>
+                <div className={styles.dropdownContainer}>
+                  <button className={styles.timeDropdown} onClick={() => setIsCourseDropdownOpen(!isCourseDropdownOpen)}>
+                    {selectedCourse} <ChevronDown size={14} />
+                  </button>
+                  {isCourseDropdownOpen && (
+                    <div className={styles.dropdownMenu}>
+                      {["All Courses", ...analyticsData.courses.map(c => c.name)].map(courseName => (
+                        <div key={courseName} onClick={() => { setSelectedCourse(courseName); setIsCourseDropdownOpen(false); }}>{courseName}</div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+            </div>
+
             <div className={styles.studentList}>
                 {studentProgressData.map((student, idx) => (
-                    <div key={idx} className={styles.studentItem}>
+                    <div key={idx} className={styles.studentItem} style={{ alignItems: 'flex-start', marginBottom: '25px' }}>
                         <img 
                           src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${student.name}`} 
                           alt={student.name} 
                           className={styles.studentAvatar} 
                         />
-                        <div className={styles.studentInfo}>
-                            <div className={styles.studentHeader}>
-                                <span className={styles.studentName}>{student.name}</span>
-                                <span className={styles.studentPercent} style={{ color: student.color }}>{student.progress}%</span>
+                        <div className={styles.studentInfo} style={{ width: '100%' }}>
+                            <div className={styles.studentHeader} style={{ marginBottom: '10px' }}>
+                                <span className={styles.studentName} style={{ fontWeight: '700', fontSize: '1.1rem' }}>{student.name}</span>
                             </div>
-                            <div className={styles.progressTrack}>
-                                <div 
-                                    className={styles.progressFill} 
-                                    style={{ width: `${student.progress}%`, backgroundColor: student.color }}
-                                ></div>
+                            
+                            {/* Lectures Section */}
+                            <div className={styles.lecturesContainer} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                              {(student.lectures || []).map((lecture, lIdx) => (
+                                <div key={lIdx} className={styles.lectureItem}>
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                      <Video size={12} style={{ color: '#64748b' }} />
+                                      <span style={{ fontSize: '0.85rem', color: '#475569', fontWeight: '500' }}>{lecture.title}</span>
+                                    </div>
+                                    <span style={{ fontSize: '0.85rem', fontWeight: '600', color: student.color }}>{lecture.progress}%</span>
+                                  </div>
+                                  <div className={styles.progressTrack} style={{ height: '6px' }}>
+                                      <div 
+                                          className={styles.progressFill} 
+                                          style={{ width: `${lecture.progress}%`, backgroundColor: student.color, height: '100%' }}
+                                      ></div>
+                                  </div>
+                                </div>
+                              ))}
                             </div>
                         </div>
                     </div>

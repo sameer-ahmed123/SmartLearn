@@ -1,22 +1,27 @@
 import { useState, useEffect } from "react";
 import { 
   PlayCircle, Clock, CheckCircle, 
-  BookOpen, Lock, MessageCircle, Star, GraduationCap, Plus, X, Users 
+  BookOpen, Lock, MessageCircle, Star, GraduationCap, Plus, X, Users, Video
 } from "lucide-react"; 
-import { useNavigate } from "react-router-dom"; 
+import { useNavigate, useParams } from "react-router-dom"; 
 import "./StudentLecturePage.css"; 
 import apiClient from "@/api/apiClient";
 
 const StudentLecturePage = () => {
+  const { id } = useParams(); // URL se course ID lene ke liye
   const navigate = useNavigate(); 
-  const [selectedLecture, setSelectedLecture] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [availableCourses, setAvailableCourses] = useState<any[]>([]); 
   const [courses, setCourses] = useState<any[]>([]); 
-  const [metrics, setMetrics] = useState<any>(null); // Dashboard metrics ke liye state
+  const [metrics, setMetrics] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  
+  // New States for Video Functionality
+  const [lectures, setLectures] = useState<any[]>([]); 
+  const [recentLectures, setRecentLectures] = useState<any[]>([]); 
+  const [selectedLecture, setSelectedLecture] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState("video");
 
-  // 1. Static Images for Courses
   const courseImages = [
     "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=500&q=80",
     "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=500&q=80",
@@ -32,37 +37,86 @@ const StudentLecturePage = () => {
     return courseImages[index];
   };
 
-  const fetchCoursesData = async () => {
-    try {
-      const response = await apiClient.get("lectures/courses/"); 
-      const allData = response.data || [];
-      setAvailableCourses(allData.filter((c: any) => !c.is_enrolled));
-      setCourses(allData.filter((c: any) => c.is_enrolled));
-    } catch (err) {
-      console.error("Failed to fetch courses", err);
-    }
+  const getProgressColor = (progress: number) => {
+    if (progress >= 100) return "#10b981"; 
+    if (progress >= 30) return "#4f46e5"; 
+    return "#ef4444"; 
   };
 
-  // Dashboard metrics fetch karne ka logic
-  const fetchDashboardMetrics = async () => {
+  const fetchData = async () => {
     try {
-      const res = await apiClient.get('/dashboard/metrics/student/');
-      setMetrics(res.data);
+      setLoading(true);
+      const [mRes, cRes] = await Promise.all([
+        apiClient.get('/dashboard/metrics/student/'),
+        apiClient.get("lectures/courses/")
+      ]);
+      
+      setMetrics(mRes.data);
+      const allCourses = cRes.data || [];
+      setAvailableCourses(allCourses.filter((c: any) => !c.is_enrolled));
+      const enrolled = allCourses.filter((c: any) => c.is_enrolled);
+      setCourses(enrolled);
+
+      let allLectures: any[] = [];
+      
+      if (enrolled.length > 0) {
+        const contents = await Promise.all(
+          enrolled.slice(0, 5).map((course: any) => 
+            apiClient.get(`/lectures/courses/${course.id}/content/`)
+          )
+        );
+        
+        contents.forEach(res => {
+          allLectures = [...allLectures, ...res.data];
+        });
+
+        allLectures.sort((a, b) => (b.review_progress || 0) - (a.review_progress || 0));
+        const top3 = allLectures.slice(0, 3);
+        setRecentLectures(top3);
+
+        if (id) {
+            const lRes = await apiClient.get(`/lectures/courses/${id}/content/`);
+            setLectures(lRes.data);
+            if (lRes.data.length > 0) setSelectedLecture(lRes.data[0]);
+        } else if (top3.length > 0) {
+            setSelectedLecture(top3[0]);
+        }
+      }
     } catch (err) {
-      console.error("Failed to fetch dashboard metrics", err);
+      console.error("Failed to fetch data", err);
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchCoursesData();
-    fetchDashboardMetrics();
-  }, []);
+    fetchData();
+  }, [id]);
+
+  const handleVideoProgress = async (e: React.SyntheticEvent<HTMLVideoElement>) => {
+    if (!selectedLecture) return;
+    const video = e.currentTarget;
+    const progress = Math.floor((video.currentTime / video.duration) * 100);
+
+    if (progress > (selectedLecture.review_progress || 0) && progress % 5 === 0) {
+      try {
+        await apiClient.post(`/lectures/${selectedLecture.id}/validate/`, {
+          review_progress: progress
+        });
+        const update = (list: any[]) => list.map(l => l.id === selectedLecture.id ? {...l, review_progress: progress} : l);
+        setRecentLectures(prev => update(prev));
+        if (id) setLectures(prev => update(prev));
+      } catch (err) { 
+        console.error("Progress Save Error:", err); 
+      }
+    }
+  };
 
   const handleRegister = async (course: any) => {
     try {
       setLoading(true);
       await apiClient.post("lectures/courses/", { course: course.id }); 
-      await fetchCoursesData(); 
+      await fetchData(); 
       setIsModalOpen(false);
       alert("Successfully enrolled!");
     } catch (err) {
@@ -72,23 +126,15 @@ const StudentLecturePage = () => {
     }
   };
 
-  const lectures = [
-    { id: 1, title: "01. Introduction to Quantum Mechanics", duration: "12:45", status: "completed", progress: 100 },
-    { id: 2, title: "02. Wave-Particle Duality", duration: "18:20", status: "in-progress", progress: 45 },
-    { id: 3, title: "03. The Uncertainty Principle", duration: "15:10", status: "locked", progress: 0 },
-  ];
-
-  const getProgressColor = (status: string) => {
-    if (status === "completed") return "#10b981"; 
-    if (status === "in-progress") return "#f59e0b"; 
-    return "#ef4444"; 
-  };
-
   const cardStyle = {
     backgroundColor: 'var(--card, #ffffff)',
     color: 'var(--foreground, #1e293b)',
     borderColor: 'var(--border, #e2e8f0)'
   };
+
+  // Logic for Completed and Pending counts
+  const completedCount = (id ? lectures : recentLectures).filter(l => (l.review_progress || 0) >= 100).length;
+  const pendingCount = (id ? lectures : recentLectures).filter(l => (l.review_progress || 0) < 100).length;
 
   return (
     <div className="student-page-wrapper">
@@ -106,13 +152,13 @@ const StudentLecturePage = () => {
           <GraduationCap size={180} className="banner-bg-icon" />
         </div>
 
-        {/* STATS GRID - REAL VALUES FROM DASHBOARD LOGIC */}
+        {/* STATS GRID */}
         <div className="stats-grid">
           {[
             { label: 'COURSES', val: courses.length, icon: <BookOpen />, color: '#6366f1' },
-            { label: 'LECTURES', val: metrics?.completed_lectures || 0, icon: <PlayCircle />, color: '#f59e0b' },
-            { label: 'COMPLETED', val: '0', icon: <CheckCircle />, color: '#10b981' },
-            { label: 'PENDING', val: '0', icon: <Clock />, color: '#ef4444' },
+                    { label: 'LECTURES', val: metrics?.completed_lectures || 0, icon: <PlayCircle />, color: '#f59e0b' },
+            { label: 'COMPLETED', val: completedCount, icon: <CheckCircle />, color: '#10b981' },
+            { label: 'PENDING', val: pendingCount, icon: <Clock />, color: '#ef4444' },
           ].map((s, i) => (
             <div key={i} className="stat-item-card" style={cardStyle}>
               <div className="stat-icon-box" style={{ color: s.color, background: `${s.color}15` }}>{s.icon}</div>
@@ -126,38 +172,64 @@ const StudentLecturePage = () => {
 
         {/* VIDEO & PLAYLIST SECTION */}
         <div className="main-layout-grid">
-          <div className="video-box-card" style={cardStyle}>
-            <div className="video-player-area">
-              <PlayCircle size={80} style={{ color: '#6366f1' }} />
-              <h3 style={{ marginTop: '20px', color: 'white' }}>{lectures[selectedLecture].title}</h3>
-              <p style={{ opacity: 0.7, color: 'white' }}>Playing from Masterclass Series</p>
+          <div className="video-box-card" style={{ ...cardStyle, padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+            <div className="video-player-area" style={{ width: '100%', flex: 1, backgroundColor: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '400px' }}>
+              {activeTab === "video" ? (
+                selectedLecture?.video_url ? (
+                  <video 
+                    key={selectedLecture.id} 
+                    controls 
+                    src={selectedLecture.video_url} 
+                    onTimeUpdate={handleVideoProgress} 
+                    style={{ width: '100%', height: '100%', objectFit: 'contain', aspectRatio: '16/9' }} 
+                  />
+                ) : (
+                  <div style={{ textAlign: 'center', color: 'white' }}>
+                    <PlayCircle size={64} style={{ color: '#6366f1', opacity: 0.8, marginBottom: '15px' }} />
+                    <p>Select a lecture to start learning</p>
+                  </div>
+                )
+              ) : (
+                <div className="transcript-area" style={{ backgroundColor: 'var(--card)', color: 'var(--foreground)', padding: '24px', width: '100%', height: '100%', overflowY: 'auto' }}>
+                  <h3 style={{ marginBottom: '16px', borderBottom: '1px solid var(--border)', paddingBottom: '8px' }}>{selectedLecture?.topic}</h3>
+                  <div style={{ lineHeight: '1.6', fontSize: '0.95rem' }}>
+                    {selectedLecture?.summary_text || selectedLecture?.summary || "No summary available for this lecture."}
+                  </div>
+                </div>
+              )}
             </div>
             
-            <div style={{ marginTop: '25px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h3 style={{ margin: 0, color: 'var(--foreground)' }}>Lecture Details</h3>
+            <div style={{ padding: '20px', borderTop: '1px solid var(--border)' }}>
+                <h3 style={{ margin: 0, color: 'var(--foreground)' }}>{selectedLecture?.topic || "Lesson Details"}</h3>
+                <p className="lecture-desc" style={{ color: 'var(--muted-foreground)', marginTop: '10px', fontSize: '0.9rem' }}>
+                    {selectedLecture?.description }
+                </p>
             </div>
-            <p className="lecture-desc" style={{ color: 'var(--muted-foreground)' }}>This video covers the core foundations. Please review the mathematical formulas.</p>
           </div>
 
           <aside className="sidebar-card" style={cardStyle}>
-            <h3 className="sidebar-title" style={{ color: 'var(--foreground)' }}>
-              <BookOpen size={20} color="#6366f1" /> Course Playlist
-            </h3>
-            <div className="lecture-list">
-              {lectures.map((lecture, index) => (
+            <div className="playlist-header" style={{ padding: '15px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <Video size={18} color="#6366f1" />
+              <span style={{ fontWeight: 'bold', color: 'var(--foreground)' }}>
+                {id ? "Course Playlist" : "Recently Viewed"}
+              </span>
+            </div>
+            <div className="lecture-list" style={{ maxHeight: '500px', overflowY: 'auto' }}>
+              {(id ? lectures : recentLectures).map((lecture) => (
                 <div 
                   key={lecture.id} 
-                  className={`lecture-row ${selectedLecture === index ? 'active' : ''}`} 
-                  onClick={() => setSelectedLecture(index)}
-                  style={selectedLecture === index ? { backgroundColor: 'var(--muted)', borderColor: '#6366f1' } : {}}
+                  className={`lecture-row ${selectedLecture?.id === lecture.id ? 'active' : ''}`} 
+                  onClick={() => setSelectedLecture(lecture)}
+                  style={selectedLecture?.id === lecture.id ? { backgroundColor: 'var(--muted)', borderColor: '#6366f1', cursor: 'pointer' } : { cursor: 'pointer' }}
                 >
-                  <div className="status-icon" style={{ color: getProgressColor(lecture.status) }}>
-                    {lecture.status === 'completed' ? <CheckCircle size={22} /> : lecture.status === 'locked' ? <Lock size={22} /> : <PlayCircle size={22} />}
+                  <div className="status-icon" style={{ color: getProgressColor(lecture.review_progress || 0) }}>
+                    {lecture.review_progress >= 100 ? <CheckCircle size={22} /> : <PlayCircle size={22} />}
                   </div>
                   <div style={{ flex: 1 }}>
-                    <p className="lecture-row-title" style={{ color: 'var(--foreground)', margin: 0, fontWeight: 700 }}>{lecture.title}</p>
-                    <div className="progress-bar-bg" style={{ backgroundColor: 'var(--muted)' }}>
-                      <div className="progress-bar-fill" style={{ width: `${lecture.progress || 5}%`, background: getProgressColor(lecture.status) }}></div>
+                    <p className="lecture-row-title" style={{ color: 'var(--foreground)', margin: 0, fontWeight: 700, fontSize: '0.9rem' }}>{lecture.topic}</p>
+                    <p style={{ color: 'var(--muted-foreground)', fontSize: '0.75rem', margin: '4px 0' }}>Progress: {lecture.review_progress || 0}%</p>
+                    <div className="progress-bar-bg" style={{ backgroundColor: 'var(--muted)', height: '6px' }}>
+                      <div className="progress-bar-fill" style={{ width: `${lecture.review_progress || 0}%`, background: getProgressColor(lecture.review_progress || 0), height: '100%', borderRadius: '10px' }}></div>
                     </div>
                   </div>
                 </div>
@@ -167,7 +239,7 @@ const StudentLecturePage = () => {
         </div>
 
         {/* MY ENROLLED COURSES */}
-        <h2 className="section-heading" style={{ color: 'var(--foreground)' }}>My Enrolled Courses</h2>
+        <h2 className="section-heading" style={{ color: 'var(--foreground)', marginTop: '40px' }}>My Enrolled Courses</h2>
         <div className="courses-grid">
           {courses.length > 0 ? (
             courses.map((course) => (
@@ -197,7 +269,7 @@ const StudentLecturePage = () => {
               </div>
             ))
           ) : (
-            <p style={{ color: 'var(--muted-foreground)' }}>No enrolled courses.</p>
+            <p style={{ color: 'var(--muted-foreground)' }}>No enrolled courses found.</p>
           )}
         </div>
       </div>

@@ -3,7 +3,6 @@ from django.conf import settings
 
 # 1: COURSE MODEL ---Subject Container
 
-
 class Course(models.Model):
     """This represents the Highest Level Container for content
         Example: COMPUTER_SCIENCE
@@ -36,7 +35,6 @@ class Course(models.Model):
 
 # 2: CONTENT SOURCE MODEL ---(Teacher k Inptut Contain kare ga files)
 
-
 class ContentSource(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="content_sources",
                                help_text="the cource this content is intended for")
@@ -58,7 +56,6 @@ class ContentSource(models.Model):
         db_table = "content_source"
 
 # 3: LECTURE MODEL ---(AI's Structured Output)
-
 
 class Lecture(models.Model):
     content_source = models.ForeignKey(
@@ -110,6 +107,32 @@ class Lecture(models.Model):
 
     class Meta:
         db_table = "lecture"
+
+
+# 4: LECTURE PROGRESS MODEL (Naya Model for Individual Progress)
+class LectureProgress(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.CASCADE, 
+        related_name="lecture_progress"
+    )
+    lecture = models.ForeignKey(
+        Lecture, 
+        on_delete=models.CASCADE, 
+        related_name="user_progress"
+    )
+    progress_percentage = models.IntegerField(
+        default=0, 
+        help_text="Individual user's watch percentage (0-100)"
+    )
+    last_watched = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "lecture_progress"
+        unique_together = (('user', 'lecture'),)
+
+    def __str__(self):
+        return f"{self.user.email} - {self.lecture.topic}: {self.progress_percentage}%"
 
 
 # Enrollment Model (student enrolls in a course)

@@ -5,12 +5,13 @@ from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
-from .models import Course, ContentSource, Lecture, Enrollment 
+from .models import Course, ContentSource, Lecture, Enrollment, LectureProgress
 from .serializers import (
     ContentSourceSerializer, ContentSourceCreateSerializer, CourseLectureListItem,
     # EnrollmentSerializer add kiya
     CourseSerializer, CourseCreateSerializer, EnrollmentSerializer,
-    LectureDetailSerializer, LectureQuerySerializer, LectureValidationActionSerializer
+    LectureDetailSerializer, LectureQuerySerializer, LectureValidationActionSerializer,
+    StudentAnalyticsCourseSerializer  # Added for analytics
 )
 from users.permissions import CanViewLecture, IsCourseOwner, IsTeacher
 from rest_framework.permissions import IsAuthenticated
@@ -23,6 +24,29 @@ load_dotenv()
 GEMINI_KEY = os.environ.get("GEMINI_API_KEY")
 if GEMINI_KEY:
     genai.configure(api_key=GEMINI_KEY)
+
+
+# -----------------------------------------------------------
+# NEW: Dashboard Metrics for Teacher
+# -----------------------------------------------------------
+@api_view(['GET'])
+@permission_classes([IsAuthenticated, IsTeacher])
+def teacher_dashboard_metrics(request):
+    """
+    Provides top-level stats for the teacher dashboard.
+    """
+    user = request.user
+    courses = Course.objects.filter(teacher=user)
+    lectures = Lecture.objects.filter(content_source__course__teacher=user)
+
+    data = {
+        "total_courses": courses.count(),
+        "total_lectures_generated": lectures.count(),
+        "pending_validation_count": lectures.filter(validation_status='pending').count(),
+        "total_validated_lectures": lectures.filter(validation_status='validated').count(),
+    }
+    return Response(data)
+
 
 # -----------------------------------------------------------
 # NEW FBV 1: COURSE - GET (List) and POST (Create/Enroll)
@@ -248,7 +272,7 @@ def lecture_detail(request, id):
         id=id)
 
     if request.method == 'GET':
-        serializer = LectureDetailSerializer(lecture)
+        serializer = LectureDetailSerializer(lecture, context={'request': request})
         return Response(serializer.data)
 
     elif request.method == 'DELETE':
@@ -260,10 +284,30 @@ def lecture_detail(request, id):
 
 
 @api_view(["PATCH"])
-@permission_classes([IsAuthenticated, IsCourseOwner])
+@permission_classes([IsAuthenticated, CanViewLecture])
 def lecture_validate_action(request, id):
     lecture = get_object_or_404(Lecture, id=id)
-    if lecture.validation_status != 'pending':
+    user = request.user
+    
+    # NEW: Handle Individual Progress Tracking
+    if 'review_progress' in request.data:
+        new_progress = request.data.get('review_progress')
+        # Update or Create individual progress for this user
+        LectureProgress.objects.update_or_create(
+            user=user,
+            lecture=lecture,
+            defaults={'progress_percentage': new_progress}
+        )
+        
+        # If ONLY updating progress, return early
+        if len(request.data) == 1:
+            return Response({"review_progress": new_progress}, status=status.HTTP_200_OK)
+
+    # Validation logic (Only for Teachers/Course Owners)
+    if not (user.role == 'teacher' and lecture.content_source.course.teacher == user):
+        return Response({"detail": "Only the teacher can validate this lecture."}, status=status.HTTP_403_FORBIDDEN)
+
+    if lecture.validation_status != 'pending' and not 'review_progress' in request.data:
         return Response(
             {"detail": f"Lecture status is already '{lecture.validation_status}'..."},
             status=status.HTTP_400_BAD_REQUEST
@@ -275,8 +319,9 @@ def lecture_validate_action(request, id):
         partial=True
     )
     if serializer.is_valid():
-        updated_lecture = serializer.save(validated_by=request.user)
+        updated_lecture = serializer.save(validated_by=user)
 
+        # Agar validate ho gaya to video generation task start karein
         if updated_lecture.validation_status == 'validated':
             generate_video_task.delay(updated_lecture.id)
 
@@ -287,10 +332,60 @@ def lecture_validate_action(request, id):
 @api_view(["GET"])
 @permission_classes([IsAuthenticated, IsCourseOwner])
 def course_lecture_list(request, course_id):
-    lecture_list = Lecture.objects.filter(content_source__course__id=course_id).select_related(
-        'content_source', 'content_source__course', 'quiz', 'assignment')
+    # Filter for all lectures belonging to the course (including pending ones)
+    lecture_list = Lecture.objects.filter(
+        content_source__course__id=course_id
+    ).select_related(
+        'content_source', 
+        'content_source__course', 
+        'quiz', 
+        'assignment'
+    ).order_by('created_at')
 
     serializer = CourseLectureListItem(
         lecture_list, many=True, context={'request': request})
     return Response(serializer.data, status=status.HTTP_200_OK)
 
+
+# -----------------------------------------------------------
+# NEW: Student Analytics Data (Progress Tracker Box)
+# -----------------------------------------------------------
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def student_analytics_data(request):
+    """
+    Provides real-time analytics for the Student Dashboard's progress box.
+    """
+    user = request.user
+    if user.role != 'student':
+        return Response({"detail": "Only students can view these analytics."}, status=status.HTTP_403_FORBIDDEN)
+
+    enrollments = Enrollment.objects.filter(student=user).select_related('course')
+    enrolled_courses = [e.course for e in enrollments]
+
+    # Calculate overall average completion for all enrolled courses
+    total_comp = 0
+    course_count = len(enrolled_courses)
+    
+    if course_count > 0:
+        for course in enrolled_courses:
+            total_comp += CourseSerializer().get_completion_percentage(course)
+        avg_completion = int(total_comp / course_count)
+    else:
+        avg_completion = 0
+
+    # Serialize course-wise lecture progress
+    serializer = StudentAnalyticsCourseSerializer(
+        enrolled_courses, many=True, context={'request': request}
+    )
+
+    return Response({
+        "stats": {
+            "completion": avg_completion,
+            "avg_quiz": 0,      # Placeholder for future Quiz logic
+            "study_hours": 0,    # Placeholder for future Time tracking
+            "grade": "N/A"
+        },
+        "courses": serializer.data,
+        "recommendations": ["Keep going! Finish your pending lectures to boost your score."]
+    }, status=status.HTTP_200_OK)

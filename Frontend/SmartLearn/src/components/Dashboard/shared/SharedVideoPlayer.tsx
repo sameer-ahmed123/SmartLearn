@@ -1,14 +1,29 @@
 // src/components/Shared/SharedVideoPlayer.tsx
 
-import React from 'react';
+import React, { useRef } from 'react';
 
 interface SharedVideoPlayerProps {
   videoUrl: string | null | undefined;
   videoStatus?: "none" | "processing" | "completed" | "failed" | string;
   title?: string;
+  // NEW: Parent se function receive karne ke liye prop
+  onTimeUpdate?: (currentTime: number, duration: number) => void;
 }
 
-const SharedVideoPlayer: React.FC<SharedVideoPlayerProps> = ({ videoUrl, videoStatus, title }) => {
+const SharedVideoPlayer: React.FC<SharedVideoPlayerProps> = ({ 
+  videoUrl, 
+  videoStatus, 
+  title,
+  onTimeUpdate 
+}) => {
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  // Video ke time change hone par parent ko batane wala function
+  const handleTimeUpdate = () => {
+    if (videoRef.current && onTimeUpdate) {
+      onTimeUpdate(videoRef.current.currentTime, videoRef.current.duration);
+    }
+  };
 
   // 1. Handle "None" or "Pending" states
   if (!videoStatus || videoStatus === 'none' || videoStatus === 'pending') {
@@ -45,7 +60,9 @@ const SharedVideoPlayer: React.FC<SharedVideoPlayerProps> = ({ videoUrl, videoSt
       <div style={{ width: '100%', maxWidth: '800px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '10px' }}>
         {title && <h3 style={{ margin: 0, color: '#2c3e50' }}>{title}</h3>}
         <video 
+          ref={videoRef}
           controls 
+          onTimeUpdate={handleTimeUpdate} // <-- Yeh line backend ko data bhejegi
           controlsList="nodownload"
           style={{ width: '100%', borderRadius: '12px', boxShadow: '0 8px 16px rgba(0,0,0,0.1)', backgroundColor: '#000' }}
           preload="metadata"

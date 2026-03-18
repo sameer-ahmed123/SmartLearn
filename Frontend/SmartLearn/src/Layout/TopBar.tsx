@@ -11,6 +11,7 @@ const TopBar = ({ toggleSidebar }: TopBarProps) => {
   const [isDark, setIsDark] = useState(false);
   const [showLangMenu, setShowLangMenu] = useState(false);
   const [showNotifMenu, setShowNotifMenu] = useState(false);
+  const [searchQuery, setSearchQuery] = useState(""); // Search active karne ke liye state
   
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
@@ -26,6 +27,7 @@ const TopBar = ({ toggleSidebar }: TopBarProps) => {
 
   const languages = [
     { code: 'en', name: 'English', flag: 'https://flagcdn.com/w40/us.png' },
+    { code: 'ur', name: 'Urdu', flag: 'https://flagcdn.com/w40/pk.png' }, // Urdu with Pakistan flag added
     { code: 'fr', name: 'French', flag: 'https://flagcdn.com/w40/fr.png' },
     { code: 'de', name: 'German', flag: 'https://flagcdn.com/w40/de.png' }
   ];
@@ -35,6 +37,16 @@ const TopBar = ({ toggleSidebar }: TopBarProps) => {
     { id: 2, title: 'Course "Parallel" Validated', time: '1 hour ago', status: 'unread' },
     { id: 3, title: 'System Update Completed', time: '2 hours ago', status: 'read' },
   ];
+
+  // Search trigger function
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      console.log("Searching for:", searchQuery);
+      // Aap yahan navigation ya API call add kar sakte hain:
+      // router.push(`/search?q=${searchQuery}`);
+    }
+  };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -76,10 +88,18 @@ const TopBar = ({ toggleSidebar }: TopBarProps) => {
         <button onClick={toggleSidebar} className={styles.iconBtn}>
            <Menu size={20} />
         </button>
-        <div className={styles.searchBar}>
-          <Search size={18} className={styles.searchIcon} />
-          <input type="text" placeholder="Search anything..." />
-        </div>
+        {/* Search Bar activated with Form */}
+        <form onSubmit={handleSearch} className={styles.searchBar}>
+          <button type="submit" style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+            <Search size={18} className={styles.searchIcon} />
+          </button>
+          <input 
+            type="text" 
+            placeholder="Search anything..." 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </form>
       </div>
 
       <div className={styles.rightSide}>

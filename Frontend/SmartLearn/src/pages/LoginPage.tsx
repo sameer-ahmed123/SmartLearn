@@ -17,6 +17,7 @@ export default function LoginPage() {
 
   const languages = [
     { code: 'en', name: 'English', flag: 'https://flagcdn.com/w40/us.png' },
+    { code: 'ur', name: 'Urdu', flag: 'https://flagcdn.com/w40/pk.png' },
     { code: 'fr', name: 'French', flag: 'https://flagcdn.com/w40/fr.png' },
     { code: 'de', name: 'German', flag: 'https://flagcdn.com/w40/de.png' }
   ];

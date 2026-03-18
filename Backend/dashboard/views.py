@@ -8,7 +8,7 @@ from django.db.models import Avg, Count, Q, F
 from django.contrib.auth import get_user_model
 from django.apps import apps
 from django.utils import timezone
-from lectures.models import Lecture, Course, Enrollment
+from lectures.models import Lecture, Course, Enrollment, LectureProgress
 from assessment.models import Assignment, Quiz, QuizSubmission, AssignmentSubmission
 
 User = get_user_model()
@@ -54,14 +54,13 @@ def teacher_dashboard_metric(request):
         "syllabus_coverage": syllabus_coverage,  # Frontend ki bar ke liye
     })
 
-# 2. NEW FUNCTION FOR STUDENT (Separate method)
-
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def student_dashboard_metric(request):
     """
     New separate method for Student Dashboard metrics.
+    Updated to fetch real progress from LectureProgress.
     """
     user = request.user
 
@@ -69,7 +68,7 @@ def student_dashboard_metric(request):
     courses = Course.objects.filter(enrollments__student=user)
     enrolled_courses_count = courses.count()
 
-    # 2. Total Validated Lectures in those courses (Lecture -> ContentSource -> Course)
+    # 2. Total Validated Lectures in those courses
     student_lectures = Lecture.objects.filter(
         content_source__course__in=courses,
         validation_status='validated'
@@ -77,21 +76,23 @@ def student_dashboard_metric(request):
     total_lectures_count = student_lectures.count()
 
     # 3. Add Real Logic for Quizzes and Assignments
-    # Filter use kiya hai taake sirf wahi count hon jo null nahi hain
     total_quizzes = student_lectures.filter(
         quiz__isnull=False, quiz__status='published').count()
 
-    # Ye line ab student ke enrolled courses ke saare validated lectures ke assignments ginegi
     total_assignments = student_lectures.filter(
         assignment__isnull=False, assignment__status='published').count()
 
-    # 4. Dynamic Course Progress List for UI bars
+    # 4. Dynamic Course Progress List for UI bars (Using actual LectureProgress)
     course_progress_list = []
     for course in courses:
-        # Aap yahan apna tracking logic add kar sakte hain, abhi 0% set hai
+        avg_progress = LectureProgress.objects.filter(
+            user=user,
+            lecture__content_source__course=course
+        ).aggregate(avg=Avg('progress_percentage'))['avg'] or 0
+
         course_progress_list.append({
             "name": course.title,
-            "progress": 0
+            "progress": int(avg_progress)
         })
 
     return Response({
@@ -127,7 +128,6 @@ def teacher_analytics(request):
                       ) if quiz_completed > 0 else 0
 
     # 2. Submissions Aggregation (Assignments)
-    # Using F() to compare submission time vs deadline dynamically in the DB
     asg_stats = AssignmentSubmission.objects.filter(
         assignment__lecture__content_source__course__teacher=teacher
     ).aggregate(
@@ -157,7 +157,7 @@ def teacher_analytics(request):
         quiz__lecture__content_source__course__teacher=teacher
     ).values('quiz__lecture__content_source__course_id').annotate(avg_score=Avg('score'))
 
-    score_dict = {item['quiz__lecture__content_source__course_id']                  : item['avg_score'] or 0 for item in course_scores}
+    score_dict = {item['quiz__lecture__content_source__course_id']: item['avg_score'] or 0 for item in course_scores}
 
     course_list = []
     for course in courses:
@@ -181,7 +181,7 @@ def teacher_analytics(request):
         quiz__lecture__content_source__course__teacher=teacher
     ).values('user_id').annotate(avg_score=Avg('score'))
 
-    stu_score_dict = {item['user_id']                      : item['avg_score'] or 0 for item in stu_scores}
+    stu_score_dict = {item['user_id']: item['avg_score'] or 0 for item in stu_scores}
 
     student_progress = []
     colors = ['#6366f1', '#10b981', '#f59e0b', '#f43f5e', '#8b5cf6']
@@ -195,25 +195,19 @@ def teacher_analytics(request):
             "avatar": f"https://i.pravatar.cc/150?u={student.id}"
         })
 
-    # --- Formatting the Final Response (No Hallucinations!) ---
+    # --- Formatting the Final Response ---
     stats = [
-        {'label': 'AVG GRADE',
-            'val': f"{round(avg_grade_all, 1)}%", 'color': '#6366f1'},
+        {'label': 'AVG GRADE', 'val': f"{round(avg_grade_all, 1)}%", 'color': '#6366f1'},
         {'label': 'PASS RATE', 'val': f"{pass_rate}%", 'color': '#10b981'},
-        {'label': 'ACTIVE STUDENTS', 'val': str(
-            total_students), 'color': '#f59e0b'},
+        {'label': 'ACTIVE STUDENTS', 'val': str(total_students), 'color': '#f59e0b'},
         {'label': 'COURSES', 'val': str(courses.count()), 'color': '#f43f5e'},
     ]
 
     lecture_stats_list = [
-        {'name': 'Total',
-            'value': lecture_stats_db['total'] or 0, 'color': '#f59e0b'},
-        {'name': 'Generated', 'value': Quiz.objects.filter(
-            lecture__content_source__course__teacher=teacher).count(), 'color': '#6366f1'},
-        {'name': 'Pending',
-            'value': lecture_stats_db['pending'] or 0, 'color': '#f43f5e'},
-        {'name': 'Validated',
-            'value': lecture_stats_db['validated'] or 0, 'color': '#10b981'},
+        {'name': 'Total', 'value': lecture_stats_db['total'] or 0, 'color': '#f59e0b'},
+        {'name': 'Generated', 'value': Quiz.objects.filter(lecture__content_source__course__teacher=teacher).count(), 'color': '#6366f1'},
+        {'name': 'Pending', 'value': lecture_stats_db['pending'] or 0, 'color': '#f43f5e'},
+        {'name': 'Validated', 'value': lecture_stats_db['validated'] or 0, 'color': '#10b981'},
     ]
 
     asg_total = asg_stats['total'] or 0
@@ -231,7 +225,6 @@ def teacher_analytics(request):
             "missed": missed_quizzes,
             "avgGrade": f"{round(avg_grade_all, 1)}%"
         },
-        # Left as 0 because you do not have a 'Project' model in your DB schema
         "project": {"submitted": 0, "inProgress": 0, "graded": 0}
     }
 
@@ -265,55 +258,47 @@ def student_analytics(request):
     completion_rate = round(
         (completed_asg / total_asg_count * 100), 1) if total_asg_count > 0 else 0
 
-    # 2. OPTIMIZATION: Fix the Course N+1 Loop
+    # 2. Course Progress & Quiz Averages
     enrolled_courses = Enrollment.objects.filter(
         student=user).select_related('course') if Enrollment else []
 
-    # Let the DB group all quiz averages by course_id in ONE query
     course_quiz_avgs = QuizSubmission.objects.filter(
         user=user
     ).values('quiz__lecture__content_source__course_id').annotate(avg_score=Avg('score'))
 
-    # Map to memory: {course_id: avg_score}
-    quiz_avg_dict = {item['quiz__lecture__content_source__course_id']                     : item['avg_score'] or 0 for item in course_quiz_avgs}
+    quiz_avg_dict = {item['quiz__lecture__content_source__course_id']: item['avg_score'] or 0 for item in course_quiz_avgs}
 
     courses_data = []
     for enrollment in enrolled_courses:
         course = enrollment.course
-        # Fast memory lookup! No DB hit.
         course_quiz_avg = quiz_avg_dict.get(course.id, 0)
 
-        # TODO: Replace hallucinated 'watch_progress' with actual video tracking later
-        watch_progress = 70 if course_quiz_avg > 50 else 30
+        # REAL WATCH PROGRESS from LectureProgress
+        watch_progress = LectureProgress.objects.filter(
+            user=user,
+            lecture__content_source__course=course
+        ).aggregate(avg_prog=Avg('progress_percentage'))['avg_prog'] or 0
 
         courses_data.append({
             "name": course.title,
-            "watch": watch_progress,
+            "watch": int(watch_progress),
             "quiz": round(course_quiz_avg, 1)
         })
 
-    # 3. OPTIMIZATION: Fix the Active Assignments N+1 Loop
+    # 3. Active Assignments
     all_asg = Assignment.objects.filter(
         lecture__content_source__course__enrollments__student=user, status='published'
     ).order_by('-deadline')[:3]
 
-    # Grab the IDs of those 3 assignments
     asg_ids = [asg.id for asg in all_asg]
-
-    # Fetch the student's submissions for ONLY those 3 assignments in ONE query
-    user_subs = AssignmentSubmission.objects.filter(
-        user=user, assignment_id__in=asg_ids)
+    user_subs = AssignmentSubmission.objects.filter(user=user, assignment_id__in=asg_ids)
     sub_dict = {sub.assignment_id: sub for sub in user_subs}
 
     recent_quizzes = QuizSubmission.objects.filter(
         user=user).select_related('quiz__lecture').order_by('-id')[:5]
     quiz_perf_data = []
     for qsub in recent_quizzes:
-        # Better fallback logic for topic name
-        topic_name = "Unit Quiz"
-        if qsub.quiz.lecture and getattr(qsub.quiz.lecture, 'topic', None):
-            topic_name = qsub.quiz.lecture.topic
-
+        topic_name = qsub.quiz.lecture.topic if (qsub.quiz.lecture and qsub.quiz.lecture.topic) else "Unit Quiz"
         quiz_perf_data.append({
             "name": topic_name,
             "quiz": float(qsub.score)
@@ -321,17 +306,13 @@ def student_analytics(request):
 
     active_assignments = []
     for asg in all_asg:
-        # Fast memory lookup! No DB hit.
         sub = sub_dict.get(asg.id)
         progress = 100 if sub else 0
 
         if sub:
             deadline_label = "Submitted"
         elif asg.deadline:
-            if timezone.now() > asg.deadline:
-                deadline_label = "Overdue"
-            else:
-                deadline_label = asg.deadline.strftime("%d %b")
+            deadline_label = "Overdue" if timezone.now() > asg.deadline else asg.deadline.strftime("%d %b")
         else:
             deadline_label = "Active"
 
@@ -341,18 +322,15 @@ def student_analytics(request):
             "progress": progress
         })
 
-    # 4. CLEANUP: Use the single source of truth for grades
-    grade = get_letter_grade(avg_quiz)
-
     return Response({
         "stats": {
             "completion": completion_rate,
-            "completion_trend": "+2%",  # TODO: Hallucinated Data
+            "completion_trend": "+2%",
             "avg_quiz": round(avg_quiz, 1),
-            "quiz_trend": "+5%",  # TODO: Hallucinated Data
-            "study_hours": 12,  # TODO: Hallucinated Data
-            "hours_trend": "+2h",  # TODO: Hallucinated Data
-            "grade": grade
+            "quiz_trend": "+5%",
+            "study_hours": 12,
+            "hours_trend": "+2h",
+            "grade": get_letter_grade(avg_quiz)
         },
         "courses": courses_data,
         "quizzes_performance": quiz_perf_data,
@@ -369,65 +347,41 @@ def student_analytics(request):
 @permission_classes([IsAuthenticated])
 def teacher_gradebook_summary(request, course_id):
     teacher = request.user
-    # course_id = request.query_params.get('course_id')
-
-    # 1. Fetch all relevant students
-    student_query = User.objects.filter(
-        course_enrollments__course__teacher=teacher)
+    student_query = User.objects.filter(course_enrollments__course__teacher=teacher)
     if course_id:
-        student_query = student_query.filter(
-            course_enrollments__course_id=course_id)
+        student_query = student_query.filter(course_enrollments__course_id=course_id)
     students = student_query.distinct()
 
-    # 2. OPTIMIZATION: Get ALL Assignment Averages grouped by User ID in ONE query
-    asg_filter = {
-        'assignment__lecture__content_source__course__teacher': teacher,
-        'score__isnull': False
-    }
+    asg_filter = {'assignment__lecture__content_source__course__teacher': teacher, 'score__isnull': False}
     if course_id:
         asg_filter['assignment__lecture__content_source__course_id'] = course_id
 
-    asg_avgs = AssignmentSubmission.objects.filter(
-        **asg_filter).values('user_id').annotate(avg_score=Avg('score'))
-    # Convert to a fast Python dictionary: { user_id: avg_score }
+    asg_avgs = AssignmentSubmission.objects.filter(**asg_filter).values('user_id').annotate(avg_score=Avg('score'))
     asg_dict = {item['user_id']: item['avg_score'] or 0 for item in asg_avgs}
 
-    # 3. OPTIMIZATION: Get ALL Quiz Averages grouped by User ID in ONE query (Query 3)
-    quiz_filter = {
-        'quiz__lecture__content_source__course__teacher': teacher
-    }
+    quiz_filter = {'quiz__lecture__content_source__course__teacher': teacher}
     if course_id:
         quiz_filter['quiz__lecture__content_source__course_id'] = course_id
 
-    quiz_avgs = QuizSubmission.objects.filter(
-        **quiz_filter).values('user_id').annotate(avg_score=Avg('score'))
-    # Convert to a fast Python dictionary: { user_id: avg_score }
+    quiz_avgs = QuizSubmission.objects.filter(**quiz_filter).values('user_id').annotate(avg_score=Avg('score'))
     quiz_dict = {item['user_id']: item['avg_score'] or 0 for item in quiz_avgs}
 
-    # 4. Assemble the data in memory (Zero database hits inside this loop!)
     gradebook_data = []
-
     for student in students:
-        # Fast O(1) memory lookup instead of hitting the database
         asg_avg = asg_dict.get(student.id, 0)
         quiz_avg = quiz_dict.get(student.id, 0)
-        exam_marks = 0
-
-        total_score = round((asg_avg + quiz_avg + exam_marks), 2)
-
-        # Using the clean utils function we made earlier
-        grade = get_letter_grade(total_score)
+        total_score = round((asg_avg + quiz_avg), 2)
 
         gradebook_data.append({
             "id": student.id,
-            "student_name": student.full_name if getattr(student, 'full_name', None) else student.email,
+            "student_name": getattr(student, 'full_name', student.email) or student.email,
             "student_id_num": f"STU-{student.id:03d}",
             "avatar_url": f"https://i.pravatar.cc/150?u={student.id}",
             "assignments_marks": round(asg_avg, 2),
             "quizzes_marks": round(quiz_avg, 2),
-            "exam_marks": exam_marks,
+            "exam_marks": 0,
             "score": total_score,
-            "grade": grade,
+            "grade": get_letter_grade(total_score),
             "total_possible": 100
         })
 
@@ -439,95 +393,50 @@ def teacher_gradebook_summary(request, course_id):
 def student_gradebook_summary(request):
     user = request.user
 
-    # 1. Let the DB calculate Quiz Averages grouped by Course
     quiz_data = QuizSubmission.objects.filter(
         user=user, score__isnull=False
     ).annotate(
         course_id=F('quiz__lecture__content_source__course__id'),
         course_title=F('quiz__lecture__content_source__course__title'),
-        teacher_name=F(
-            'quiz__lecture__content_source__course__teacher__full_name'),
+        teacher_name=F('quiz__lecture__content_source__course__teacher__full_name'),
         teacher_user=F('quiz__lecture__content_source__course__teacher__email')
-    ).values(
-        'course_id', 'course_title', 'teacher_name', 'teacher_user'
-    ).annotate(avg_score=Avg('score'))
+    ).values('course_id', 'course_title', 'teacher_name', 'teacher_user').annotate(avg_score=Avg('score'))
 
-    # 2. Let the DB calculate Assignment Averages grouped by Course
     asg_data = AssignmentSubmission.objects.filter(
         user=user, score__isnull=False
     ).annotate(
         course_id=F('assignment__lecture__content_source__course__id'),
         course_title=F('assignment__lecture__content_source__course__title'),
-        teacher_name=F(
-            'assignment__lecture__content_source__course__teacher__full_name'),
-        teacher_user=F(
-            'assignment__lecture__content_source__course__teacher__email')
-    ).values(
-        'course_id', 'course_title', 'teacher_name', 'teacher_user'
-    ).annotate(avg_score=Avg('score'))
+        teacher_name=F('assignment__lecture__content_source__course__teacher__full_name'),
+        teacher_user=F('assignment__lecture__content_source__course__teacher__email')
+    ).values('course_id', 'course_title', 'teacher_name', 'teacher_user').annotate(avg_score=Avg('score'))
 
-    # 3. Merge the DB results into a dictionary grouped by course_id
     courses_dict = {}
-
     for q in quiz_data:
-        c_id = q['course_id']
-        courses_dict[c_id] = {
-            "course": q['course_title'],
-            "instructor": q['teacher_name'] or q['teacher_user'],
-            "quizzes_marks": q['avg_score'] or 0,
-            "assignments_marks": 0,
-            "exam_marks": 0,
-            "status": "Completed"
-        }
+        courses_dict[q['course_id']] = {"course": q['course_title'], "instructor": q['teacher_name'] or q['teacher_user'], "quizzes_marks": q['avg_score'] or 0, "assignments_marks": 0, "exam_marks": 0, "status": "Completed"}
 
     for a in asg_data:
         c_id = a['course_id']
         if c_id not in courses_dict:
-            courses_dict[c_id] = {
-                "course": a['course_title'],
-                "instructor": a['teacher_name'] or a['teacher_user'],
-                "quizzes_marks": 0,
-                "assignments_marks": 0,
-                "exam_marks": 0,
-                "status": "Completed"
-            }
+            courses_dict[c_id] = {"course": a['course_title'], "instructor": a['teacher_name'] or a['teacher_user'], "quizzes_marks": 0, "assignments_marks": 0, "exam_marks": 0, "status": "Completed"}
         courses_dict[c_id]['assignments_marks'] = a['avg_score'] or 0
 
-    # 4. Calculate Final Scores & Formatting
     final_course_list = []
     total_avg_sum = 0
-
     for c_id, data in courses_dict.items():
-        total_score = round(
-            (data["assignments_marks"] + data["quizzes_marks"] + data["exam_marks"]), 2)
+        total_score = round((data["assignments_marks"] + data["quizzes_marks"]), 2)
         total_avg_sum += total_score
-
-        # CLEANUP: One single function call instead of 20 lines of if/elif!
-        grade = get_letter_grade(total_score)
-
-        data["assignments_marks"] = round(data["assignments_marks"], 2)
-        data["quizzes_marks"] = round(data["quizzes_marks"], 2)
-        data["score"] = total_score
-        data["grade"] = grade
-
+        data.update({"score": total_score, "grade": get_letter_grade(total_score), "assignments_marks": round(data["assignments_marks"], 2), "quizzes_marks": round(data["quizzes_marks"], 2)})
         final_course_list.append(data)
 
-    # 5. Overall Stats
     course_count = len(final_course_list)
-    gpa = round((total_avg_sum / (course_count * 25)),
-                2) if course_count > 0 else 0.00
-
-    # Fast total counts
-    quizzes_done = QuizSubmission.objects.filter(user=user).count()
-    assignments_done = AssignmentSubmission.objects.filter(user=user).count()
-
     return Response({
         "stats": {
-            "gpa": gpa,
+            "gpa": round((total_avg_sum / (course_count * 25)), 2) if course_count > 0 else 0.00,
             "total_courses": course_count,
             "completed_courses": course_count,
-            "quizzes_done": quizzes_done,
-            "assignments_done": assignments_done
+            "quizzes_done": QuizSubmission.objects.filter(user=user).count(),
+            "assignments_done": AssignmentSubmission.objects.filter(user=user).count()
         },
         "courses": final_course_list
     })
@@ -540,62 +449,28 @@ def student_detail_report(request, student_id):
     student = get_object_or_404(User, id=student_id)
     course_id = request.query_params.get('course_id')
 
-    # 1. Setup Filters
-    asg_filter = {
-        'user': student,
-        'assignment__lecture__content_source__course__teacher': teacher
-    }
-    quiz_filter = {
-        'user': student,
-        'quiz__lecture__content_source__course__teacher': teacher
-    }
+    asg_filter = {'user': student, 'assignment__lecture__content_source__course__teacher': teacher}
+    quiz_filter = {'user': student, 'quiz__lecture__content_source__course__teacher': teacher}
 
     if course_id:
         asg_filter['assignment__lecture__content_source__course_id'] = course_id
         quiz_filter['quiz__lecture__content_source__course_id'] = course_id
 
-    # 2. Fetch Assignments (select_related successfully prevents N+1 here!)
-    assignments = AssignmentSubmission.objects.filter(
-        **asg_filter
-    ).select_related('assignment__lecture')
+    assignments = AssignmentSubmission.objects.filter(**asg_filter).select_related('assignment__lecture')
+    asg_list = [{"title": sub.assignment.lecture.topic if (sub.assignment and sub.assignment.lecture) else "Assignment", "score": sub.score or 0, "feedback": sub.feedback or "No feedback yet", "status": "Graded" if sub.score is not None else "Submitted"} for sub in assignments]
 
-    asg_list = [{
-        "title": sub.assignment.lecture.topic if (sub.assignment and sub.assignment.lecture) else "Assignment",
-        "score": sub.score if sub.score is not None else 0,
-        "feedback": sub.feedback or "No feedback yet",
-        "status": "Graded" if sub.score is not None else "Submitted"
-    } for sub in assignments]
+    quizzes = QuizSubmission.objects.filter(**quiz_filter).select_related('quiz__lecture')
+    quiz_list = [{"title": sub.quiz.lecture.topic if (sub.quiz and sub.quiz.lecture) else "Quiz", "score": sub.score or 0, "submitted_at": sub.submitted_at} for sub in quizzes]
 
-    # 3. Fetch Quizzes (select_related successfully prevents N+1 here!)
-    quizzes = QuizSubmission.objects.filter(
-        **quiz_filter
-    ).select_related('quiz__lecture')
-
-    quiz_list = [{
-        "title": sub.quiz.lecture.topic if (sub.quiz and sub.quiz.lecture) else "Quiz",
-        "score": sub.score if sub.score is not None else 0,
-        "submitted_at": sub.submitted_at
-    } for sub in quizzes]
-
-    # 4. Safe Course Fetching
     course_info = None
     if course_id:
-        # Dynamically load the Course model to avoid circular imports
-        Course = apps.get_model('courses', 'Course')
-        try:
-            # SECURITY FIX: Ensure the teacher actually owns this course!
-            c_obj = Course.objects.get(id=course_id, teacher=teacher)
+        CourseModel = apps.get_model('courses', 'Course')
+        c_obj = CourseModel.objects.filter(id=course_id, teacher=teacher).first()
+        if c_obj:
             course_info = {"id": c_obj.id, "title": c_obj.title}
-        except Course.DoesNotExist:
-            pass
 
     return Response({
-        "student_info": {
-            "name": getattr(student, 'full_name', '') or student.email,
-            "email": student.email,
-            "id_num": f"STU-{student.id:03d}",
-            "id": student.id
-        },
+        "student_info": {"name": getattr(student, 'full_name', student.email) or student.email, "email": student.email, "id_num": f"STU-{student.id:03d}", "id": student.id},
         "course_info": course_info,
         "assignments": asg_list,
         "quizzes": quiz_list

@@ -9,6 +9,7 @@ import {
   Video, FileText, Info, ArrowLeft, Clock, 
   CheckCircle, Bot, MessageSquare, Trash2 
 } from "lucide-react";
+
 const LectureReviewPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -35,7 +36,23 @@ const LectureReviewPage = () => {
     fetchLectureDetails();
   }, [lectureId]);
 
+  // --- ADDED: Progress Tracking Logic ---
+  const handleProgressUpdate = async (currentTime: number, duration: number) => {
+    if (!lecture || !duration) return;
 
+    const progress = Math.floor((currentTime / duration) * 100);
+
+    if (progress > (lecture.review_progress || 0) && progress % 5 === 0) {
+      try {
+        await apiClient.patch(`/lectures/${lecture.id}/validate/`, {
+          review_progress: progress
+        });
+        setlecture(prev => prev ? { ...prev, review_progress: progress } : null);
+      } catch (err) {
+        console.error("Failed to sync progress:", err);
+      }
+    }
+  };
 
   const handleDeleteLecture = async () => {
     if (!window.confirm("Are you sure you want to delete this lecture? This action cannot be undone.")) {
@@ -94,7 +111,7 @@ const LectureReviewPage = () => {
             <SharedVideoPlayer
               videoUrl={lecture.video_url}
               videoStatus={lecture.video_status}
-              title="AI Lecture Presentation"
+              onTimeUpdate={handleProgressUpdate} // <-- ADDED: Passing the handler
             />
 
           {/* <div className={styles.sectionCard}>
@@ -148,6 +165,12 @@ const LectureReviewPage = () => {
                 <p>{lecture.rejection_comment}</p>
               </div>
             )}
+            
+            {/* Added a visual indicator for progress in metadata */}
+            <div className={styles.metaGroup}>
+              <label><Video size={14} /> WATCHED PROGRESS</label>
+              <p>{lecture.review_progress || 0}%</p>
+            </div>
           </div>
 
           {isPending ? (

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { 
   TrendingUp, Clock, Target, PlayCircle, 
   CheckCircle2, AlertCircle, BarChart3, ArrowUpRight,
-  Zap, Layers, Award, FileText, BookOpen
+  Zap, Layers, Award, FileText, BookOpen, ChevronDown
 } from "lucide-react";
 import "./StudentAnalytics.css";
 import apiClient from "@/api/apiClient";
@@ -10,6 +10,9 @@ import apiClient from "@/api/apiClient";
 const StudentAnalyticsPage = () => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  // Video Progress ke liye states
+  const [selectedCourseId, setSelectedCourseId] = useState("");
+  const [showCourseDrop, setShowCourseDrop] = useState(false);
 
   useEffect(() => {
     const fetchAnalytics = async () => {
@@ -19,6 +22,12 @@ const StudentAnalyticsPage = () => {
         });
         console.log(response.data)
         setData(response.data);
+        
+        // Default pehla course select karne ke liye
+        if (response.data.courses && response.data.courses.length > 0) {
+          setSelectedCourseId(response.data.courses[0].id || response.data.courses[0].name);
+        }
+        
         setLoading(false);
       } catch (error) {
         console.error("Error fetching analytics:", error);
@@ -39,6 +48,9 @@ const StudentAnalyticsPage = () => {
 
   if (loading) return <div className="loading">Loading Analytics...</div>;
   if (!data) return <div className="error">Failed to load data.</div>;
+
+  // Selected course ka data nikalne ke liye
+  const selectedCourseData = data.courses?.find(c => (c.id || c.name) === selectedCourseId);
 
   return (
     <div className="dashboard-wrapper">
@@ -117,7 +129,7 @@ const StudentAnalyticsPage = () => {
               </ul>
           </div>
 
-          {/* QUIZ PERFORMANCE - Layout from screenshot */}
+          {/* QUIZ PERFORMANCE */}
           <div className="content-card">
             <div className="card-header">
               <Target size={22} color="#10b981" />
@@ -152,7 +164,7 @@ const StudentAnalyticsPage = () => {
             </div>
           </div>
 
-          {/* ASSIGNMENT TRACKER - Card Style from screenshot */}
+          {/* ASSIGNMENT TRACKER */}
           <div className="content-card">
             <div className="card-header">
               <FileText size={22} color="#f59e0b" />
@@ -197,6 +209,83 @@ const StudentAnalyticsPage = () => {
                 ))
               ) : (
                 <p style={{ padding: '20px', color: '#64748b' }}>No assignments assigned.</p>
+              )}
+            </div>
+          </div>
+
+          {/* NEW STUDENT VIDEO PROGRESS SECTION */}
+          <div className="content-card" style={{ gridColumn: '1 / -1' }}>
+            <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'relative' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <PlayCircle size={22} color="#8b5cf6" />
+                <h3 style={{ margin: 0 }}>Student Video Progress</h3>
+              </div>
+              
+              {/* Course Dropdown Button */}
+              <div style={{ position: 'relative' }}>
+                <button 
+                  onClick={() => setShowCourseDrop(!showCourseDrop)}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px',
+                    background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px',
+                    cursor: 'pointer', fontSize: '0.9rem', fontWeight: '500', color: '#475569'
+                  }}
+                >
+                  {selectedCourseData?.name || "Select Course"} <ChevronDown size={16} />
+                </button>
+
+                {showCourseDrop && (
+                  <div style={{
+                    position: 'absolute', top: '100%', right: 0, marginTop: '5px',
+                    background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px',
+                    boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', zIndex: 50, width: '220px',
+                    maxHeight: '200px', overflowY: 'auto'
+                  }}>
+                    {data.courses?.map((course, idx) => (
+                      <div 
+                        key={idx}
+                        onClick={() => {
+                          setSelectedCourseId(course.id || course.name);
+                          setShowCourseDrop(false);
+                        }}
+                        style={{
+                          padding: '10px 15px', cursor: 'pointer', fontSize: '0.85rem',
+                          background: selectedCourseId === (course.id || course.name) ? '#f1f5f9' : 'transparent',
+                          borderBottom: '1px solid #f1f5f9'
+                        }}
+                        className="dropdown-item-hover"
+                      >
+                        {course.name}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="video-progress-list" style={{ marginTop: '25px', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px' }}>
+              {selectedCourseData?.lectures?.length > 0 ? (
+                selectedCourseData.lectures.map((lecture, lIdx) => (
+                  <div key={lIdx} style={{ padding: '15px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+                      <span style={{ fontSize: '0.9rem', fontWeight: '600', color: '#334155' }}>{lecture.title}</span>
+                      <span style={{ fontSize: '0.85rem', fontWeight: '700', color: '#8b5cf6' }}>{lecture.progress}%</span>
+                    </div>
+                    <div style={{ height: '6px', background: '#e2e8f0', borderRadius: '10px', overflow: 'hidden' }}>
+                      <div style={{ 
+                        width: `${lecture.progress}%`, 
+                        height: '100%', 
+                        background: '#8b5cf6',
+                        borderRadius: '10px'
+                      }}></div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '40px', color: '#64748b' }}>
+                  <BookOpen size={40} style={{ opacity: 0.3, marginBottom: '10px' }} />
+                  <p>No detailed lecture progress available for this course.</p>
+                </div>
               )}
             </div>
           </div>

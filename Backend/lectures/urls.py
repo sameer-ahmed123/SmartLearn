@@ -12,11 +12,20 @@ from .views import (
     lecture_detail,
     lecture_validation_queue,
     lecture_validate_action,
+    # DASHBOARD METRICS
+    teacher_dashboard_metrics, # Naya view import kiya
+    student_analytics_data,    # <--- NAYA ANALYTICS VIEW IMPORT KIYA
 )
 
 app_name = "lectures"
 
 urlpatterns = [
+    # --- DASHBOARD METRICS ---
+    path('dashboard/metrics/', teacher_dashboard_metrics, name='teacher-dashboard-metrics'),
+
+    # --- STUDENT ANALYTICS ---
+    path('student/analytics/', student_analytics_data, name='student-analytics-data'), # <--- NAYA ENDPOINT
+
     # --- COURSE ENDPOINTS ---
     # Inka final URL banega: /api/v1/lectures/courses/
     path('courses/', course_list_create, name='course-list-create'),
