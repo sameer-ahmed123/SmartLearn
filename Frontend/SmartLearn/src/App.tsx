@@ -26,7 +26,7 @@ import StudentGradebook from "./pages/student/StudentGradebook";
 import StudentAnalytics from "./pages/student/StudentAnalytics";
 import StudentVirtual from "./pages/student/StudentVirtual";
 import StudentSetting from "./pages/student/StudentSetting";
-import SmartChat from './components/Chatbot/SmartChat';
+import SmartChat from "./components/Chatbot/SmartChat";
 import StudentCourseDetailPage from "./pages/student/StudentCourseDetailPage";
 import StudentLectureReviewPage from "./pages/student/StudentLectureViewPage";
 import StudentQuizPage from "./pages/student/StudentQuizPage";
@@ -34,7 +34,7 @@ import StudentAssignmentPage from "./pages/student/StudentAssignmentPage";
 import AssignmentSubmission from "./pages/teacher/AssignmentSubmissions";
 import QuizDetailView from "./pages/teacher/QuizDetailView";
 import StudentReportPage from "./pages/teacher/StudentReportPage";
-
+import StudentVideoProgress from "./pages/teacher/StudentVideoProgress";
 
 // --- FIX: TypeScript interface for Google Translate ---
 declare global {
@@ -50,7 +50,7 @@ const App: React.FC = () => {
   const location = useLocation();
 
   // --- Logic to check if current route is for teacher ---
-  const isTeacherPage = location.pathname.startsWith('/teacher');
+  const isTeacherPage = location.pathname.startsWith("/teacher");
 
   return (
     <>
@@ -78,34 +78,16 @@ const App: React.FC = () => {
               path="/student/dashboard"
               element={<StudentDashboardPage />}
             />
-            <Route
-              path="/student/lecture"
-              element={<StudentLecturePage />}
-            />
-            <Route
-              path="/student/quiz"
-              element={<StudentQuiz />}
-            />
+            <Route path="/student/lecture" element={<StudentLecturePage />} />
+            <Route path="/student/quiz" element={<StudentQuiz />} />
             <Route
               path="/student/assignments"
               element={<StudentAssignment />}
             />
-            <Route
-              path="/student/grades"
-              element={<StudentGradebook />}
-            />
-            <Route
-              path="/student/analytics"
-              element={<StudentAnalytics />}
-            />
-            <Route
-              path="/student/virtualroom"
-              element={<StudentVirtual />}
-            />
-            <Route
-              path="/student/settings"
-              element={<StudentSetting />}
-            />
+            <Route path="/student/grades" element={<StudentGradebook />} />
+            <Route path="/student/analytics" element={<StudentAnalytics />} />
+            <Route path="/student/virtualroom" element={<StudentVirtual />} />
+            <Route path="/student/settings" element={<StudentSetting />} />
             <Route
               path="/student/course/:courseid"
               element={<StudentCourseDetailPage />}
@@ -122,7 +104,6 @@ const App: React.FC = () => {
               path="/student/lecture/:id/assignment"
               element={<StudentAssignmentPage />}
             />
-            
           </Route>
 
           {/* TEACHER ROUTES */}
@@ -131,30 +112,15 @@ const App: React.FC = () => {
               path="/teacher/dashboard"
               element={<TeacherDashboardPage />}
             />
-            <Route
-              path="/teacher/lecture"
-              element={<TeacherLecturePage />}
-            />
-            <Route
-              path="/teacher/quiz"
-              element={<TeacherQuiz />}
-            />
+            <Route path="/teacher/lecture" element={<TeacherLecturePage />} />
+            <Route path="/teacher/quiz" element={<TeacherQuiz />} />
             <Route
               path="/teacher/assignments"
               element={<TeacherAssignment />}
             />
-            <Route
-              path="/teacher/grades"
-              element={<TeacherGradebook />}
-            />
-            <Route
-              path="/teacher/analytics"
-              element={<TeacherAnalytics />}
-            />
-            <Route
-              path="/teacher/settings"
-              element={<TeacherSetting />}
-            />
+            <Route path="/teacher/grades" element={<TeacherGradebook />} />
+            <Route path="/teacher/analytics" element={<TeacherAnalytics />} />
+            <Route path="/teacher/settings" element={<TeacherSetting />} />
             <Route
               path="/teacher/lecture/:id/review"
               element={<LectureReviewPage />}
@@ -171,15 +137,19 @@ const App: React.FC = () => {
               path="/teacher/lecture/:id/quiz"
               element={<QuizDetailView />}
             />
-            <Route 
-            path="/teacher/student-report/:studentId" 
-            element={<StudentReportPage />} 
+            <Route
+              path="/teacher/student-report/:studentId/:courseId"
+              element={<StudentReportPage />}
             />
-            
+
+            <Route
+              path="/teacher/student-video-progress/:studentId/:courseId"
+              element={<StudentVideoProgress />}
+            />
           </Route>
 
           {/* DUMMY & ERROR ROUTES */}
-          
+
           <Route path="/grades" element={<DummyGradebook />} />
           <Route path="/analytics" element={<DummyAnalytics />} />
           <Route path="/settings" element={<DummySettings />} />

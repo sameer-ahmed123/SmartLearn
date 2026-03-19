@@ -1,0 +1,183 @@
+.reportWrapper {
+    padding: 2rem;
+    min-height: 100vh;
+}
+
+.backBtn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: transparent;
+    border: none;
+    color: #4338ca;
+    font-weight: 700;
+    cursor: pointer;
+    margin-bottom: 1.5rem;
+    font-size: 0.95rem;
+}
+
+/* Header Refinement */
+.profileHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: white;
+    padding: 1.5rem 2rem;
+    border-radius: 24px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+    margin-bottom: 2rem;
+    border: 1px solid rgba(255, 255, 255, 0.8);
+}
+
+.largeAvatar {
+    width: 70px;
+    height: 70px;
+    border-radius: 18px;
+    background: #eef2ff;
+}
+
+.info h1 {
+    font-size: 1.5rem;
+    margin: 0;
+    color: #1e293b;
+}
+
+.courseSubtitle {
+    color: #64748b;
+    margin: 2px 0 8px 0;
+    font-weight: 500;
+}
+
+.headerBadge {
+    font-size: 0.7rem;
+    background: #e0e7ff;
+    color: #4338ca;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.overallStatBox {
+    background: linear-gradient(135deg, #6366f1 0%, #4338ca 100%);
+    color: white;
+    padding: 1rem 1.5rem;
+    border-radius: 20px;
+    box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.3);
+}
+
+.statVal {
+    display: block;
+    font-size: 1.8rem;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.statLabel {
+    font-size: 0.7rem;
+    opacity: 0.9;
+    font-weight: 500;
+}
+
+/* Grid Logic */
+.gridContainer {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+.videoCard {
+    background: white;
+    border-radius: 20px;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid #e2e8f0;
+    position: relative;
+    overflow: hidden;
+}
+
+.videoCard:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    border-color: #6366f1;
+}
+
+.cardTop {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.indexTag {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #94a3b8;
+}
+
+.videoTitleArea h3 {
+    margin: 8px 0 0 0;
+    font-size: 1.1rem;
+    line-height: 1.4;
+    color: #0f172a;
+    font-weight: 700;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.playIcon {
+    color: #6366f1;
+}
+
+.progressHeader {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #64748b;
+    margin-bottom: 8px;
+}
+
+.barContainer {
+    height: 8px;
+    background: #f1f5f9;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.barFill {
+    height: 100%;
+    transition: width 0.8s ease;
+}
+
+.cardFooter {
+    margin-top: auto;
+    padding-top: 1rem;
+    border-top: 1px solid #f1f5f9;
+}
+
+.activityInfo {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.75rem;
+    color: #94a3b8;
+    font-weight: 500;
+}
+
+/* Badges */
+.statusBadge {
+    padding: 4px 12px;
+    border-radius: 8px;
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+}
+
+.Completed { background: #dcfce7; color: #166534; }
+.InProgress { background: #fff7ed; color: #9a3412; }
+.NotStarted { background: #f1f5f9; color: #64748b; }

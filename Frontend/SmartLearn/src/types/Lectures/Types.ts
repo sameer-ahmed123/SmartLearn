@@ -49,6 +49,9 @@ export interface LectureDetails{
     validated_by:string,
     created_at:string,
     content_source:ContentSource,
+    review_progress: number; 
+    has_quiz: boolean;       
+    has_assignment: boolean; 
 }
 
 // list of lectures to a course

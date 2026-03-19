@@ -9,8 +9,6 @@ import {
   FileText,
   MessageSquare,
   Globe,
-  Info,
-  Clock,
   CheckCircle2,
   Video,
   HelpCircle,
@@ -19,12 +17,14 @@ import {
 import apiClient from "@/api/apiClient";
 import "./StudentLectureView.css";
 import SharedVideoPlayer from "@/components/Dashboard/shared/SharedVideoPlayer";
+import { useVideoProgress } from "@/hooks/useVideoProgress";
+import type { LectureDetails } from "@/types/Lectures/Types";
 
 const StudentLectureReviewPage = () => {
   const { id } = useParams(); // URL params: /student/lecture/:id/review
   const navigate = useNavigate();
 
-  const [lecture, setLecture] = useState<any>(null);
+  const [lecture, setLecture] = useState<LectureDetails | null>(null);
   const [loading, setLoading] = useState(true);
 
   // Chat state
@@ -34,9 +34,15 @@ const StudentLectureReviewPage = () => {
   const [input, setInput] = useState("");
   const [isChatLoading, setIsChatLoading] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
-
-  // --- PROGRESS TRACKING REFS ---
-  const lastSyncedProgress = useRef<number>(0);
+  const { handleProgressUpdate } = useVideoProgress(
+    id,
+    lecture?.review_progress || 0,
+    (newProgress) => {
+      setLecture((prev) =>
+        prev ? { ...prev, review_progress: newProgress } : null,
+      );
+    },
+  );
 
   // Scroll to bottom of chat when messages update
   useEffect(() => {
@@ -49,9 +55,8 @@ const StudentLectureReviewPage = () => {
       try {
         setLoading(true);
         const response = await apiClient.get(`lectures/${id}/`);
+        console.log(response);
         setLecture(response.data);
-        // Sync ref with initial data from DB
-        lastSyncedProgress.current = response.data.review_progress || 0;
       } catch (err) {
         console.error("Error fetching lecture:", err);
       } finally {
@@ -59,45 +64,7 @@ const StudentLectureReviewPage = () => {
       }
     };
 
-    if (id !== "demo-id") {
-      fetchLecture();
-    } else {
-      setLecture({
-        topic: "Demo: How to use the AI Tutor",
-        summary_text: "This is a sample summary for the lecture.",
-        video_url: "",
-        created_at: new Date().toLocaleDateString(),
-        review_progress: 0,
-      });
-      setLoading(false);
-    }
   }, [id]);
-
-  // --- FIXED: Progress Tracking Logic ---
-  const handleProgressUpdate = async (currentTime: number, duration: number) => {
-    if (!duration || id === "demo-id") return;
-
-    const currentProgress = Math.floor((currentTime / duration) * 100);
-
-    // Update if progress increases and hits 5% intervals or 100%
-    if (
-      currentProgress > lastSyncedProgress.current && 
-      (currentProgress % 5 === 0 || currentProgress === 100)
-    ) {
-      lastSyncedProgress.current = currentProgress; 
-      
-      try {
-        await apiClient.patch(`/lectures/${id}/validate/`, {
-          review_progress: currentProgress,
-        });
-        
-        // UI update
-        setLecture((prev: any) => prev ? { ...prev, review_progress: currentProgress } : null);
-      } catch (err) {
-        console.error("Failed to sync progress:", err);
-      }
-    }
-  };
 
   // --- Fetch Chat History on Load ---
   useEffect(() => {
@@ -108,7 +75,7 @@ const StudentLectureReviewPage = () => {
 
         if (response.data.messages && response.data.messages.length > 0) {
           const history = response.data.messages.map((msg: any) => ({
-            role: msg.sender === "ai" ? "bot" : "user", 
+            role: msg.sender === "ai" ? "bot" : "user",
             text: msg.text,
           }));
           setMessages(history);
@@ -143,7 +110,7 @@ const StudentLectureReviewPage = () => {
     const userMsg = { role: "user", text: currentInput };
 
     setMessages((prev) => [...prev, userMsg]);
-    setInput(""); 
+    setInput("");
     setIsChatLoading(true);
 
     try {
@@ -207,7 +174,7 @@ const StudentLectureReviewPage = () => {
                 <SharedVideoPlayer
                   videoUrl={lecture.video_url}
                   videoStatus={lecture.video_status}
-                  onTimeUpdate={handleProgressUpdate} 
+                  onTimeUpdate={handleProgressUpdate}
                 />
               ) : (
                 <div
@@ -225,54 +192,142 @@ const StudentLectureReviewPage = () => {
                 </div>
               )}
             </div>
-            
+
             {/* Watch Progress Bar below video */}
-            <div style={{ padding: '15px 20px', borderTop: '1px solid #f1f5f9' }}>
-               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#64748b', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                    <Video size={14} /> WATCHED PROGRESS
-                  </span>
-                  <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#6366f1' }}>{lecture?.review_progress || 0}%</span>
-               </div>
-               <div style={{ height: '8px', background: '#e2e8f0', borderRadius: '10px', overflow: 'hidden' }}>
-                  <div style={{ width: `${lecture?.review_progress || 0}%`, height: '100%', background: 'linear-gradient(90deg, #6366f1, #a855f7)', transition: 'width 0.5s ease' }}></div>
-               </div>
+            <div
+              style={{ padding: "15px 20px", borderTop: "1px solid #f1f5f9" }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  marginBottom: "8px",
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: "0.85rem",
+                    fontWeight: 600,
+                    color: "#64748b",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "5px",
+                  }}
+                >
+                  <Video size={14} /> WATCHED PROGRESS
+                </span>
+                <span
+                  style={{
+                    fontSize: "0.85rem",
+                    fontWeight: 700,
+                    color: "#6366f1",
+                  }}
+                >
+                  {lecture?.review_progress || 0}%
+                </span>
+              </div>
+              <div
+                style={{
+                  height: "8px",
+                  background: "#e2e8f0",
+                  borderRadius: "10px",
+                  overflow: "hidden",
+                }}
+              >
+                <div
+                  style={{
+                    width: `${lecture?.review_progress || 0}%`,
+                    height: "100%",
+                    background: "linear-gradient(90deg, #6366f1, #a855f7)",
+                    transition: "width 0.5s ease",
+                  }}
+                ></div>
+              </div>
             </div>
           </div>
 
           {/* ADDED: Quiz & Assignment Row */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
-            <div className="sectionCard" style={{ marginBottom: 0 }}>
-              <div className="sectionHeader">
-                <HelpCircle size={20} color="#6366f1" />
-                <h2>Lecture Quiz</h2>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: "20px",
+              marginBottom: "20px",
+            }}
+          >
+            {lecture?.has_quiz ? (
+              <div className="sectionCard" style={{ marginBottom: 0 }}>
+                <div className="sectionHeader">
+                  <HelpCircle size={20} color="#6366f1" />
+                  <h2>Lecture Quiz</h2>
+                </div>
+                <div style={{ padding: "0 20px 20px" }}>
+                  <p
+                    style={{
+                      fontSize: "0.9rem",
+                      color: "#64748b",
+                      marginBottom: "15px",
+                    }}
+                  >
+                    Test your knowledge with a quick AI-generated quiz.
+                  </p>
+                  <button
+                    onClick={() => navigate(`/student/quiz/${id}`)}
+                    style={{
+                      width: "100%",
+                      padding: "10px",
+                      borderRadius: "8px",
+                      background: "#6366f1",
+                      color: "white",
+                      border: "none",
+                      fontWeight: 600,
+                      cursor: "pointer",
+                    }}
+                  >
+                    Take Quiz
+                  </button>
+                </div>
               </div>
-              <div style={{ padding: '0 20px 20px' }}>
-                <p style={{ fontSize: '0.9rem', color: '#64748b', marginBottom: '15px' }}>Test your knowledge with a quick AI-generated quiz.</p>
-                <button 
-                  onClick={() => navigate(`/student/quiz/${id}`)}
-                  style={{ width: '100%', padding: '10px', borderRadius: '8px', background: '#6366f1', color: 'white', border: 'none', fontWeight: 600, cursor: 'pointer' }}
-                >
-                  Take Quiz
-                </button>
-              </div>
-            </div>
+            ) : (
+              <></>
+            )}
 
-            <div className="sectionCard" style={{ marginBottom: 0 }}>
-              <div className="sectionHeader">
-                <BookOpen size={20} color="#6366f1" />
-                <h2>Assignment</h2>
+            {lecture?.has_assignment ? (
+              <div className="sectionCard" style={{ marginBottom: 0 }}>
+                <div className="sectionHeader">
+                  <BookOpen size={20} color="#6366f1" />
+                  <h2>Assignment</h2>
+                </div>
+                <div style={{ padding: "0 20px 20px" }}>
+                  <p
+                    style={{
+                      fontSize: "0.9rem",
+                      color: "#64748b",
+                      marginBottom: "15px",
+                    }}
+                  >
+                    Complete the practical assignment for this session.
+                  </p>
+                  <button
+                    onClick={() => navigate(`/student/assignment/${id}`)}
+                    style={{
+                      width: "100%",
+                      padding: "10px",
+                      borderRadius: "8px",
+                      background: "transparent",
+                      color: "#6366f1",
+                      border: "2px solid #6366f1",
+                      fontWeight: 600,
+                      cursor: "pointer",
+                    }}
+                  >
+                    View Assignment
+                  </button>
+                </div>
               </div>
-              <div style={{ padding: '0 20px 20px' }}>
-                <p style={{ fontSize: '0.9rem', color: '#64748b', marginBottom: '15px' }}>Complete the practical assignment for this session.</p>
-                <button 
-                  onClick={() => navigate(`/student/assignment/${id}`)}
-                  style={{ width: '100%', padding: '10px', borderRadius: '8px', background: 'transparent', color: '#6366f1', border: '2px solid #6366f1', fontWeight: 600, cursor: 'pointer' }}
-                >
-                  View Assignment
-                </button>
-              </div>
-            </div>
+            ) : (
+              <></>
+            )}
           </div>
 
           <div className="sectionCard">
@@ -286,7 +341,7 @@ const StudentLectureReviewPage = () => {
                 lineHeight: "1.6",
                 color: "#334155",
                 whiteSpace: "pre-line",
-                padding: "0 20px 20px 20px"
+                padding: "0 20px 20px 20px",
               }}
             >
               {lecture?.summary_text ||
@@ -355,7 +410,7 @@ const StudentLectureReviewPage = () => {
                 placeholder="Ask a question..."
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                disabled={isChatLoading} 
+                disabled={isChatLoading}
               />
               <button
                 type="submit"

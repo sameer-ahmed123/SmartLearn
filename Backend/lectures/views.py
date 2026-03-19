@@ -291,17 +291,29 @@ def lecture_validate_action(request, id):
     
     # NEW: Handle Individual Progress Tracking
     if 'review_progress' in request.data:
-        new_progress = request.data.get('review_progress')
-        # Update or Create individual progress for this user
-        LectureProgress.objects.update_or_create(
-            user=user,
-            lecture=lecture,
-            defaults={'progress_percentage': new_progress}
-        )
-        
-        # If ONLY updating progress, return early
-        if len(request.data) == 1:
-            return Response({"review_progress": new_progress}, status=status.HTTP_200_OK)
+        try:
+            new_progress = int(request.data.get('review_progress'))
+            
+            # Use get_or_create to check for existing records without overwriting yet
+            progress_obj, created = LectureProgress.objects.get_or_create(
+                user=user,
+                lecture=lecture,
+                defaults={'progress_percentage': new_progress}
+            )
+            
+            # The Shield: Only update if the record already existed AND the new progress is higher
+            if not created and new_progress > progress_obj.progress_percentage:
+                progress_obj.progress_percentage = new_progress
+                progress_obj.save()
+            
+            # If ONLY updating progress, return early with the actual highest value
+            if len(request.data) == 1:
+                return Response(
+                    {"review_progress": progress_obj.progress_percentage}, 
+                    status=status.HTTP_200_OK
+                )
+        except (ValueError, TypeError):
+            return Response({"detail": "Invalid progress value."}, status=status.HTTP_400_BAD_REQUEST)
 
     # Validation logic (Only for Teachers/Course Owners)
     if not (user.role == 'teacher' and lecture.content_source.course.teacher == user):

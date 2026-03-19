@@ -189,3 +189,276 @@
     border-radius: 10px;
     transition: width 0.5s ease;
 }
+
+
+
+/* //////////// */
+.clickableRow {
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.clickableRow:hover {
+  background-color: #f8fafc; /* Light indigo/slate hint */
+}
+
+/* Video Progress visual logic */
+.videoProgressContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 250px;
+}
+
+.videoText {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #475569;
+}
+
+.miniBarBg {
+  width: 100%;
+  height: 8px;
+  background: #e2e8f0;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.miniBarFill {
+  height: 100%;
+  background: linear-gradient(90deg, #6366f1, #a855f7);
+  border-radius: 10px;
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.actionCell {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  color: #6366f1;
+}
+
+.viewLabel {
+  font-size: 0.8rem;
+  font-weight: 700;
+  opacity: 0;
+  transform: translateX(10px);
+  transition: all 0.2s ease;
+}
+
+.clickableRow:hover .viewLabel {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.loadingState {
+  padding: 60px;
+  text-align: center;
+  font-weight: 600;
+  color: #6366f1;
+}
+
+/* Card Container */
+.card {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  margin-top: 24px;
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.cardTitle {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+/* Table Styling */
+.tableResponsive {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.gradeTable {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 8px; /* Spacing between rows */
+}
+
+.gradeTable th {
+  text-align: left;
+  padding: 12px 16px;
+  color: #64748b;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.gradeTable tr td {
+  padding: 16px;
+  background: #ffffff;
+  vertical-align: middle;
+}
+
+/* Rounded corners for row effect */
+.gradeTable tbody tr:hover td {
+  background: #f8fafc;
+}
+
+/* Student Info Cell */
+.studentCell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #f1f5f9;
+}
+
+.sName {
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.sId {
+  font-size: 0.8rem;
+  color: #94a3b8;
+}
+
+/* Progress Bar Styling */
+.progressContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 140px;
+}
+
+.progressPercent {
+  font-weight: 800;
+  font-size: 0.85rem;
+}
+
+.progressBarBg {
+  width: 100%;
+  height: 8px;
+  background: #f1f5f9;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.progressBarFill {
+  height: 100%;
+  border-radius: 10px;
+  transition: width 0.5s ease;
+}
+
+/* Action Button */
+.actionButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #6366f1;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: none;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.actionButton:hover {
+  background: #4f46e5;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.tableMessage {
+  padding: 60px;
+  text-align: center;
+  color: #94a3b8;
+  font-style: italic;
+}
+
+/* The button that triggers the dropdown */
+.timeDropdown {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  padding: 8px 16px;
+  border-radius: 10px;
+  color: #475569;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  min-width: 160px;
+  transition: all 0.2s ease;
+}
+
+.timeDropdown:hover {
+  border-color: #6366f1;
+  background: #f8fafc;
+}
+
+/* The actual floating menu */
+.dropdownContainer {
+  position: relative;
+}
+
+.dropdownMenu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 100%;
+  min-width: 200px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  z-index: 100;
+  overflow: hidden;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.dropdownMenu div {
+  padding: 10px 16px;
+  font-size: 0.875rem;
+  color: #475569;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.dropdownMenu div:hover {
+  background: #f1f5ff;
+  color: #6366f1;
+}
+
+/* Divider if you want to separate "All Courses" */
+.dropdownMenu div:not(:last-child) {
+  border-bottom: 1px solid #f1f5f9;
+}

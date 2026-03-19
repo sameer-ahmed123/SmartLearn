@@ -19,7 +19,7 @@ const TeacherLecturePage = () => {
   const [recentLectures, setRecentLectures] = useState<any[]>([]); 
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState("video"); 
+  // const [activeTab, setActiveTab] = useState("video");  not needed now 
   const [selectedLecture, setSelectedLecture] = useState<any>(null);
 
   const getProgressColor = (progress: number) => {
@@ -53,10 +53,12 @@ const TeacherLecturePage = () => {
         allLectures.sort((a, b) => (b.review_progress || 0) - (a.review_progress || 0));
         
         const top3 = allLectures.slice(0, 3);
+        console.log(top3, "top 3 Lecture")
         setRecentLectures(top3);
 
         if (id) {
             const lRes = await apiClient.get(`/lectures/courses/${id}/content/`);
+            console.log(lRes, "selected Lecture")
             setLectures(lRes.data);
             if (lRes.data.length > 0) setSelectedLecture(lRes.data[0]);
         } else if (top3.length > 0) {
@@ -148,14 +150,14 @@ const TeacherLecturePage = () => {
           ))}
         </div>
 
-        <div className="tabs-row" style={{ backgroundColor: 'var(--muted, #f1f5f9)' }}>
+        {/* <div className="tabs-row" style={{ backgroundColor: 'var(--muted, #f1f5f9)' }}>
           <button onClick={() => setActiveTab("video")} className={activeTab === 'video' ? 'tab-active' : 'tab-btn'} style={activeTab === 'video' ? { backgroundColor: 'var(--card)', color: '#4f46e5' } : { color: 'var(--foreground)' }}>Video Preview</button>
           <button onClick={() => setActiveTab("transcript")} className={activeTab === 'transcript' ? 'tab-active' : 'tab-btn'} style={activeTab === 'transcript' ? { backgroundColor: 'var(--card)', color: '#4f46e5' } : { color: 'var(--foreground)' }}>Review Summary</button>
-        </div>
+        </div> */}
 
         <div className="main-content-split">
           <div className="video-container-box" style={{ ...cardBgStyle, padding: 0, overflow: 'hidden' }}>
-            {activeTab === "video" ? (
+            {/* {activeTab === "video" ? ( */}
               <div className="video-dark-screen" style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#000' }}>
                 {selectedLecture?.video_url ? (
                   <video 
@@ -172,14 +174,14 @@ const TeacherLecturePage = () => {
                     </div>
                 )}
               </div>
-            ) : (
+            {/* ) : (
               <div className="transcript-area" style={{ backgroundColor: 'var(--card)', color: 'var(--foreground)', padding: '24px', borderRadius: '8px', height: '100%', overflowY: 'auto' }}>
                   <h3 style={{ marginBottom: '16px', borderBottom: '1px solid var(--border)', paddingBottom: '8px' }}>{selectedLecture?.topic}</h3>
                   <div style={{ lineHeight: '1.6', fontSize: '0.95rem' }}>
                     {selectedLecture?.summary_text || selectedLecture?.summary || "No summary available for this lecture."}
                   </div>
               </div>
-            )}
+            )} */}
           </div>
 
           <div className="playlist-card" style={cardBgStyle}>

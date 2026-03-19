@@ -5,13 +5,9 @@ import styles from './StudentReport.module.css';
 import apiClient from '@/api/apiClient';
 
 const StudentReportPage = () => {
-  const { studentId } = useParams();
+  const { studentId,courseId } = useParams();
   const navigate = useNavigate();
-  const location = useLocation();
-  
-  // URL query parameters se course_id nikalna
-  const queryParams = new URLSearchParams(location.search);
-  const courseId = queryParams.get('course_id');
+
 
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -34,7 +30,7 @@ const StudentReportPage = () => {
          * URL CONSTRUCTION WITH COURSE FILTER:
          * Hum course_id ko query parameter ke taur par bhej rahe hain
          */
-        const res = await apiClient.get(`/assessments/teacher/student-report/${studentId}/`, {
+        const res = await apiClient.get(`/dashboard/teacher/student-report/${studentId}/`, {
           params: { course_id: courseId }
         });
         

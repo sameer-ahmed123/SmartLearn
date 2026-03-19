@@ -250,3 +250,65 @@
     background: rgba(239, 68, 68, 0.05);
     color: #e2e8f0;
 }
+
+.dropdown-menu-custom {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 5px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+  z-index: 100; /* Ensure it stays on top */
+  width: 220px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.dropdown-item-custom {
+  padding: 10px 15px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  border-bottom: 1px solid #f1f5f9;
+  transition: background 0.2s;
+  color: #475569;
+}
+
+.dropdown-item-custom:hover {
+  background: #f1f5f9;
+}
+
+.dropdown-item-custom.active {
+  background: #f1f5f9;
+  font-weight: 600;
+  color: #8b5cf6;
+}
+
+.performance-item {
+  display: block !important; /* Overrides any flex interference */
+  width: 100%;
+  padding: 12px 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.video-lecture-card {
+  padding: 15px; 
+  background: #f8fafc; 
+  border-radius: 12px; 
+  border: 1px solid #e2e8f0;
+  transition: transform 0.2s ease;
+}
+
+.video-lecture-card:hover {
+  transform: translateY(-2px);
+  border-color: #cbd5e1;
+}
+
+/* Ensure course titles in progress are always dark */
+.course-title {
+  color: #1e293b !important;
+  font-weight: 700 !important;
+  display: block;
+  margin-bottom: 5px;
+}

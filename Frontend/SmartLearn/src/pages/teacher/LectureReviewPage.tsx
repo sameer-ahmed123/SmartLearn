@@ -5,10 +5,18 @@ import { useEffect, useState } from "react";
 import apiClient from "@/api/apiClient";
 import ValidationActionPanel from "@/components/Dashboard/teacher/ValidationActionPanel";
 import SharedVideoPlayer from "@/components/Dashboard/shared/SharedVideoPlayer";
-import { 
-  Video, FileText, Info, ArrowLeft, Clock, 
-  CheckCircle, Bot, MessageSquare, Trash2 
+import {
+  Video,
+  FileText,
+  Info,
+  ArrowLeft,
+  Clock,
+  CheckCircle,
+  Bot,
+  MessageSquare,
+  Trash2,
 } from "lucide-react";
+import { useVideoProgress } from "@/hooks/useVideoProgress";
 
 const LectureReviewPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -19,13 +27,24 @@ const LectureReviewPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  const { handleProgressUpdate } = useVideoProgress(
+    id,
+    lecture?.review_progress || 0,
+    (newProgress) => {
+      setlecture((prev) =>
+        prev ? { ...prev, review_progress: newProgress } : null,
+      );
+    },
+  );
+
   useEffect(() => {
     if (!lectureId) return;
     const fetchLectureDetails = async () => {
       try {
         const response = await apiClient.get(`/lectures/${lectureId}/`);
         if (response.status === 403) throw new Error("Permission Denied");
-        if (response.status !== 200) throw new Error(`Error! ${response.status}`);
+        if (response.status !== 200)
+          throw new Error(`Error! ${response.status}`);
         setlecture(response.data);
       } catch (err) {
         setError("Failed to fetch Lecture Details");
@@ -37,25 +56,12 @@ const LectureReviewPage = () => {
   }, [lectureId]);
 
   // --- ADDED: Progress Tracking Logic ---
-  const handleProgressUpdate = async (currentTime: number, duration: number) => {
-    if (!lecture || !duration) return;
-
-    const progress = Math.floor((currentTime / duration) * 100);
-
-    if (progress > (lecture.review_progress || 0) && progress % 5 === 0) {
-      try {
-        await apiClient.patch(`/lectures/${lecture.id}/validate/`, {
-          review_progress: progress
-        });
-        setlecture(prev => prev ? { ...prev, review_progress: progress } : null);
-      } catch (err) {
-        console.error("Failed to sync progress:", err);
-      }
-    }
-  };
-
   const handleDeleteLecture = async () => {
-    if (!window.confirm("Are you sure you want to delete this lecture? This action cannot be undone.")) {
+    if (
+      !window.confirm(
+        "Are you sure you want to delete this lecture? This action cannot be undone.",
+      )
+    ) {
       return;
     }
 
@@ -66,21 +72,20 @@ const LectureReviewPage = () => {
       navigate(-1); // Success par pichle page par bhej dein
     } catch (err: any) {
       console.error("Failed to delete lecture:", err);
-      const msg = err.response?.status === 405 
-        ? "Error 405: Delete method not allowed on server. Please check backend view decorators."
-        : "Failed to delete lecture.";
+      const msg =
+        err.response?.status === 405
+          ? "Error 405: Delete method not allowed on server. Please check backend view decorators."
+          : "Failed to delete lecture.";
       alert(msg);
     } finally {
       setIsDeleting(false);
     }
   };
 
-
   if (isLoading) return <div className={styles.loader}>Loading...</div>;
 
   if (error || !lecture) {
     return <div className={styles.error}>{error || "Course not found"}</div>;
-
   }
 
   const isPending = lecture.validation_status === "pending";
@@ -93,18 +98,21 @@ const LectureReviewPage = () => {
         </button>
         <div className={styles.titleInfo}>
           <h1>Review: {lecture.topic}</h1>
-          <p>Course: <span>{lecture.content_source.course.title}</span></p>
+          <p>
+            Course: <span>{lecture.content_source.course.title}</span>
+          </p>
         </div>
         <div className={styles.statusBadgeWrapper}>
-           <span className={`${styles.statusBadge} ${styles[lecture.validation_status]}`}>
-              {lecture.status_display}
-           </span>
+          <span
+            className={`${styles.statusBadge} ${styles[lecture.validation_status]}`}
+          >
+            {lecture.status_display}
+          </span>
         </div>
       </div>
 
       <div className={styles.reviewGrid}>
         <div className={styles.contentColumn}>
-
           <h2>Video Content</h2>
           {/* Placeholder for the video player. In a real app, this would be an embedded iframe */}
           <div className={styles.videoPlayer}>
@@ -114,7 +122,7 @@ const LectureReviewPage = () => {
               onTimeUpdate={handleProgressUpdate} // <-- ADDED: Passing the handler
             />
 
-          {/* <div className={styles.sectionCard}>
+            {/* <div className={styles.sectionCard}>
             <div className={styles.sectionHeader}>
               <Video size={18} />
               <h2>Video Content</h2>
@@ -124,7 +132,6 @@ const LectureReviewPage = () => {
                   <p>Video Preview (URL: {lecture.video_url || "N/A"})</p>
                </div>
             </div> */}
-
           </div>
 
           <div className={styles.sectionCard}>
@@ -141,22 +148,30 @@ const LectureReviewPage = () => {
         <div className={styles.actionColumn}>
           <div className={styles.metadataCard}>
             <div className={styles.metaHeader}>
-               <Info size={16} /> <span>AI Metadata</span>
+              <Info size={16} /> <span>AI Metadata</span>
             </div>
-            
+
             <div className={styles.metaGroup}>
-              <label><Bot size={14} /> GENERATED BY</label>
+              <label>
+                <Bot size={14} /> GENERATED BY
+              </label>
               <p>SmartLearn AI Bot</p>
             </div>
 
             <div className={styles.metaGroup}>
-              <label><Clock size={14} /> CREATED ON</label>
+              <label>
+                <Clock size={14} /> CREATED ON
+              </label>
               <p>{new Date(lecture.created_at).toLocaleDateString()}</p>
             </div>
 
             <div className={styles.metaGroup}>
-              <label><MessageSquare size={14} /> ORIGINAL PROMPT</label>
-              <div className={styles.promptBox}>"{lecture.content_source.ai_prompt}"</div>
+              <label>
+                <MessageSquare size={14} /> ORIGINAL PROMPT
+              </label>
+              <div className={styles.promptBox}>
+                "{lecture.content_source.ai_prompt}"
+              </div>
             </div>
 
             {lecture.rejection_comment && (
@@ -165,10 +180,12 @@ const LectureReviewPage = () => {
                 <p>{lecture.rejection_comment}</p>
               </div>
             )}
-            
+
             {/* Added a visual indicator for progress in metadata */}
             <div className={styles.metaGroup}>
-              <label><Video size={14} /> WATCHED PROGRESS</label>
+              <label>
+                <Video size={14} /> WATCHED PROGRESS
+              </label>
               <p>{lecture.review_progress || 0}%</p>
             </div>
           </div>
@@ -177,16 +194,20 @@ const LectureReviewPage = () => {
             <ValidationActionPanel lectureId={lecture.id} />
           ) : (
             <div className={styles.successNotice}>
-              <div className={styles.successIcon}><CheckCircle size={24} /></div>
+              <div className={styles.successIcon}>
+                <CheckCircle size={24} />
+              </div>
               <div className={styles.successText}>
                 <h3>Validation Complete</h3>
-                <p>This lecture is marked as <strong>Validated</strong>.</p>
+                <p>
+                  This lecture is marked as <strong>Validated</strong>.
+                </p>
               </div>
             </div>
           )}
 
-          <button 
-            className={styles.deleteLectureBtn} 
+          <button
+            className={styles.deleteLectureBtn}
             onClick={handleDeleteLecture}
             disabled={isDeleting}
           >

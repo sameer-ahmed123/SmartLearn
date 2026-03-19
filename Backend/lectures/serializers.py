@@ -8,6 +8,7 @@ User = get_user_model()
 # HELPER SERIALIZERS
 ######
 
+
 class TeacherDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -40,16 +41,15 @@ class CourseSerializer(serializers.ModelSerializer):
 
     is_enrolled = serializers.SerializerMethodField()  # Student check ke liye
     enrolled_count = serializers.SerializerMethodField()  # <--- NEW FIELD ADDED
-    completion_percentage = serializers.SerializerMethodField() # <--- REAL DATA FOR BARS
-
+    completion_percentage = serializers.SerializerMethodField()  # <--- REAL DATA FOR BARS
 
     class Meta:
         model = Course
         fields = [
-            'id', 'teacher', 'teacher_name', 'title', 'description', 
-            'thumbnail', 'status', 'created_at', 'lecture_count', 
+            'id', 'teacher', 'teacher_name', 'title', 'description',
+            'thumbnail', 'status', 'created_at', 'lecture_count',
             'content_source_count', 'is_enrolled', 'enrolled_count',
-            'completion_percentage' 
+            'completion_percentage'
         ]
         read_only_fields = ['teacher', 'created_at']
 
@@ -60,16 +60,16 @@ class CourseSerializer(serializers.ModelSerializer):
         total_sources = obj.content_sources.count()
         if total_sources == 0:
             return 0
-        
+
         # Sirf wo lectures count karein jo 'validated' hain
         validated_lectures = Lecture.objects.filter(
-            content_source__course=obj, 
+            content_source__course=obj,
             validation_status='validated'
         ).count()
-        
+
         return int((validated_lectures / total_sources) * 100)
 
-    def get_enrolled_count(self, obj): 
+    def get_enrolled_count(self, obj):
         return Enrollment.objects.filter(course=obj).count()
 
     def get_content_source_count(self, obj):
@@ -131,7 +131,7 @@ class LectureSerializer(serializers.ModelSerializer):
     quiz_id = serializers.SerializerMethodField()
     assignment_data = serializers.SerializerMethodField()
     assignment_id = serializers.SerializerMethodField()
-    review_progress = serializers.SerializerMethodField() # Changed to MethodField
+    review_progress = serializers.SerializerMethodField()  # Changed to MethodField
 
     class Meta:
         model = Lecture
@@ -149,7 +149,8 @@ class LectureSerializer(serializers.ModelSerializer):
     def get_review_progress(self, obj):
         request = self.context.get('request')
         if request and request.user.is_authenticated:
-            progress = LectureProgress.objects.filter(user=request.user, lecture=obj).first()
+            progress = LectureProgress.objects.filter(
+                user=request.user, lecture=obj).first()
             return progress.progress_percentage if progress else 0
         return 0
 
@@ -187,7 +188,9 @@ class LectureDetailSerializer(serializers.ModelSerializer):
     validated_by = TeacherDetailSerializer(read_only=True)
     status_display = serializers.CharField(
         source='get_validation_status_display', read_only=True)
-    review_progress = serializers.SerializerMethodField() # Changed to MethodField
+    review_progress = serializers.SerializerMethodField()
+    has_quiz = serializers.SerializerMethodField()
+    has_assignment = serializers.SerializerMethodField()
 
     class Meta:
         model = Lecture
@@ -204,7 +207,9 @@ class LectureDetailSerializer(serializers.ModelSerializer):
             'validated_by',
             'created_at',
             'content_source',
-            'review_progress', # <-- Dynamic progress
+            'review_progress',
+            'has_quiz',
+            'has_assignment'
         ]
 
         read_only_fields = ('generated_by', 'validated_by',
@@ -213,9 +218,16 @@ class LectureDetailSerializer(serializers.ModelSerializer):
     def get_review_progress(self, obj):
         request = self.context.get('request')
         if request and request.user.is_authenticated:
-            progress = LectureProgress.objects.filter(user=request.user, lecture=obj).first()
+            progress = LectureProgress.objects.filter(
+                user=request.user, lecture=obj).first()
             return progress.progress_percentage if progress else 0
         return 0
+
+    def get_has_quiz(self, obj):
+        return hasattr(obj, 'quiz')
+
+    def get_has_assignment(self, obj):
+        return hasattr(obj, 'assignment')
 
 
 class LectureQuerySerializer(serializers.ModelSerializer):
@@ -224,13 +236,13 @@ class LectureQuerySerializer(serializers.ModelSerializer):
     status_display = serializers.CharField(
         source='get_validation_status_display', read_only=True)
     review_url = serializers.SerializerMethodField()
-    review_progress = serializers.SerializerMethodField() # Changed to MethodField
+    review_progress = serializers.SerializerMethodField()  # Changed to MethodField
 
     class Meta:
         model = Lecture
         fields = [
             'id', 'topic', 'created_at', 'validation_status', 'status_display',
-            'content_source', 'review_url', 'review_progress' # <-- Added review_progress
+            'content_source', 'review_url', 'review_progress'  # <-- Added review_progress
         ]
 
     def get_review_url(self, obj):
@@ -239,7 +251,8 @@ class LectureQuerySerializer(serializers.ModelSerializer):
     def get_review_progress(self, obj):
         request = self.context.get('request')
         if request and request.user.is_authenticated:
-            progress = LectureProgress.objects.filter(user=request.user, lecture=obj).first()
+            progress = LectureProgress.objects.filter(
+                user=request.user, lecture=obj).first()
             return progress.progress_percentage if progress else 0
         return 0
 
@@ -252,7 +265,8 @@ class LectureValidationActionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Lecture
         fields = ['validation_status', 'rejection_comment',
-                  'video_url', 'video_status'] # review_progress removed from fields as it's handled in view
+                  # review_progress removed from fields as it's handled in view
+                  'video_url', 'video_status']
         read_only_fields = ['id', 'topic', 'video_url', 'video_status',
                             'summary_text', 'content_source']
 
@@ -287,10 +301,11 @@ class CourseLectureListItem(serializers.ModelSerializer):
     quiz_id = serializers.SerializerMethodField()
     assignment_data = serializers.SerializerMethodField()
     assignment_id = serializers.SerializerMethodField()
-    review_progress = serializers.SerializerMethodField() # Changed to MethodField
-    
+    review_progress = serializers.SerializerMethodField()  # Changed to MethodField
+
     quiz_status = serializers.CharField(source='quiz.status', read_only=True)
-    assignment_status = serializers.CharField(source='assignment.status', read_only=True)
+    assignment_status = serializers.CharField(
+        source='assignment.status', read_only=True)
 
     class Meta:
         model = Lecture
@@ -310,13 +325,14 @@ class CourseLectureListItem(serializers.ModelSerializer):
             'assignment_status',
             'video_status',
             'video_url',
-            'review_progress', # <-- Dynamic Progress
+            'review_progress',
         ]
 
     def get_review_progress(self, obj):
         request = self.context.get('request')
         if request and request.user.is_authenticated:
-            progress = LectureProgress.objects.filter(user=request.user, lecture=obj).first()
+            progress = LectureProgress.objects.filter(
+                user=request.user, lecture=obj).first()
             return progress.progress_percentage if progress else 0
         return 0
 
@@ -369,6 +385,7 @@ class EnrollmentSerializer(serializers.ModelSerializer):
 # NEW ANALYTICS SERIALIZERS
 ######
 
+
 class StudentAnalyticsLectureSerializer(serializers.ModelSerializer):
     progress = serializers.SerializerMethodField()
 
@@ -379,9 +396,11 @@ class StudentAnalyticsLectureSerializer(serializers.ModelSerializer):
     def get_progress(self, obj):
         request = self.context.get('request')
         if request and request.user.is_authenticated:
-            prog = LectureProgress.objects.filter(user=request.user, lecture=obj).first()
+            prog = LectureProgress.objects.filter(
+                user=request.user, lecture=obj).first()
             return prog.progress_percentage if prog else 0
         return 0
+
 
 class StudentAnalyticsCourseSerializer(serializers.ModelSerializer):
     watch = serializers.SerializerMethodField()
@@ -394,11 +413,14 @@ class StudentAnalyticsCourseSerializer(serializers.ModelSerializer):
     def get_watch(self, obj):
         # Overall course progress percentage
         total = obj.content_sources.count()
-        if total == 0: return 0
-        validated = Lecture.objects.filter(content_source__course=obj, validation_status='validated').count()
+        if total == 0:
+            return 0
+        validated = Lecture.objects.filter(
+            content_source__course=obj, validation_status='validated').count()
         return int((validated / total) * 100)
 
     def get_lectures(self, obj):
         # List of lectures with their individual progress for the student
-        lectures = Lecture.objects.filter(content_source__course=obj, validation_status='validated')
+        lectures = Lecture.objects.filter(
+            content_source__course=obj, validation_status='validated')
         return StudentAnalyticsLectureSerializer(lectures, many=True, context=self.context).data
