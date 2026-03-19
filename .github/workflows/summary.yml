@@ -3,7 +3,7 @@ name: Generate Summary
 on:
   push:
     branches:
-      - **  # or your default branch
+      - "**"  # or your default branch
   pull_request:
 
 jobs:
