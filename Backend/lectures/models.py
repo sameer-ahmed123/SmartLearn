@@ -1,5 +1,6 @@
 from django.db import models
 from django.conf import settings
+from lectures.managers import LectureQuerySet, CourseQuerySet
 
 # 1: COURSE MODEL ---Subject Container
 
@@ -7,6 +8,8 @@ class Course(models.Model):
     """This represents the Highest Level Container for content
         Example: COMPUTER_SCIENCE
     """
+    objects = CourseQuerySet.as_manager()
+    
     teacher = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -58,6 +61,8 @@ class ContentSource(models.Model):
 # 3: LECTURE MODEL ---(AI's Structured Output)
 
 class Lecture(models.Model):
+    objects = LectureQuerySet.as_manager()
+    
     content_source = models.ForeignKey(
         ContentSource,
         on_delete=models.SET_NULL,

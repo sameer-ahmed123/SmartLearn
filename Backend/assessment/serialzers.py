@@ -7,8 +7,9 @@ class QuizSerializer(serializers.ModelSerializer):
     course_name = serializers.CharField(
         source='lecture.content_source.course.title', read_only=True)
     # --- UPDATED: Fallback added for lecture topic ---
-    lecture_title = serializers.SerializerMethodField()
+    title = serializers.SerializerMethodField()
     questions_count = serializers.SerializerMethodField()
+    submission_count = serializers.SerializerMethodField()
 
     # --- ADDED: Student ka score fetch karne ke liye field ---
     user_score = serializers.SerializerMethodField()
@@ -17,10 +18,8 @@ class QuizSerializer(serializers.ModelSerializer):
         model = Quiz
         fields = '__all__'
 
-    def get_lecture_title(self, obj):
-        if obj.lecture and obj.lecture.topic:
-            return obj.lecture.topic
-        return "Unit Quiz"
+    def get_title(self, obj):
+        return obj.lecture.topic if obj.lecture else "Untitled Quiz"
 
     def get_questions_count(self, obj):
         if obj.quiz_data:
@@ -42,6 +41,10 @@ class QuizSerializer(serializers.ModelSerializer):
             if submission:
                 return submission.score
         return None
+    
+    def get_submission_count(self, obj):
+        # Count total submissions for this quiz
+        return QuizSubmission.objects.filter(quiz=obj).count()
 
 # serializers.py
 

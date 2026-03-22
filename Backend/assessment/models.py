@@ -1,9 +1,11 @@
 from django.db import models
 from django.conf import settings
+from assessment.managers import QuizManager,AssignmentManager
 
 # --- QUIZZES ---
 
 class Quiz(models.Model):
+    objects = QuizManager()
     status_choices = (
         ('generating', 'Generating'),
         ('ready', 'Ready'),
@@ -40,6 +42,7 @@ class QuizSubmission(models.Model):
 # --- ASSIGNMENTS ---
 
 class Assignment(models.Model):
+    objects = AssignmentManager()
     status_choices = (
         ('generating', 'Generating'),
         ('ready', 'Ready'),

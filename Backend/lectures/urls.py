@@ -14,7 +14,7 @@ from .views import (
     lecture_validate_action,
     # DASHBOARD METRICS
     teacher_dashboard_metrics, # Naya view import kiya
-    student_analytics_data,    # <--- NAYA ANALYTICS VIEW IMPORT KIYA
+    # student_analytics_data,    # <--- NAYA ANALYTICS VIEW IMPORT KIYA
 )
 
 app_name = "lectures"
@@ -23,8 +23,8 @@ urlpatterns = [
     # --- DASHBOARD METRICS ---
     path('dashboard/metrics/', teacher_dashboard_metrics, name='teacher-dashboard-metrics'),
 
-    # --- STUDENT ANALYTICS ---
-    path('student/analytics/', student_analytics_data, name='student-analytics-data'), # <--- NAYA ENDPOINT
+    # --- SHOULD BE REMOVED  ------NOT BEING ACCESSD  (MOVED TO DASHBOARD APP [NEW VIEW] )  NOT NEEDED 
+    # path('student/analytics/', student_analytics_data, name='student-analytics-data'), # <--- NAYA ENDPOINT
 
     # --- COURSE ENDPOINTS ---
     # Inka final URL banega: /api/v1/lectures/courses/
