@@ -64,6 +64,8 @@ const StudentLectureReviewPage = () => {
       }
     };
 
+    fetchLecture()
+
   }, [id]);
 
   // --- Fetch Chat History on Load ---

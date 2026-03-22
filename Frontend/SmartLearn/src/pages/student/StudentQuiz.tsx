@@ -29,19 +29,7 @@ const StudentQuiz = () => {
       try {
         setLoading(true);
         const response = await apiClient.get('/assessments/student-quizzes/'); 
-        
-        // Quiz data ko process karein taake percentage convert ho sake
-        const processedQuizzes = response.data.quizzes.map((quiz: Quiz) => {
-          if (quiz.status === 'Completed' && typeof quiz.score === 'string' && quiz.score.includes('%')) {
-            // Agar score "40.0%" jaisa hai, to usey count mein convert karein
-            const percentage = parseFloat(quiz.score);
-            const count = Math.round((percentage / 100) * quiz.questions_count);
-            return { ...quiz, score: `${count} / ${quiz.questions_count}` };
-          }
-          return quiz;
-        });
-
-        setQuizzes(processedQuizzes);
+        setQuizzes(response.data.quizzes);
         
         // Stats handling
         if (response.data.stats) {

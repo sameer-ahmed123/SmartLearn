@@ -41,6 +41,8 @@ const TeacherQuiz = () => {
         apiClient.get("/assessments/teacher-quizzes/"), 
         apiClient.get("/lectures/courses")
       ]);
+
+      console.log(quizResponse)
       
       let quizData = [];
       if (quizResponse.data.results && Array.isArray(quizResponse.data.results)) {
@@ -151,7 +153,7 @@ const TeacherQuiz = () => {
 
         <div className={styles.statCardBox}>
           <div className={styles.statIconContainer} style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444' }}><Trophy size={22} /></div>
-          <div className={styles.statTextContainer}><p>Submissions</p><h3>{quizzes.reduce((acc, q) => acc + (q.submission_count || 0), 0)}</h3></div>
+          <div className={styles.statTextContainer}><p>Submissions</p><h3>{quizzes.reduce((acc, q) => acc + (Number(q.submission_count) || 0), 0)}</h3></div>
         </div>
       </div>
 
