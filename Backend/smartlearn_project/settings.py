@@ -57,7 +57,8 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
     ### django helpers ###
-    'django_extensions'
+    'django_extensions',
+    'silk',
 ]
 
 MIDDLEWARE = [
@@ -69,6 +70,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'silk.middleware.SilkyMiddleware',
 ]
 
 REST_FRAMEWORK = {

@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Lecture, ContentSource, Course,Enrollment
+from .models import Lecture, ContentSource, Course,Enrollment,LectureProgress
 
 # Register your models here.
 @admin.register(ContentSource)
@@ -20,3 +20,4 @@ class LectureAdmin(admin.ModelAdmin):
     
     
 admin.site.register(Enrollment)
+admin.site.register(LectureProgress)

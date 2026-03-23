@@ -15,7 +15,7 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path,include
+from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.views.static import serve as static_serve
@@ -24,15 +24,17 @@ from django.views.decorators.clickjacking import xframe_options_sameorigin
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/v1/', include([
-        path('auth/', include('users.urls')), 
+        path('auth/', include('users.urls')),
         path('lectures/', include('lectures.urls')),
         path('assessments/', include('assessment.urls')),
         path('ai/', include('ai_core.urls')),
-        path('dashboard/',include('dashboard.urls')),
-        path('chat/',include('chatbot.urls')),
+        path('dashboard/', include('dashboard.urls')),
+        path('chat/', include('chatbot.urls')),
     ])),
+    path('silk/', include('silk.urls')),
 ]
 
 
 if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL,view=xframe_options_sameorigin(static_serve), document_root=settings.MEDIA_ROOT)
+    urlpatterns += static(settings.MEDIA_URL, view=xframe_options_sameorigin(
+        static_serve), document_root=settings.MEDIA_ROOT)
