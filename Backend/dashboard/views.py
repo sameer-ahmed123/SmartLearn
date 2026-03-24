@@ -1,4 +1,13 @@
 from django.shortcuts import get_object_or_404
+from dashboard.services import (
+    format_teacher_stats,
+    calculate_gpa,
+    get_student_leaderboard,
+    get_submission_metrics,
+    format_student_course_data,
+    get_active_assignments,
+    get_recent_quiz_performance
+)
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -15,7 +24,6 @@ User = get_user_model()
 
 
 @api_view(['GET'])
-# IsTeacher permission agar hai toh add karein
 @permission_classes([IsAuthenticated])
 def teacher_dashboard_metric(request):
     """
@@ -26,13 +34,13 @@ def teacher_dashboard_metric(request):
 
     total_courses = Course.objects.filter(teacher=user).count()
     lec_stats = Lecture.objects.teacher_summary(user)
-    
+
     return Response({
         "total_courses": total_courses,
         "total_lectures_generated": lec_stats['total_lectures'],
         "pending_validation_count": lec_stats['pending'],
         "total_validated_lectures": lec_stats['validated'],
-        "syllabus_coverage": lec_stats['coverage'],
+        "lecture_validation_coverage": lec_stats['coverage'],
     })
 
 
@@ -63,132 +71,52 @@ def student_dashboard_metric(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def teacher_analytics(request):
+    """
+    MOVED ALL DATABASE HITS TO CourseQuerySet manager in lectures/managers.py
+    """
+
     teacher = request.user
+    # fecth data
+    data = Course.objects.teacher_analytics_summary(teacher)
+    lec_summary = Lecture.objects.teacher_summary(teacher)
 
-    # 1. Base counts & averages
-    total_students = User.objects.filter(
-        course_enrollments__course__teacher=teacher).distinct().count()
+    # logic and calculations
+    q_stats = data['quiz_stats']
+    pass_rate = round(
+        (q_stats['passed']/q_stats['total_done']*100)if q_stats['total_done'] > 0 else 0)
 
-    quiz_subs = QuizSubmission.objects.filter(
-        quiz__lecture__content_source__course__teacher=teacher)
-    quiz_completed = quiz_subs.count()
-    avg_grade_all = quiz_subs.aggregate(avg=Avg('score'))['avg'] or 0
+    # service for UI formating
 
-    # Calculate real pass rate (assuming >= 50 is a pass)
-    passed_quizzes = quiz_subs.filter(score__gte=50).count()
-    pass_rate = round((passed_quizzes / quiz_completed * 100)
-                      ) if quiz_completed > 0 else 0
-
-    # 2. Submissions Aggregation (Assignments)
-    asg_stats = AssignmentSubmission.objects.filter(
-        assignment__lecture__content_source__course__teacher=teacher
-    ).aggregate(
-        total=Count('id'),
-        pending=Count('id', filter=Q(score__isnull=True)),
-        late=Count('id', filter=Q(submitted_at__gt=F('assignment__deadline')))
+    stats_cards = format_teacher_stats(
+        data['total_students'],
+        q_stats['avg_grade'] or 0,
+        pass_rate,
+        data['courses_qs'].count()
     )
+    submissions = get_submission_metrics(data['asg_stats'], q_stats)
 
-    # Calculate real missed quizzes
-    total_published_quizzes = Quiz.objects.filter(
-        lecture__content_source__course__teacher=teacher, status='published').count()
-    expected_quiz_subs = total_published_quizzes * total_students
-    missed_quizzes = max(0, expected_quiz_subs - quiz_completed)
+    student_progress = get_student_leaderboard(
+        data['top_students_qs'], data['student_score_map'])
 
-    # Calculate real Lecture validation states
-    lecture_stats_db = Lecture.objects.filter(content_source__course__teacher=teacher).aggregate(
-        total=Count('id'),
-        pending=Count('id', filter=Q(validation_status='pending')),
-        validated=Count('id', filter=Q(validation_status='validated'))
-    )
-
-    # 3. O(1) Course Mapping
-    courses = teacher.taught_courses.annotate(
-        student_count=Count('enrollments', distinct=True))
-
-    course_scores = QuizSubmission.objects.filter(
-        quiz__lecture__content_source__course__teacher=teacher
-    ).values('quiz__lecture__content_source__course_id').annotate(avg_score=Avg('score'))
-
-    score_dict = {item['quiz__lecture__content_source__course_id']: item['avg_score'] or 0 for item in course_scores}
-
-    course_list = []
-    for course in courses:
-        score = score_dict.get(course.id, 0)
-        course_list.append({
-            "name": course.title,
-            "students": course.student_count,
-            "score": round(score, 1)
-        })
-    course_list = sorted(course_list, key=lambda x: x['score'], reverse=True)
-
-    # 4. O(1) Student Progress Mapping
-    student_ids = list(User.objects.filter(
-        course_enrollments__course__teacher=teacher
-    ).values_list('id', flat=True).distinct()[:5])
-
-    students = User.objects.filter(id__in=student_ids)
-
-    stu_scores = QuizSubmission.objects.filter(
-        user_id__in=student_ids,
-        quiz__lecture__content_source__course__teacher=teacher
-    ).values('user_id').annotate(avg_score=Avg('score'))
-
-    stu_score_dict = {item['user_id']: item['avg_score'] or 0 for item in stu_scores}
-
-    student_progress = []
-    colors = ['#6366f1', '#10b981', '#f59e0b', '#f43f5e', '#8b5cf6']
-
-    for idx, student in enumerate(students):
-        prog = stu_score_dict.get(student.id, 0)
-        student_progress.append({
-            "name": getattr(student, 'full_name', '') or student.email,
-            "progress": round(prog, 1),
-            "color": colors[idx % len(colors)],
-            "avatar": f"https://i.pravatar.cc/150?u={student.id}"
-        })
-
-    # --- Formatting the Final Response ---
-    stats = [
-        {'label': 'AVG GRADE',
-            'val': f"{round(avg_grade_all, 1)}%", 'color': '#6366f1'},
-        {'label': 'PASS RATE', 'val': f"{pass_rate}%", 'color': '#10b981'},
-        {'label': 'ACTIVE STUDENTS', 'val': str(
-            total_students), 'color': '#f59e0b'},
-        {'label': 'COURSES', 'val': str(courses.count()), 'color': '#f43f5e'},
-    ]
-
-    lecture_stats_list = [
-        {'name': 'Total',
-            'value': lecture_stats_db['total'] or 0, 'color': '#f59e0b'},
-        {'name': 'Generated', 'value': Quiz.objects.filter(
-            lecture__content_source__course__teacher=teacher).count(), 'color': '#6366f1'},
-        {'name': 'Pending',
-            'value': lecture_stats_db['pending'] or 0, 'color': '#f43f5e'},
-        {'name': 'Validated',
-            'value': lecture_stats_db['validated'] or 0, 'color': '#10b981'},
-    ]
-
-    asg_total = asg_stats['total'] or 0
-    asg_late = asg_stats['late'] or 0
-    asg_pending = asg_stats['pending'] or 0
-
-    submissions = {
-        "assignment": {
-            "onTime": asg_total - asg_late,
-            "late": asg_late,
-            "pending": asg_pending
-        },
-        "quiz": {
-            "completed": quiz_completed,
-            "missed": missed_quizzes,
-            "avgGrade": f"{round(avg_grade_all, 1)}%"
-        },
-        "project": {"submitted": 0, "inProgress": 0, "graded": 0}
-    }
+    # course list formatting
+    course_list = sorted([
+        {
+            "name": c.title,
+            "students": c.student_count,
+            "score": round(data['course_score_map'].get(c.id, 0), 1)
+        } for c in data['courses_qs']
+    ], key=lambda x: x['score'], reverse=True)
 
     return Response({
-        "stats": stats,
-        "lectureProgress": lecture_stats_list,
+        "stats": stats_cards,
+        "lectureProgress": [
+            {'name': 'Total',
+                'value': lec_summary['total_lectures'], 'color': '#f59e0b'},
+            {'name': 'Pending',
+                'value': lec_summary['pending'], 'color': '#f43f5e'},
+            {'name': 'Validated',
+                'value': lec_summary['validated'], 'color': '#10b981'},
+        ],
         "submissions": submissions,
         "courses": course_list,
         "studentProgress": student_progress,
@@ -201,101 +129,26 @@ def teacher_analytics(request):
 def student_analytics(request):
     user = request.user
 
-    # 1. Overall Quick Stats
-    avg_quiz = QuizSubmission.objects.filter(
-        user=user).aggregate(avg=Avg('score'))['avg'] or 0
+    data = Course.objects.student_analytics_summary(user)
 
-    total_asg_count = Assignment.objects.filter(
-        lecture__content_source__course__enrollments__student=user, status='published'
-    ).count()
-
-    completed_asg = AssignmentSubmission.objects.filter(
-        user=user, score__isnull=False
-    ).count()
+    courses_data = format_student_course_data(user, data['enrollments'])
+    active_assignments = get_active_assignments(
+        user, data['recent_assignments'])
+    quiz_perf_data = get_recent_quiz_performance(data['recent_quiz_subs'])
 
     completion_rate = round(
-        (completed_asg / total_asg_count * 100), 1) if total_asg_count > 0 else 0
-
-    # 2. Course Progress & Quiz Averages
-    enrolled_courses = Enrollment.objects.filter(
-        student=user).select_related('course') if Enrollment else []
-
-    course_quiz_avgs = QuizSubmission.objects.filter(
-        user=user
-    ).values('quiz__lecture__content_source__course_id').annotate(avg_score=Avg('score'))
-
-    quiz_avg_dict = {item['quiz__lecture__content_source__course_id']: item['avg_score'] or 0 for item in course_quiz_avgs}
-
-    courses_data = []
-    for enrollment in enrolled_courses:
-        course = enrollment.course
-        course_quiz_avg = quiz_avg_dict.get(course.id, 0)
-
-        # GET DETAILED LECTURE PROGRESS (For the Line/Area Chart)
-        # We fetch all lectures for this course and the user's progress for each
-        lecture_progress_records = LectureProgress.objects.filter(
-            user=user,
-            lecture__content_source__course=course
-        ).select_related('lecture').order_by('last_watched')
-
-        # REAL WATCH PROGRESS from LectureProgress
-        watch_progress = LectureProgress.objects.filter(
-            user=user,
-            lecture__content_source__course=course
-        ).aggregate(avg_prog=Avg('progress_percentage'))['avg_prog'] or 0
-
-        graph_points = []
-        for lp in lecture_progress_records:
-            graph_points.append({
-                "id": lp.lecture.id,
-                "title": lp.lecture.topic,
-                "progress": lp.progress_percentage,
-                "date": lp.last_watched.strftime("%b %d")  # e.g., "Jan 06"
-            })
-
-        courses_data.append({
-            "id": course.id,
-            "name": course.title,
-            "watch": int(watch_progress),
-            "quiz": round(course_quiz_avg, 1),
-            "lectures": graph_points
-        })
-
-# 3. Active Assignments (Existing logic kept)
-    all_asg = Assignment.objects.filter(
-        lecture__content_source__course__enrollments__student=user, status='published'
-    ).order_by('-deadline')[:3]
-
-    sub_dict = {sub.assignment_id: sub for sub in AssignmentSubmission.objects.filter(
-        user=user, assignment_id__in=[asg.id for asg in all_asg])}
-
-    active_assignments = []
-    for asg in all_asg:
-        sub = sub_dict.get(asg.id)
-        deadline_label = "Submitted" if sub else (asg.deadline.strftime(
-            "%d %b") if asg.deadline and timezone.now() <= asg.deadline else "Overdue" if asg.deadline else "Active")
-
-        active_assignments.append({
-            "title": asg.assignment_data.get('title', 'Assignment') if isinstance(asg.assignment_data, dict) else "Assignment",
-            "deadline": deadline_label,
-            "progress": 100 if sub else 0
-        })
-
-    # 4. Recent Quiz Performance (Existing logic kept)
-    recent_quizzes = QuizSubmission.objects.filter(
-        user=user).select_related('quiz__lecture').order_by('-id')[:5]
-    quiz_perf_data = [{"name": q.quiz.lecture.topic if q.quiz.lecture else "Quiz", "quiz": float(
-        q.score)} for q in recent_quizzes]
-
+        (data['completed_asg']/data['total_asg']*100), 1) if data['total_asg'] > 0 else 0
+    
     return Response({
         "stats": {
             "completion": completion_rate,
             "completion_trend": "+2%",
-            "avg_quiz": round(avg_quiz, 1),
+            "avg_quiz": round(data['avg_quiz'], 1),
             "quiz_trend": "+5%",
             "study_hours": 12,
             "hours_trend": "+2h",
-            "grade": get_letter_grade(avg_quiz)
+            # calculating Grade from Quiz average now .. later need to change to something else
+            "grade": get_letter_grade(data['avg_quiz'])
         },
         "courses": courses_data,
         "quizzes_performance": quiz_perf_data,

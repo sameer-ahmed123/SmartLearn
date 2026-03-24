@@ -30,8 +30,9 @@ const StudentAnalyticsPage = () => {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         });
 
+
         // DEBUG: Check this in your browser console!
-        console.log("Full API Response:", response.data);
+        console.log("Full API Response:", response);
 
         setData(response.data);
 
@@ -65,7 +66,7 @@ const StudentAnalyticsPage = () => {
   if (!data) return <div className="error">Failed to load data.</div>;
 
   // Optimized selection logic
-  const selectedCourseData = data.courses?.find(c => {
+  const selectedCourseData = data?.courses?.find(c => {
     const courseIdStr = c.id ? String(c.id) : c.name;
     return courseIdStr === String(selectedCourseId);
   });

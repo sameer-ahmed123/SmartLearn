@@ -1,4 +1,6 @@
 from django.db import models
+from assessment.models import Assignment, QuizSubmission, Quiz, AssignmentSubmission
+from django.contrib.auth import get_user_model
 
 
 class CourseQuerySet(models.QuerySet):
@@ -20,33 +22,64 @@ class CourseQuerySet(models.QuerySet):
             return self.filter(teacher=user)
         return self.filter(enrollments__student=user)
 
-    def student_summary(self, student):
+    def _base_teacher_metrics(self, teacher):
         """
-        BEING USED IN dashboard/views.py AT student_dashboard_metric
-        Calculates all student dashboard metrics.
+        INTERNAL HELPER: Centralizes teacher-specific aggregations 
+        (Student counts, Quiz averages, and Assignment statuses).
         """
-        # Courses the student is enrolled in
-        enrolled_qs = self.filter(enrollments__student=student)
+        from assessment.models import QuizSubmission, AssignmentSubmission
 
-        # Aggregate counts for the top tiles
-        # for overall data Aggregate ==> one Combined result
-        stats = enrolled_qs.aggregate(
+        # 1. Course & Student Counts
+        courses = self.filter(teacher=teacher).annotate(
+            student_count=models.Count('enrollments', distinct=True)
+        )
+        total_students = courses.aggregate(
+            total=models.Sum('student_count'))['total'] or 0
+
+        # 2. Quiz Performance
+        quiz_stats = QuizSubmission.objects.filter(
+            quiz__lecture__content_source__course__teacher=teacher
+        ).aggregate(
+            avg_grade=models.Avg('score'),
+            total_done=models.Count('id'),
+            passed=models.Count('id', filter=models.Q(score__gte=50))
+        )
+
+        # 3. Assignment Status
+        asg_stats = AssignmentSubmission.objects.filter(
+            assignment__lecture__content_source__course__teacher=teacher
+        ).aggregate(
+            total=models.Count('id'),
+            pending=models.Count('id', filter=models.Q(score__isnull=True)),
+            late=models.Count('id', filter=models.Q(
+                submitted_at__gt=models.F('assignment__deadline')))
+        )
+
+        return {
+            "courses_qs": courses,
+            "total_students": total_students,
+            "quiz_stats": quiz_stats,
+            "asg_stats": asg_stats
+        }
+
+    def _base_student_metrics(self, student):
+        """
+        Centralizes the shared counting logic.
+        """
+        return self.aggregate(
             course_count=models.Count('id', distinct=True),
-            # Count validated lectures across all enrolled courses
             lec_count=models.Count(
                 'content_sources__generated_lectures',
                 filter=models.Q(
                     content_sources__generated_lectures__validation_status='validated'),
                 distinct=True
             ),
-            # Count published quizzes
             quiz_count=models.Count(
                 'content_sources__generated_lectures__quiz',
                 filter=models.Q(
                     content_sources__generated_lectures__quiz__status='published'),
                 distinct=True
             ),
-            # Count published assignments
             asg_count=models.Count(
                 'content_sources__generated_lectures__assignment',
                 filter=models.Q(
@@ -54,6 +87,17 @@ class CourseQuerySet(models.QuerySet):
                 distinct=True
             )
         )
+
+    def student_summary(self, student):
+        """
+        Calculates all student dashboard metrics.
+        """
+        # Courses the student is enrolled in
+        enrolled_qs = self.filter(enrollments__student=student)
+
+        # Aggregate counts for the top tiles
+        # for overall data Aggregate ==> one Combined result
+        stats = enrolled_qs._base_student_metrics(student)
 
         # Get the progress list (using your existing logic but inside the manager)
         # for each lecture  Annote ==> indivually
@@ -71,6 +115,76 @@ class CourseQuerySet(models.QuerySet):
                 {"name": p['title'], "progress": int(p['avg_prog'] or 0)}
                 for p in progress_list
             ]
+        }
+
+    def teacher_analytics_summary(self, teacher):
+        """
+        === TEACHER ANALYTICS ===
+        Aggregates all teacher-related counts in a single pass.
+        """
+        User = get_user_model()
+        base = self._base_teacher_metrics(teacher)
+
+        course_scores = QuizSubmission.objects.filter(
+            quiz__lecture__content_source__course__teacher=teacher
+        ).values(
+            'quiz__lecture__content_source__course_id'
+        ).annotate(avg_score=models.Avg('score'))
+
+        score_dict = {item['quiz__lecture__content_source__course_id']: item['avg_score'] or 0 for item in course_scores}
+
+        # get id of top students
+        top_student_ids = list(User.objects.filter(
+            course_enrollments__course__teacher=teacher).distinct().values_list('id', flat=True)[:5])
+        # the actual User object for the top students
+        top_students = User.objects.filter(id__in=top_student_ids)
+
+        stu_scores = QuizSubmission.objects.filter(
+            user_id__in=top_student_ids,
+            quiz__lecture__content_source__course__teacher=teacher
+        ).values('user_id').annotate(avg_score=models.Avg('score'))
+        stu_score_dict = {item['user_id']: item['avg_score'] or 0 for item in stu_scores}
+        
+        return {
+            **base,
+            "course_score_map": score_dict,
+            "top_students_qs": top_students,
+            "student_score_map": stu_score_dict
+        }
+
+    def student_analytics_summary(self, student):
+        """
+        high-level stats for the student analytics page.
+        """
+        enrolled_qs = self.filter(enrollments__student=student)
+        base_stats = enrolled_qs._base_student_metrics(student)
+
+        # 1. Avg Quiz Score
+        avg_quiz = QuizSubmission.objects.filter(user=student).aggregate(
+            avg=models.Avg('score'))['avg'] or 0
+
+        completed_asg = AssignmentSubmission.objects.filter(
+            user=student, score__isnull=False
+        ).count()
+
+        enrollments = student.course_enrollments.select_related('course')
+
+        recent_assignments = Assignment.objects.filter(
+            lecture__content_source__course__enrollments__student=student,
+            status='published'
+        ).order_by('-deadline')[:3]
+
+        recent_quiz_subs = QuizSubmission.objects.filter(
+            user=student).select_related('quiz__lecture').order_by('-id')[:5]
+
+        return {
+            "avg_quiz": avg_quiz,
+            "total_asg": base_stats['asg_count'],  # from _base func
+            "completed_asg": completed_asg,
+            "enrollments": enrollments,
+            "recent_assignments": recent_assignments,
+            "recent_quiz_subs": recent_quiz_subs,
+            "base_stats": base_stats  # Optional: if you need lec_count or course_count
         }
 
 
@@ -96,7 +210,6 @@ class LectureQuerySet(models.QuerySet):
 
     def teacher_summary(self, teacher):
         """
-        BEING USED IN dashboard/views.py AT teacher_dashboard_metric
         aggregation for the Teacher Dashboard.  
         (aggregation ==> returns one single compiled dictionary)
         """

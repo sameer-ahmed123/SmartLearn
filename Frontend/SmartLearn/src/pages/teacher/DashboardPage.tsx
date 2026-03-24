@@ -39,8 +39,8 @@ const TeacherDashboardPage = () => {
         // Analytics endpoint se student progress uhtane ke liye call (Same as Analytics Page logic)
         const [metricsRes, assignRes, quizRes, courseRes, analyticsRes] = await Promise.all([
           apiClient.get('/dashboard/metrics/teacher/'),
-          apiClient.get('/assessments/teacher-list/'),
-          apiClient.get('/assessments/teacher-quizzes/'),
+          apiClient.get('/assessments/teacher-list/'), // LOOK AT WHAT THIS ENDPOINT RETUNS FROM BACKEND 
+          apiClient.get('/assessments/teacher-quizzes/'), // LOOK AT WHAT THIS ENDPOINT RETUNS FROM BACKEND
           apiClient.get('/lectures/courses/'),
           apiClient.get('/dashboard/teacher-analytics/') // Student progress yahan se aayega
         ]);
@@ -52,6 +52,11 @@ const TeacherDashboardPage = () => {
         
         // Student progress mapping
         const sProgress = analyticsRes.data.studentProgress || [];
+        console.log("metricsRes from dashboardPage",metricsRes)
+        console.log("assignRes from dashboardPage",assignRes)
+        console.log("quizRes from dashboardPage",quizRes)
+        console.log("courseRes from dashboardPage",courseRes)
+        console.log("analyticsRes from dashboardPage",analyticsRes)
         setStudentProgress(sProgress);
 
       } catch (error) {
@@ -226,6 +231,7 @@ const TeacherDashboardPage = () => {
         <div className={styles.threeColumnGrid} style={{marginTop: '24px'}}>
            <div className={styles.card}>
               <h3 className={styles.cardTitle}>Syllabus Coverage</h3>
+              {/* here syllabus coverage means coverage per Course */}
               {courses.length > 0 ? (
                 courses.slice(0, 3).map((course, idx) => {
                   const percent = course.completion_percentage || 0;

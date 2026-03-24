@@ -65,8 +65,10 @@ const AnalyticsPage = () => {
       try {
         setLoading(true);
         const response = await apiClient.get(
-          `/dashboard/teacher-analytics/?month=${selectedMonth}`,
+          `/dashboard/teacher-analytics/`,
         );
+        console.log("analytics from analytics page",response)
+
         setAnalyticsData(response.data);
       } catch (error) {
         console.error("Error fetching analytics:", error);
@@ -312,7 +314,7 @@ const AnalyticsPage = () => {
               </div>
               <div className={styles.imgText}>
                 <p>On Time</p>
-                <strong>{analyticsData.submissions.assignment.onTime}</strong>
+                <strong>{analyticsData?.submissions?.assignment?.onTime}</strong>
               </div>
             </div>
             <div className={styles.imgRow}>
@@ -324,7 +326,7 @@ const AnalyticsPage = () => {
               </div>
               <div className={styles.imgText}>
                 <p>Late Submission</p>
-                <strong>{analyticsData.submissions.assignment.late}</strong>
+                <strong>{analyticsData?.submissions?.assignment?.late}</strong>
               </div>
             </div>
             <div className={styles.imgRow}>
@@ -336,7 +338,7 @@ const AnalyticsPage = () => {
               </div>
               <div className={styles.imgText}>
                 <p>Pending Review</p>
-                <strong>{analyticsData.submissions.assignment.pending}</strong>
+                <strong>{analyticsData?.submissions?.assignment?.pending}</strong>
               </div>
             </div>
           </div>
@@ -352,7 +354,7 @@ const AnalyticsPage = () => {
               </div>
               <div className={styles.imgText}>
                 <p>Completed</p>
-                <strong>{analyticsData.submissions.quiz.completed}</strong>
+                <strong>{analyticsData?.submissions?.quiz?.completed}</strong>
               </div>
             </div>
             <div className={styles.imgRow}>
@@ -364,7 +366,7 @@ const AnalyticsPage = () => {
               </div>
               <div className={styles.imgText}>
                 <p>Missed</p>
-                <strong>{analyticsData.submissions.quiz.missed}</strong>
+                <strong>{analyticsData?.submissions?.quiz?.missed}</strong>
               </div>
             </div>
             <div className={styles.imgRow}>
@@ -376,7 +378,7 @@ const AnalyticsPage = () => {
               </div>
               <div className={styles.imgText}>
                 <p>Avg. Grade</p>
-                <strong>{analyticsData.submissions.quiz.avgGrade}</strong>
+                <strong>{analyticsData?.submissions?.quiz?.avgGrade}</strong>
               </div>
             </div>
           </div>
@@ -392,7 +394,7 @@ const AnalyticsPage = () => {
               </div>
               <div className={styles.imgText}>
                 <p>Submitted</p>
-                <strong>{analyticsData.submissions.project.submitted}</strong>
+                <strong>{analyticsData?.submissions?.project?.submitted}</strong>
               </div>
             </div>
             <div className={styles.imgRow}>
@@ -404,7 +406,7 @@ const AnalyticsPage = () => {
               </div>
               <div className={styles.imgText}>
                 <p>In Progress</p>
-                <strong>{analyticsData.submissions.project.inProgress}</strong>
+                <strong>{analyticsData?.submissions?.project?.inProgress}</strong>
               </div>
             </div>
             <div className={styles.imgRow}>
@@ -416,7 +418,7 @@ const AnalyticsPage = () => {
               </div>
               <div className={styles.imgText}>
                 <p>Graded</p>
-                <strong>{analyticsData.submissions.project.graded}</strong>
+                <strong>{analyticsData?.submissions?.project?.graded}</strong>
               </div>
             </div>
           </div>
