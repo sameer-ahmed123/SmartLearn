@@ -109,6 +109,7 @@ const GradeBookPage = () => {
         setLoading(true);
         const res = await apiClient.get(`/dashboard/teacher/gradebook-summary/${selectedCourse}/`);
         const fetchedGrades = Array.isArray(res.data) ? res.data : [];
+        console.log(fetchedGrades)
         setGrades(fetchedGrades);
         updateStats(fetchedGrades);
       } catch (err: any) {

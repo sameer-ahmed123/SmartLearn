@@ -41,6 +41,7 @@ const StudentGradebookPage = () => {
         setLoading(true);
         const response = await apiClient.get('/dashboard/student/gradebook-summary/');
         const data = response.data;
+        console.log(data)
         
         setGradeData(data.courses || []);
         setStats(data.stats);

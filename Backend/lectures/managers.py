@@ -187,6 +187,26 @@ class CourseQuerySet(models.QuerySet):
             "base_stats": base_stats  # Optional: if you need lec_count or course_count
         }
 
+    def student_gradebook_data(self, student):
+        """
+        Fetche all courses with their respective averages 
+        for a specific student in one single query.
+        """
+        return self.filter(enrollments__student=student).annotate(
+            q_avg=models.Avg(
+                'content_sources__generated_lectures__quiz__quizsubmission__score',
+                filter=models.Q(content_sources__generated_lectures__quiz__quizsubmission__user=student)
+            ),
+            asg_avg=models.Avg(
+                'content_sources__generated_lectures__assignment__assignmentsubmission__score',
+                filter=models.Q(content_sources__generated_lectures__assignment__assignmentsubmission__user=student)
+            ),
+            instructor=models.functions.Coalesce(
+                models.F('teacher__full_name'), 
+                models.F('teacher__email'),
+                output_field=models.CharField() # output only in String 
+            )
+        ).values('id', 'title', 'instructor', 'q_avg', 'asg_avg')
 
 class LectureQuerySet(models.QuerySet):
     """

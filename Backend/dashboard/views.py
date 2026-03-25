@@ -6,7 +6,10 @@ from dashboard.services import (
     get_submission_metrics,
     format_student_course_data,
     get_active_assignments,
-    get_recent_quiz_performance
+    get_recent_quiz_performance,
+    format_student_gradebook,
+    get_teacher_gradebook,
+
 )
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
@@ -138,7 +141,7 @@ def student_analytics(request):
 
     completion_rate = round(
         (data['completed_asg']/data['total_asg']*100), 1) if data['total_asg'] > 0 else 0
-    
+
     return Response({
         "stats": {
             "completion": completion_rate,
@@ -165,48 +168,8 @@ def student_analytics(request):
 @permission_classes([IsAuthenticated])
 def teacher_gradebook_summary(request, course_id):
     teacher = request.user
-    student_query = User.objects.filter(
-        course_enrollments__course__teacher=teacher)
-    if course_id:
-        student_query = student_query.filter(
-            course_enrollments__course_id=course_id)
-    students = student_query.distinct()
-
-    asg_filter = {
-        'assignment__lecture__content_source__course__teacher': teacher, 'score__isnull': False}
-    if course_id:
-        asg_filter['assignment__lecture__content_source__course_id'] = course_id
-
-    asg_avgs = AssignmentSubmission.objects.filter(
-        **asg_filter).values('user_id').annotate(avg_score=Avg('score'))
-    asg_dict = {item['user_id']: item['avg_score'] or 0 for item in asg_avgs}
-
-    quiz_filter = {'quiz__lecture__content_source__course__teacher': teacher}
-    if course_id:
-        quiz_filter['quiz__lecture__content_source__course_id'] = course_id
-
-    quiz_avgs = QuizSubmission.objects.filter(
-        **quiz_filter).values('user_id').annotate(avg_score=Avg('score'))
-    quiz_dict = {item['user_id']: item['avg_score'] or 0 for item in quiz_avgs}
-
-    gradebook_data = []
-    for student in students:
-        asg_avg = asg_dict.get(student.id, 0)
-        quiz_avg = quiz_dict.get(student.id, 0)
-        total_score = round((asg_avg + quiz_avg), 2)
-
-        gradebook_data.append({
-            "id": student.id,
-            "student_name": getattr(student, 'full_name', student.email) or student.email,
-            "student_id_num": f"STU-{student.id:03d}",
-            "avatar_url": f"https://i.pravatar.cc/150?u={student.id}",
-            "assignments_marks": round(asg_avg, 2),
-            "quizzes_marks": round(quiz_avg, 2),
-            "exam_marks": 0,
-            "score": total_score,
-            "grade": get_letter_grade(total_score),
-            "total_possible": 100
-        })
+    
+    gradebook_data = get_teacher_gradebook(teacher, course_id)
 
     return Response(gradebook_data)
 
@@ -216,60 +179,11 @@ def teacher_gradebook_summary(request, course_id):
 def student_gradebook_summary(request):
     user = request.user
 
-    quiz_data = QuizSubmission.objects.filter(
-        user=user, score__isnull=False
-    ).annotate(
-        course_id=F('quiz__lecture__content_source__course__id'),
-        course_title=F('quiz__lecture__content_source__course__title'),
-        teacher_name=F(
-            'quiz__lecture__content_source__course__teacher__full_name'),
-        teacher_user=F('quiz__lecture__content_source__course__teacher__email')
-    ).values('course_id', 'course_title', 'teacher_name', 'teacher_user').annotate(avg_score=Avg('score'))
+    raw_data = Course.objects.student_gradebook_data(user)
 
-    asg_data = AssignmentSubmission.objects.filter(
-        user=user, score__isnull=False
-    ).annotate(
-        course_id=F('assignment__lecture__content_source__course__id'),
-        course_title=F('assignment__lecture__content_source__course__title'),
-        teacher_name=F(
-            'assignment__lecture__content_source__course__teacher__full_name'),
-        teacher_user=F(
-            'assignment__lecture__content_source__course__teacher__email')
-    ).values('course_id', 'course_title', 'teacher_name', 'teacher_user').annotate(avg_score=Avg('score'))
+    response_data = format_student_gradebook(raw_data, user)
 
-    courses_dict = {}
-    for q in quiz_data:
-        courses_dict[q['course_id']] = {"course": q['course_title'], "instructor": q['teacher_name'] or q['teacher_user'],
-                                        "quizzes_marks": q['avg_score'] or 0, "assignments_marks": 0, "exam_marks": 0, "status": "Completed"}
-
-    for a in asg_data:
-        c_id = a['course_id']
-        if c_id not in courses_dict:
-            courses_dict[c_id] = {"course": a['course_title'], "instructor": a['teacher_name'] or a['teacher_user'],
-                                  "quizzes_marks": 0, "assignments_marks": 0, "exam_marks": 0, "status": "Completed"}
-        courses_dict[c_id]['assignments_marks'] = a['avg_score'] or 0
-
-    final_course_list = []
-    total_avg_sum = 0
-    for c_id, data in courses_dict.items():
-        total_score = round(
-            (data["assignments_marks"] + data["quizzes_marks"]), 2)
-        total_avg_sum += total_score
-        data.update({"score": total_score, "grade": get_letter_grade(total_score), "assignments_marks": round(
-            data["assignments_marks"], 2), "quizzes_marks": round(data["quizzes_marks"], 2)})
-        final_course_list.append(data)
-
-    course_count = len(final_course_list)
-    return Response({
-        "stats": {
-            "gpa": round((total_avg_sum / (course_count * 25)), 2) if course_count > 0 else 0.00,
-            "total_courses": course_count,
-            "completed_courses": course_count,
-            "quizzes_done": QuizSubmission.objects.filter(user=user).count(),
-            "assignments_done": AssignmentSubmission.objects.filter(user=user).count()
-        },
-        "courses": final_course_list
-    })
+    return Response(response_data)
 
 
 @api_view(['GET'])
