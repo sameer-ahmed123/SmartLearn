@@ -1,8 +1,8 @@
-from lectures.models import LectureProgress
+from lectures.models import Lecture, LectureProgress, Course
 from assessment.models import QuizSubmission, AssignmentSubmission
 from smartlearn_project.utils import get_letter_grade
 from django.contrib.auth import get_user_model
-from django.db.models import Avg, Q, F
+from django.db.models import Avg, Q, F, Sum
 from django.db.models.functions import Coalesce
 from django.utils import timezone
 from django.db import models
@@ -68,8 +68,7 @@ def format_student_course_data(user, enrollments):
     quiz_avgs = QuizSubmission.objects.filter(user=user).values(
         'quiz__lecture__content_source__course_id'
     ).annotate(avg_score=models.Avg('score'))
-    quiz_map = {item['quiz__lecture__content_source__course_id']
-        : item['avg_score'] for item in quiz_avgs}
+    quiz_map = {item['quiz__lecture__content_source__course_id']                : item['avg_score'] for item in quiz_avgs}
 
     courses_data = []
     for enrollment in enrollments:
@@ -228,4 +227,101 @@ def get_teacher_gradebook(teacher, course_id=None):
             "total_possible": 100
         }
         for s in gradebook_data
+    ]
+
+
+def get_student_performance_detail(teacher, student, course_id=None):
+    """
+    LOGIC LAYER: Reuses Lecture manager to fetch and format 
+    detailed history for a specific student.
+    """
+
+    # 1. Get the allowed scope of lectures from our Manager
+    lecture_qs = Lecture.objects.for_teacher(teacher)
+    if course_id:
+        lecture_qs = lecture_qs.for_course(course_id)
+
+    # 2. Fetch and Format Assignments
+    assignments = AssignmentSubmission.objects.filter(
+        user=student,
+        assignment__lecture__in=lecture_qs
+    ).select_related('assignment__lecture')
+
+    asg_list = [
+        {
+            "title": sub.assignment.lecture.topic if (sub.assignment and sub.assignment.lecture) else "Assignment",
+            "score": sub.score or 0,
+            "feedback": sub.feedback or "No feedback yet",
+            "status": "Graded" if sub.score is not None else "Submitted"
+        } for sub in assignments
+    ]
+
+    # 3. Fetch and Format Quizzes (Using the scope from step 1)
+    quizzes = QuizSubmission.objects.filter(
+        user=student,
+        quiz__lecture__in=lecture_qs
+    ).select_related('quiz__lecture')
+
+    quiz_list = [
+        {
+            "title": sub.quiz.lecture.topic if (sub.quiz and sub.quiz.lecture) else "Quiz",
+            "score": sub.score or 0,
+            "submitted_at": sub.submitted_at
+        } for sub in quizzes
+    ]
+
+    # 4. Fetch Course Info (if applicable)
+    course_info = None
+    if course_id:
+        c_obj = Course.objects.filter(id=course_id, teacher=teacher).first()
+        if c_obj:
+            course_info = {"id": c_obj.id, "title": c_obj.title}
+
+    return {
+        "student_info": {
+            "name": getattr(student, 'full_name', student.email) or student.email,
+            "email": student.email,
+            "id_num": f"STU-{student.id:03d}",
+            "id": student.id
+        },
+        "course_info": course_info,
+        "assignments": asg_list,
+        "quizzes": quiz_list
+    }
+
+
+def get_course_student_list_with_progress(course_id):
+    """
+    LOGIC LAYER: Fetches all students in a course with their 
+    average video progress in a single database hit.
+    """
+    User = get_user_model()
+    total_lectures = Lecture.objects.filter(
+        content_source__course_id=course_id).count() or 1
+
+    # 1. Fetch Users enrolled in this specific course
+    # 2. Annotate the average progress ONLY for lectures in THIS course
+    students_with_stats = User.objects.filter(
+        course_enrollments__course_id=course_id
+    ).annotate(
+        total_progress_points=Coalesce(Sum(
+            'lecture_progress__progress_percentage',
+            filter=Q(lecture_progress__lecture__content_source__course_id=course_id)
+        ), 0.0, output_field=models.FloatField()),
+        display_name=Coalesce(
+            F('full_name'),
+            F('email'),
+            output_field=models.CharField()
+        )
+    ).values('id', 'display_name', 'email', 'total_progress_points').order_by('-total_progress_points')
+
+    # 3. Format for the Frontend
+    return [
+        {
+            "id": s['id'],
+            "full_name": s['display_name'],
+            "email": s['email'],
+            "video_progress": round(s['total_progress_points']/total_lectures, 1)
+        }
+        for s in students_with_stats
     ]

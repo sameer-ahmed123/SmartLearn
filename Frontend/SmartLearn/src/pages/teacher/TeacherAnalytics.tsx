@@ -105,6 +105,7 @@ const AnalyticsPage = () => {
         const response = await apiClient.get(
           `dashboard/teacher/course-students/${selectedCourse}/`,
         );
+        console.log(response, "teacher analytics page getting course video progress")
         setStudents(response.data);
       } catch (error) {
         console.error("Error fetching students:", error);

@@ -1,8 +1,11 @@
 from django.shortcuts import get_object_or_404
+from dashboard.video_progress_service import get_student_course_video_report
 from dashboard.services import (
     format_teacher_stats,
     calculate_gpa,
+    get_course_student_list_with_progress,
     get_student_leaderboard,
+    get_student_performance_detail,
     get_submission_metrics,
     format_student_course_data,
     get_active_assignments,
@@ -168,7 +171,7 @@ def student_analytics(request):
 @permission_classes([IsAuthenticated])
 def teacher_gradebook_summary(request, course_id):
     teacher = request.user
-    
+
     gradebook_data = get_teacher_gradebook(teacher, course_id)
 
     return Response(gradebook_data)
@@ -193,39 +196,9 @@ def student_detail_report(request, student_id):
     student = get_object_or_404(User, id=student_id)
     course_id = request.query_params.get('course_id')
 
-    asg_filter = {'user': student,
-                  'assignment__lecture__content_source__course__teacher': teacher}
-    quiz_filter = {'user': student,
-                   'quiz__lecture__content_source__course__teacher': teacher}
+    report_data = get_student_performance_detail(teacher, student, course_id)
 
-    if course_id:
-        asg_filter['assignment__lecture__content_source__course_id'] = course_id
-        quiz_filter['quiz__lecture__content_source__course_id'] = course_id
-
-    assignments = AssignmentSubmission.objects.filter(
-        **asg_filter).select_related('assignment__lecture')
-    asg_list = [{"title": sub.assignment.lecture.topic if (sub.assignment and sub.assignment.lecture) else "Assignment", "score": sub.score or 0,
-                 "feedback": sub.feedback or "No feedback yet", "status": "Graded" if sub.score is not None else "Submitted"} for sub in assignments]
-
-    quizzes = QuizSubmission.objects.filter(
-        **quiz_filter).select_related('quiz__lecture')
-    quiz_list = [{"title": sub.quiz.lecture.topic if (
-        sub.quiz and sub.quiz.lecture) else "Quiz", "score": sub.score or 0, "submitted_at": sub.submitted_at} for sub in quizzes]
-
-    course_info = None
-    if course_id:
-        # CourseModel = apps.get_model('courses', 'Course')
-        c_obj = Course.objects.filter(
-            id=course_id, teacher=teacher).first()
-        if c_obj:
-            course_info = {"id": c_obj.id, "title": c_obj.title}
-
-    return Response({
-        "student_info": {"name": getattr(student, 'full_name', student.email) or student.email, "email": student.email, "id_num": f"STU-{student.id:03d}", "id": student.id},
-        "course_info": course_info,
-        "assignments": asg_list,
-        "quizzes": quiz_list
-    }, status=status.HTTP_200_OK)
+    return Response(report_data, status=status.HTTP_200_OK)
 
 
 @api_view(['GET'])
@@ -238,67 +211,18 @@ def get_student_video_detail(request, student_id, course_id):
 
     # Ensure the course belongs to this teacher
     course = get_object_or_404(Course, id=course_id, teacher=teacher)
-
-    # Ensure the student exists
     student = get_object_or_404(User, id=student_id)
+    
+    report = get_student_course_video_report(student,course)
 
-    # Get all lectures for this course
-    lectures = Lecture.objects.filter(
-        content_source__course=course).order_by('id')
 
-    # Get the student's progress for these lectures
-    progress_map = {
-        lp.lecture_id: lp
-        for lp in LectureProgress.objects.filter(user=student, lecture__in=lectures)
-    }
-
-    video_details = []
-    for lecture in lectures:
-        progress_obj = progress_map.get(lecture.id)
-
-        video_details.append({
-            "lecture_id": lecture.id,
-            "title": lecture.topic,
-            "progress": progress_obj.progress_percentage if progress_obj else 0,
-            "last_watched": progress_obj.last_watched.strftime("%B %d, %Y") if progress_obj and progress_obj.last_watched else "Not started",
-            "status": "Completed" if progress_obj and progress_obj.progress_percentage >= 95 else "In Progress" if progress_obj and progress_obj.progress_percentage > 0 else "Not Started"
-        })
-
-    # Overall course watch percentage for this student
-    total_watch = sum(item['progress'] for item in video_details) / \
-        len(video_details) if video_details else 0
-
-    return Response({
-        "student_name": getattr(student, 'full_name', student.email),
-        "course_name": course.title,
-        "overall_watch": round(total_watch, 1),
-        "lectures": video_details
-    })
+    return Response(report)
 
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_course_students(request, course_id):
-    # Fetch all students enrolled in the specific course
-    enrollments = Enrollment.objects.filter(
-        course_id=course_id).select_related('student')
-
-    student_data = []
-    for enrollment in enrollments:
-        student = enrollment.student
-        # Calculate average video progress for this student in this specific course
-        avg_progress = LectureProgress.objects.filter(
-            user=student,
-            lecture__content_source__course_id=course_id
-        ).aggregate(Avg('progress_percentage'))['progress_percentage__avg'] or 0
-
-        student_data.append({
-            "id": student.id,
-            "full_name": student.get_full_name() or student.email,
-            "email": student.email,
-            "video_progress": round(avg_progress, 1)
-        })
-
+    student_data = get_course_student_list_with_progress(course_id)
     return Response(student_data)
 
 

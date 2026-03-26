@@ -1,30 +1,53 @@
 import { useState, useEffect } from "react";
-import { 
-  Users, CheckCircle, Clock, 
-  GraduationCap, Star,
-  ChevronLeft, ChevronRight, BookOpen, BarChart as BarIcon,
-  Trophy, ClipboardList, Layout
-} from "lucide-react"; 
+import {
+  Users,
+  CheckCircle,
+  Clock,
+  GraduationCap,
+  Star,
+  ChevronLeft,
+  ChevronRight,
+  BookOpen,
+  BarChart as BarIcon,
+  Trophy,
+  ClipboardList,
+  Layout,
+} from "lucide-react";
 import styles from "./TeacherDashboard.module.css";
-import { 
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
-  LineChart, Line, Legend,
-  PieChart, Pie
-} from 'recharts';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Cell,
+  LineChart,
+  Line,
+  Legend,
+  PieChart,
+  Pie,
+} from "recharts";
 import apiClient from "@/api/apiClient";
 import { useAuthStore } from "@/store/useAuthStore";
 
 // Static Data for Weekly Activity
 const weeklyTeacherActivity = [
-    { name: 'Mon', hours: 6 }, { name: 'Tue', hours: 8 }, { name: 'Wed', hours: 5 },
-    { name: 'Thu', hours: 9 }, { name: 'Fri', hours: 4 }, { name: 'Sat', hours: 2 }, { name: 'Sun', hours: 1 },
+  { name: "Mon", hours: 6 },
+  { name: "Tue", hours: 8 },
+  { name: "Wed", hours: 5 },
+  { name: "Thu", hours: 9 },
+  { name: "Fri", hours: 4 },
+  { name: "Sat", hours: 2 },
+  { name: "Sun", hours: 1 },
 ];
 
 const TeacherDashboardPage = () => {
   const [metrics, setMetrics] = useState<any>(null);
   const [assignments, setAssignments] = useState<any[]>([]);
   const [quizzes, setQuizzes] = useState<any[]>([]);
-  const [courses, setCourses] = useState<any[]>([]); 
+  const [courses, setCourses] = useState<any[]>([]);
   const [studentProgress, setStudentProgress] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewDate, setViewDate] = useState(new Date());
@@ -37,28 +60,28 @@ const TeacherDashboardPage = () => {
       try {
         setLoading(true);
         // Analytics endpoint se student progress uhtane ke liye call (Same as Analytics Page logic)
-        const [metricsRes, assignRes, quizRes, courseRes, analyticsRes] = await Promise.all([
-          apiClient.get('/dashboard/metrics/teacher/'),
-          apiClient.get('/assessments/teacher-list/'), // LOOK AT WHAT THIS ENDPOINT RETUNS FROM BACKEND 
-          apiClient.get('/assessments/teacher-quizzes/'), // LOOK AT WHAT THIS ENDPOINT RETUNS FROM BACKEND
-          apiClient.get('/lectures/courses/'),
-          apiClient.get('/dashboard/teacher-analytics/') // Student progress yahan se aayega
-        ]);
+        const [metricsRes, assignRes, quizRes, courseRes, analyticsRes] =
+          await Promise.all([
+            apiClient.get("/dashboard/metrics/teacher/"),
+            apiClient.get("/assessments/teacher-list/"), // LOOK AT WHAT THIS ENDPOINT RETUNS FROM BACKEND
+            apiClient.get("/assessments/teacher-quizzes/"), // LOOK AT WHAT THIS ENDPOINT RETUNS FROM BACKEND
+            apiClient.get("/lectures/courses/"),
+            apiClient.get("/dashboard/teacher-analytics/"), // Student progress yahan se aayega
+          ]);
 
         setMetrics(metricsRes.data);
         setAssignments(assignRes.data || []);
         setQuizzes(quizRes.data.results || quizRes.data || []);
         setCourses(courseRes.data.results || courseRes.data || []);
-        
         // Student progress mapping
         const sProgress = analyticsRes.data.studentProgress || [];
-        console.log("metricsRes from dashboardPage",metricsRes)
-        console.log("assignRes from dashboardPage",assignRes)
-        console.log("quizRes from dashboardPage",quizRes)
-        console.log("courseRes from dashboardPage",courseRes)
-        console.log("analyticsRes from dashboardPage",analyticsRes)
         setStudentProgress(sProgress);
 
+        console.log("metricsRes from dashboardPage", metricsRes);
+        console.log("assignRes from dashboardPage", assignRes);
+        console.log("quizRes from dashboardPage", quizRes);
+        console.log("courseRes from dashboardPage", courseRes);
+        console.log("analyticsRes from dashboardPage", analyticsRes);
       } catch (error) {
         console.error("Dashboard Fetch Error:", error);
       } finally {
@@ -68,44 +91,59 @@ const TeacherDashboardPage = () => {
     fetchDashboardData();
   }, []);
 
-  // Fallback Student Data (Agar backend khali ho)
-  const displayStudentProgress = studentProgress.length > 0 ? studentProgress : [
-    { name: 'Amelia', progress: 75, color: '#4f46e5' },
-    { name: 'Johen', progress: 64, color: '#f59e0b' },
-    { name: 'Micheal', progress: 59, color: '#10b981' },
-    { name: 'Amanda', progress: 45, color: '#ef4444' },
-  ];
-
-  const displayStudentCount = metrics?.total_students || courses.reduce((acc, c) => acc + Number(c.enrolled_count || 0), 0) || 0;
+  const displayStudentCount =
+    metrics?.total_students ||
+    courses.reduce((acc, c) => acc + Number(c.enrolled_count || 0), 0) ||
+    0;
   const activeCoursesCount = courses.length || metrics?.total_courses || 0;
   const totalAssigned = assignments.length;
   const totalQuizzes = quizzes.length;
 
   // --- Charts Data ---
-  const totalSubmissions = assignments.reduce((acc, curr) => acc + (Number(curr.submission_count) || 0), 0);
-  const publishedAssignments = assignments.filter(a => (a.status || a.assignment_data?.status)?.toLowerCase() === 'published').length;
+  const totalSubmissions = assignments.reduce(
+    (acc, curr) => acc + (Number(curr.submission_count) || 0),
+    0,
+  );
+  const publishedAssignments = assignments.filter(
+    (a) =>
+      (a.status || a.assignment_data?.status)?.toLowerCase() === "published",
+  ).length;
 
   const assignmentLineData = [
-    { name: 'Total', value: totalAssigned },
-    { name: 'Published', value: publishedAssignments },
-    { name: 'Submissions', value: totalSubmissions },
-    { name: 'Drafts', value: totalAssigned - publishedAssignments },
+    { name: "Total", value: totalAssigned },
+    { name: "Published", value: publishedAssignments },
+    { name: "Submissions", value: totalSubmissions },
+    { name: "Drafts", value: totalAssigned - publishedAssignments },
   ];
 
-  const activeQuizzes = quizzes.filter(q => q.status === 'published' || q.status === 'active').length;
-  const draftQuizzes = quizzes.filter(q => q.status === 'draft').length;
+  const activeQuizzes = quizzes.filter(
+    (q) => q.status === "published" || q.status === "active",
+  ).length;
+  const draftQuizzes = quizzes.filter((q) => q.status === "draft").length;
 
   const quizPieData = [
-    { name: 'Active', value: activeQuizzes, color: '#10b981' },
-    { name: 'Drafts', value: draftQuizzes, color: '#f59e0b' },
-    { name: 'Total', value: totalQuizzes, color: '#8b5cf6' },
+    { name: "Active", value: activeQuizzes, color: "#10b981" },
+    { name: "Drafts", value: draftQuizzes, color: "#f59e0b" },
+    { name: "Total", value: totalQuizzes, color: "#8b5cf6" },
   ];
 
   const getLectureStatsData = () => [
-    { name: 'Courses', count: activeCoursesCount, fill: '#f59e0b' },
-    { name: 'Generated', count: metrics?.total_lectures_generated ?? 0, fill: '#6366f1' },
-    { name: 'Pending', count: metrics?.pending_validation_count ?? 0, fill: '#ef4444' },
-    { name: 'Validated', count: metrics?.total_validated_lectures ?? 0, fill: '#10b981' },
+    { name: "Courses", count: activeCoursesCount, fill: "#f59e0b" },
+    {
+      name: "Generated",
+      count: metrics?.total_lectures_generated ?? 0,
+      fill: "#6366f1",
+    },
+    {
+      name: "Pending",
+      count: metrics?.pending_validation_count ?? 0,
+      fill: "#ef4444",
+    },
+    {
+      name: "Validated",
+      count: metrics?.total_validated_lectures ?? 0,
+      fill: "#10b981",
+    },
   ];
 
   const renderCalendar = () => {
@@ -114,20 +152,30 @@ const TeacherDashboardPage = () => {
     const firstDay = new Date(year, month, 1).getDay();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     const now = new Date();
-    const isCurrentMonth = now.getFullYear() === year && now.getMonth() === month;
+    const isCurrentMonth =
+      now.getFullYear() === year && now.getMonth() === month;
     const days = [];
-    for (let i = 0; i < firstDay; i++) days.push(<span key={`empty-${i}`} className={styles.calEmpty}></span>);
+    for (let i = 0; i < firstDay; i++)
+      days.push(<span key={`empty-${i}`} className={styles.calEmpty}></span>);
     for (let i = 1; i <= daysInMonth; i++) {
       days.push(
-        <span key={i} className={(isCurrentMonth && i === now.getDate()) ? styles.calActive : styles.calDay}>
+        <span
+          key={i}
+          className={
+            isCurrentMonth && i === now.getDate()
+              ? styles.calActive
+              : styles.calDay
+          }
+        >
           {i}
-        </span>
+        </span>,
       );
     }
     return days;
   };
 
-  if (loading) return <div className={styles.loader}>Loading Teacher Portal...</div>;
+  if (loading)
+    return <div className={styles.loader}>Loading Teacher Portal...</div>;
 
   return (
     <div className={styles.pageWrapper}>
@@ -135,8 +183,14 @@ const TeacherDashboardPage = () => {
         {/* Welcome Banner */}
         <div className={styles.welcomeBanner}>
           <div className={styles.bannerLeft}>
-              <h2 className={styles.bannerTitle}>Welcome back, Prof. <span className={styles.highlight}>{displayName}!</span></h2>
-              <p className={styles.bannerSub}>Your dashboard is now synced with all your latest assessments and lectures.</p>
+            <h2 className={styles.bannerTitle}>
+              Welcome back, Prof.{" "}
+              <span className={styles.highlight}>{displayName}!</span>
+            </h2>
+            <p className={styles.bannerSub}>
+              Your dashboard is now synced with all your latest assessments and
+              lectures.
+            </p>
           </div>
           <GraduationCap size={120} className={styles.capIcon} />
         </div>
@@ -144,14 +198,42 @@ const TeacherDashboardPage = () => {
         {/* Top Stats Row */}
         <div className={styles.statsRow}>
           {[
-            { label: 'TOTAL STUDENTS', val: displayStudentCount, icon: <Users />, color: '#6366f1' },
-            { label: 'ACTIVE COURSES', val: activeCoursesCount, icon: <Layout />, color: '#10b981' },
-            { label: 'ASSIGNMENTS', val: totalAssigned, icon: <ClipboardList />, color: '#f59e0b' },
-            { label: 'TOTAL QUIZZES', val: totalQuizzes, icon: <Trophy />, color: '#ef4444' },
+            {
+              label: "TOTAL STUDENTS",
+              val: displayStudentCount,
+              icon: <Users />,
+              color: "#6366f1",
+            },
+            {
+              label: "ACTIVE COURSES",
+              val: activeCoursesCount,
+              icon: <Layout />,
+              color: "#10b981",
+            },
+            {
+              label: "ASSIGNMENTS",
+              val: totalAssigned,
+              icon: <ClipboardList />,
+              color: "#f59e0b",
+            },
+            {
+              label: "TOTAL QUIZZES",
+              val: totalQuizzes,
+              icon: <Trophy />,
+              color: "#ef4444",
+            },
           ].map((stat, idx) => (
             <div key={idx} className={styles.statCard}>
-              <div className={styles.statIcon} style={{ color: stat.color, background: `${stat.color}15` }}>{stat.icon}</div>
-              <div className={styles.statInfo}><p>{stat.label}</p><h3>{stat.val}</h3></div>
+              <div
+                className={styles.statIcon}
+                style={{ color: stat.color, background: `${stat.color}15` }}
+              >
+                {stat.icon}
+              </div>
+              <div className={styles.statInfo}>
+                <p>{stat.label}</p>
+                <h3>{stat.val}</h3>
+              </div>
             </div>
           ))}
         </div>
@@ -160,41 +242,63 @@ const TeacherDashboardPage = () => {
         <div className={styles.twoColumnGrid}>
           <div className={styles.card}>
             <h3 className={styles.cardTitle}>Assignment Analytics</h3>
-            <div style={{ height: '220px' }}>
-                <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={assignmentLineData}>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                        <XAxis dataKey="name" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
-                        <YAxis tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
-                        <Tooltip />
-                        <Line type="monotone" dataKey="value" stroke="#6366f1" strokeWidth={3} dot={{ r: 4, fill: '#6366f1' }} activeDot={{ r: 6 }} animationDuration={1500} />
-                    </LineChart>
-                </ResponsiveContainer>
+            <div style={{ height: "220px" }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={assignmentLineData}>
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    vertical={false}
+                    stroke="#f1f5f9"
+                  />
+                  <XAxis
+                    dataKey="name"
+                    tick={{ fontSize: 11 }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    tick={{ fontSize: 11 }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <Tooltip />
+                  <Line
+                    type="monotone"
+                    dataKey="value"
+                    stroke="#6366f1"
+                    strokeWidth={3}
+                    dot={{ r: 4, fill: "#6366f1" }}
+                    activeDot={{ r: 6 }}
+                    animationDuration={1500}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
             </div>
           </div>
 
           <div className={styles.card}>
             <h3 className={styles.cardTitle}>Quiz Distribution</h3>
-            <div style={{ height: '220px' }}>
-                <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                        <Pie
-                            data={quizPieData}
-                            cx="50%" cy="50%"
-                            outerRadius={80}
-                            fill="#8884d8"
-                            dataKey="value"
-                            label={({ name, value }) => `${name}: ${value}`}
-                            animationDuration={1200}
-                        >
-                            {quizPieData.map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={entry.color} />
-                            ))}
-                        </Pie>
-                        <Tooltip />
-                        <Legend iconType="circle" />
-                    </PieChart>
-                </ResponsiveContainer>
+            <div style={{ height: "220px" }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={quizPieData}
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="value"
+                    label={({ name, value }) => `${name}: ${value}`}
+                    animationDuration={1200}
+                  >
+                    {quizPieData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                  <Legend iconType="circle" />
+                </PieChart>
+              </ResponsiveContainer>
             </div>
           </div>
         </div>
@@ -203,112 +307,205 @@ const TeacherDashboardPage = () => {
         <div className={styles.unevenGrid}>
           <div className={styles.card}>
             <h3 className={styles.cardTitle}>Lecture Progress Analysis</h3>
-            <div style={{ height: '250px', marginTop: '10px' }}>
+            <div style={{ height: "250px", marginTop: "10px" }}>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={getLectureStatsData()}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eee" />
-                  <XAxis dataKey="name" fontSize={11} axisLine={false} tickLine={false} />
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    vertical={false}
+                    stroke="#eee"
+                  />
+                  <XAxis
+                    dataKey="name"
+                    fontSize={11}
+                    axisLine={false}
+                    tickLine={false}
+                  />
                   <YAxis axisLine={false} tickLine={false} />
-                  <Tooltip cursor={{fill: '#f1f5f9'}} />
-                  <Bar dataKey="count" radius={[6, 6, 0, 0]} barSize={60} animationDuration={1000} />
+                  <Tooltip cursor={{ fill: "#f1f5f9" }} />
+                  <Bar
+                    dataKey="count"
+                    radius={[6, 6, 0, 0]}
+                    barSize={60}
+                    animationDuration={1000}
+                  />
                 </BarChart>
               </ResponsiveContainer>
             </div>
           </div>
           <div className={styles.card}>
             <div className={styles.calendarHeader}>
-              <h3 className={styles.calTitle}>{viewDate.toLocaleString('default', { month: 'long', year: 'numeric' })}</h3>
+              <h3 className={styles.calTitle}>
+                {viewDate.toLocaleString("default", {
+                  month: "long",
+                  year: "numeric",
+                })}
+              </h3>
               <div className={styles.calendarNav}>
-                <button onClick={() => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() - 1, 1))} className={styles.navBtn}><ChevronLeft size={14} /></button>
-                <button onClick={() => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1))} className={styles.navBtn}><ChevronRight size={14} /></button>
+                <button
+                  onClick={() =>
+                    setViewDate(
+                      new Date(
+                        viewDate.getFullYear(),
+                        viewDate.getMonth() - 1,
+                        1,
+                      ),
+                    )
+                  }
+                  className={styles.navBtn}
+                >
+                  <ChevronLeft size={14} />
+                </button>
+                <button
+                  onClick={() =>
+                    setViewDate(
+                      new Date(
+                        viewDate.getFullYear(),
+                        viewDate.getMonth() + 1,
+                        1,
+                      ),
+                    )
+                  }
+                  className={styles.navBtn}
+                >
+                  <ChevronRight size={14} />
+                </button>
               </div>
             </div>
-            <div className={styles.calendarGrid}>{['S','M','T','W','T','F','S'].map(d => <span key={d} className={styles.calHead}>{d}</span>)}{renderCalendar()}</div>
+            <div className={styles.calendarGrid}>
+              {["S", "M", "T", "W", "T", "F", "S"].map((d) => (
+                <span key={d} className={styles.calHead}>
+                  {d}
+                </span>
+              ))}
+              {renderCalendar()}
+            </div>
           </div>
         </div>
 
         {/* Row 3: Syllabus & Performance */}
-        <div className={styles.threeColumnGrid} style={{marginTop: '24px'}}>
-           <div className={styles.card}>
-              <h3 className={styles.cardTitle}>Syllabus Coverage</h3>
-              {/* here syllabus coverage means coverage per Course */}
-              {courses.length > 0 ? (
-                courses.slice(0, 3).map((course, idx) => {
-                  const percent = course.completion_percentage || 0;
-                  return (
-                    <div key={idx} className={styles.linearProg} style={{marginBottom: '15px'}}>
-                      <div className={styles.progLabel}>
-                        <span style={{fontSize: '13px', fontWeight: '500'}}>{course.title}</span>
-                        <span>{percent}%</span>
-                      </div>
-                      <div className={styles.progBar}>
-                        <div style={{width: `${percent}%`, background: idx === 0 ? '#6366f1' : idx === 1 ? '#10b981' : '#f59e0b'}}></div>
-                      </div>
+        <div className={styles.threeColumnGrid} style={{ marginTop: "24px" }}>
+          <div className={styles.card}>
+            <h3 className={styles.cardTitle}>Syllabus Coverage</h3>
+            {/* here syllabus coverage means coverage per Course */}
+            {courses.length > 0 ? (
+              courses.slice(0, 3).map((course, idx) => {
+                const percent = course.completion_percentage || 0;
+                return (
+                  <div
+                    key={idx}
+                    className={styles.linearProg}
+                    style={{ marginBottom: "15px" }}
+                  >
+                    <div className={styles.progLabel}>
+                      <span style={{ fontSize: "13px", fontWeight: "500" }}>
+                        {course.title}
+                      </span>
+                      <span>{percent}%</span>
                     </div>
-                  )
-                })
-              ) : (
-                <p style={{fontSize: '12px', color: '#64748b'}}>No course data available</p>
-              )}
-           </div>
-           <div className={`${styles.card} ${styles.centerText}`}>
-              <h3 className={styles.cardTitle}>Overall Performance</h3>
-              <div className={styles.circleContainer}>
-                  <svg viewBox="0 0 36 36" className={styles.circularChart}>
-                    <path className={styles.circleBg} d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                    <path className={styles.circle} style={{stroke: '#10b981'}} strokeDasharray="82, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                  </svg>
-                  <div className={styles.percentage}>82%</div>
-              </div>
-           </div>
-           <div className={styles.goalCard}>
-              <Star size={20} fill="white" /><h4>Monthly Goal</h4>
-              <p>{metrics?.total_lectures_generated ?? 0}/20 uploaded</p>
-           </div>
+                    <div className={styles.progBar}>
+                      <div
+                        style={{
+                          width: `${percent}%`,
+                          background:
+                            idx === 0
+                              ? "#6366f1"
+                              : idx === 1
+                                ? "#10b981"
+                                : "#f59e0b",
+                        }}
+                      ></div>
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <p style={{ fontSize: "12px", color: "#64748b" }}>
+                No course data available
+              </p>
+            )}
+          </div>
+          <div className={`${styles.card} ${styles.centerText}`}>
+            <h3 className={styles.cardTitle}>Overall Performance</h3>
+            <div className={styles.circleContainer}>
+              <svg viewBox="0 0 36 36" className={styles.circularChart}>
+                <path
+                  className={styles.circleBg}
+                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                />
+                <path
+                  className={styles.circle}
+                  style={{ stroke: "#10b981" }}
+                  strokeDasharray="82, 100"
+                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                />
+              </svg>
+              <div className={styles.percentage}>82%</div>
+            </div>
+          </div>
+          <div className={styles.goalCard}>
+            <Star size={20} fill="white" />
+            <h4>Monthly Goal</h4>
+            <p>{metrics?.total_lectures_generated ?? 0}/20 uploaded</p>
+          </div>
         </div>
 
         {/* LAST ROW: Weekly Hours + Student Progress (Functionality matched with Analytics) */}
-        <div className={styles.twoColumnGrid} style={{marginTop: '24px'}}>
-           <div className={styles.card}>
-              <h3 className={styles.cardTitle}>Weekly Active Hours</h3>
-              <div style={{ height: '250px' }}>
-                 <ResponsiveContainer width="100%" height="100%">
-                   <BarChart data={weeklyTeacherActivity}>
-                     <XAxis dataKey="name" axisLine={false} tickLine={false} />
-                     <YAxis axisLine={false} tickLine={false} />
-                     <Tooltip cursor={{fill: '#f8fafc'}} />
-                     <Bar dataKey="hours" fill="#8b5cf6" radius={[6, 6, 0, 0]} barSize={60} animationDuration={1300} />
-                   </BarChart>
-                 </ResponsiveContainer>
-              </div>
-           </div>
+        <div className={styles.twoColumnGrid} style={{ marginTop: "24px" }}>
+          <div className={styles.card}>
+            <h3 className={styles.cardTitle}>Weekly Active Hours</h3>
+            <div style={{ height: "250px" }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={weeklyTeacherActivity}>
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} />
+                  <YAxis axisLine={false} tickLine={false} />
+                  <Tooltip cursor={{ fill: "#f8fafc" }} />
+                  <Bar
+                    dataKey="hours"
+                    fill="#8b5cf6"
+                    radius={[6, 6, 0, 0]}
+                    barSize={60}
+                    animationDuration={1300}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
 
-           <div className={styles.card}>
+          <div className={styles.card}>
             <h3 className={styles.cardTitle}>Students Progress</h3>
             <div className={styles.studentList}>
-                {displayStudentProgress.map((student, idx) => (
-                    <div key={idx} className={styles.studentItem}>
-                        <img 
-                          src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${student.name}`} 
-                          alt={student.name} 
-                          className={styles.studentAvatar} 
-                        />
-                        <div className={styles.studentInfo}>
-                            <div className={styles.studentHeader}>
-                                <span className={styles.studentName}>{student.name}</span>
-                                <span className={styles.studentPercent} style={{ color: student.color || '#6366f1' }}>{student.progress}%</span>
-                            </div>
-                            <div className={styles.progressTrack}>
-                                <div 
-                                    className={styles.progressFill} 
-                                    style={{ width: `${student.progress}%`, backgroundColor: student.color || '#6366f1' }}
-                                ></div>
-                            </div>
-                        </div>
+              {studentProgress.map((student, idx) => (
+                <div key={idx} className={styles.studentItem}>
+                  <img
+                    src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${student.name}`}
+                    alt={student.name}
+                    className={styles.studentAvatar}
+                  />
+                  <div className={styles.studentInfo}>
+                    <div className={styles.studentHeader}>
+                      <span className={styles.studentName}>{student.name}</span>
+                      <span
+                        className={styles.studentPercent}
+                        style={{ color: student.color || "#6366f1" }}
+                      >
+                        {student.progress}%
+                      </span>
                     </div>
-                ))}
+                    <div className={styles.progressTrack}>
+                      <div
+                        className={styles.progressFill}
+                        style={{
+                          width: `${student.progress}%`,
+                          backgroundColor: student.color || "#6366f1",
+                        }}
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
-           </div>
+          </div>
         </div>
       </main>
     </div>

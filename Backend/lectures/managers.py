@@ -131,7 +131,8 @@ class CourseQuerySet(models.QuerySet):
             'quiz__lecture__content_source__course_id'
         ).annotate(avg_score=models.Avg('score'))
 
-        score_dict = {item['quiz__lecture__content_source__course_id']: item['avg_score'] or 0 for item in course_scores}
+        score_dict = {item['quiz__lecture__content_source__course_id']
+            : item['avg_score'] or 0 for item in course_scores}
 
         # get id of top students
         top_student_ids = list(User.objects.filter(
@@ -143,8 +144,9 @@ class CourseQuerySet(models.QuerySet):
             user_id__in=top_student_ids,
             quiz__lecture__content_source__course__teacher=teacher
         ).values('user_id').annotate(avg_score=models.Avg('score'))
-        stu_score_dict = {item['user_id']: item['avg_score'] or 0 for item in stu_scores}
-        
+        stu_score_dict = {item['user_id']
+            : item['avg_score'] or 0 for item in stu_scores}
+
         return {
             **base,
             "course_score_map": score_dict,
@@ -195,18 +197,21 @@ class CourseQuerySet(models.QuerySet):
         return self.filter(enrollments__student=student).annotate(
             q_avg=models.Avg(
                 'content_sources__generated_lectures__quiz__quizsubmission__score',
-                filter=models.Q(content_sources__generated_lectures__quiz__quizsubmission__user=student)
+                filter=models.Q(
+                    content_sources__generated_lectures__quiz__quizsubmission__user=student)
             ),
             asg_avg=models.Avg(
                 'content_sources__generated_lectures__assignment__assignmentsubmission__score',
-                filter=models.Q(content_sources__generated_lectures__assignment__assignmentsubmission__user=student)
+                filter=models.Q(
+                    content_sources__generated_lectures__assignment__assignmentsubmission__user=student)
             ),
             instructor=models.functions.Coalesce(
-                models.F('teacher__full_name'), 
+                models.F('teacher__full_name'),
                 models.F('teacher__email'),
-                output_field=models.CharField() # output only in String 
+                output_field=models.CharField()  # output only in String
             )
         ).values('id', 'title', 'instructor', 'q_avg', 'asg_avg')
+
 
 class LectureQuerySet(models.QuerySet):
     """
@@ -251,3 +256,18 @@ class LectureQuerySet(models.QuerySet):
             "validated": validated,
             "coverage": coverage
         }
+
+    def with_student_progress(self, student):
+        """
+        Joins Lectures with the specific student's progress.
+        """
+        return self.annotate(
+            student_progress=models.Max(
+                'user_progress__progress_percentage',
+                filter=models.Q(user_progress__user=student)
+            ),
+            student_last_watched=models.Max(
+                'user_progress__last_watched',
+                filter=models.Q(user_progress__user=student)
+            ),
+        )

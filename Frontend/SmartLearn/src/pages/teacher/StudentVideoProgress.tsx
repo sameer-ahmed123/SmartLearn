@@ -22,7 +22,7 @@ const StudentVideoProgress = () => {
         const res = await apiClient.get(
           `/dashboard/teacher/student-video-detail/${studentId}/${courseId}`,
         );
-
+        console.log(res, "student video progress detail page")
         setData(res.data);
       } catch (err: any) {
         console.error("API Error:", err);

@@ -33,7 +33,7 @@ const StudentReportPage = () => {
         const res = await apiClient.get(`/dashboard/teacher/student-report/${studentId}/`, {
           params: { course_id: courseId }
         });
-        
+        console.log(res);
         setData(res.data);
       } catch (err: any) {
         console.error("API Error:", err);
