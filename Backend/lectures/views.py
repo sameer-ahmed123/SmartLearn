@@ -15,7 +15,7 @@ from .serializers import (
 )
 from users.permissions import CanViewLecture, IsCourseOwner, IsTeacher
 from rest_framework.permissions import IsAuthenticated
-from .tasks import generate_lecture_from_source, generate_video_task
+from .tasks import generate_lecture_from_source
 from lectures.services import ProgressService, AnalyticsService
 
 # Load environment variables from .env
