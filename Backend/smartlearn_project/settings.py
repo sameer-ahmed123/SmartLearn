@@ -37,6 +37,10 @@ X_FRAME_OPTIONS = 'SAMEORIGIN'
 # Application definition
 
 INSTALLED_APPS = [
+    #### for notifications (channels)####
+    'daphne',
+    'channels',
+    #### django defaults #####
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -60,6 +64,17 @@ INSTALLED_APPS = [
     'django_extensions',
     'silk',
 ]
+
+ASGI_APPLICATION = 'smartlearn_project.asgi.application'
+
+CHANNEL_LAYERS = {
+    "default":{
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG":{
+            "hosts": [("127.0.0.1",6379)]
+        }
+    }
+}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
