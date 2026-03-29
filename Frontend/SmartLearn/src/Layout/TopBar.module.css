@@ -1,100 +1,273 @@
 .topbar {
-    height: 70px;
-    background: var(--card);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0 24px;
-    border-bottom: 1px solid var(--border);
-    position: sticky;
-    top: 0;
-    z-index: 100;
+  height: 70px;
+  background: var(--card);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 24px;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 
-.leftSide, .rightSide { display: flex; align-items: center; gap: 20px; }
+.leftSide,
+.rightSide {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
 
 .searchBar {
-    background: var(--muted);
-    border-radius: 10px;
-    padding: 8px 15px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    width: 280px;
+  background: var(--muted);
+  border-radius: 10px;
+  padding: 8px 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 280px;
 }
 
-.searchBar input { border: none; background: transparent; outline: none; width: 100%; color: var(--foreground); }
+.searchBar input {
+  border: none;
+  background: transparent;
+  outline: none;
+  width: 100%;
+  color: var(--foreground);
+}
 
-.actionButtons { display: flex; gap: 8px; }
+.actionButtons {
+  display: flex;
+  gap: 8px;
+}
 
 .iconBtn {
-    width: 40px;
-    height: 40px;
-    border-radius: 8px;
-    border: none;
-    background: transparent;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--muted-foreground);
-    position: relative;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted-foreground);
+  position: relative;
 }
 
-.iconBtn:hover { background: var(--secondary); }
+.iconBtn:hover {
+  background: var(--secondary);
+}
 
 .relativeWrapper {
-    position: relative;
+  position: relative;
 }
 
 .countBadge {
-    position: absolute;
-    top: 5px;
-    right: 5px;
-    background: #ef4444;
-    color: white;
-    font-size: 10px;
-    padding: 2px 5px;
-    border-radius: 10px;
-    font-weight: bold;
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background: #ef4444;
+  color: white;
+  font-size: 10px;
+  padding: 2px 5px;
+  border-radius: 10px;
+  font-weight: bold;
 }
 
-.notifBox, .langBox {
-    position: absolute;
-    top: 50px;
-    right: 0;
-    background: var(--popover);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-    z-index: 1000;
-    animation: fadeIn 0.2s ease-out;
+.notifBox,
+.langBox {
+  position: absolute;
+  top: 50px;
+  right: 0;
+  background: var(--popover);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  animation: fadeIn 0.2s ease-out;
 }
 
-.notifBox { width: 280px; overflow: hidden; }
-.notifHeader { padding: 12px 15px; display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); font-size: 13px; font-weight: 700; }
-.markAll { color: #6366f1; background: none; border: none; font-size: 11px; cursor: pointer; }
-.notifItem { padding: 12px 15px; border-bottom: 1px solid var(--border); cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
-.notifItem:hover { background: var(--accent); }
-.notifTitle { margin: 0; font-size: 12px; font-weight: 600; color: var(--foreground); }
-.notifTime { font-size: 10px; color: var(--muted-foreground); display: flex; align-items: center; gap: 3px; }
-.unreadDot { width: 6px; height: 6px; background: #ef4444; border-radius: 50%; }
-.viewAllBtn { width: 100%; padding: 10px; border: none; background: transparent; font-size: 11px; font-weight: 600; color: var(--muted-foreground); cursor: pointer; }
+.notifBox {
+  width: 280px;
+  overflow: hidden;
+}
+.notifHeader {
+  padding: 12px 15px;
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+  font-weight: 700;
+}
+.markAll {
+  color: #6366f1;
+  background: none;
+  border: none;
+  font-size: 11px;
+  cursor: pointer;
+}
+.notifItem {
+  padding: 12px 15px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.notifItem:hover {
+  background: var(--accent);
+}
+.notifTitle {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--foreground);
+}
+.notifTime {
+  font-size: 10px;
+  color: var(--muted-foreground);
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+.unreadDot {
+  width: 6px;
+  height: 6px;
+  background: #ef4444;
+  border-radius: 50%;
+}
+.viewAllBtn {
+  width: 100%;
+  padding: 10px;
+  border: none;
+  background: transparent;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted-foreground);
+  cursor: pointer;
+}
 
-.langPicker { display: flex; align-items: center; gap: 8px; padding: 6px 12px; background: var(--card); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; color: var(--foreground); }
-.flagImg { width: 20px; border-radius: 2px; }
-.langBox { width: 140px; padding: 5px; }
-.langRow { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 6px; cursor: pointer; font-size: 13px; color: var(--foreground); }
-.langRow:hover { background: var(--accent); }
-.activeRow { background: var(--accent); font-weight: bold; }
+.langPicker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--foreground);
+}
+.flagImg {
+  width: 20px;
+  border-radius: 2px;
+}
+.langBox {
+  width: 140px;
+  padding: 5px;
+}
+.langRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--foreground);
+}
+.langRow:hover {
+  background: var(--accent);
+}
+.activeRow {
+  background: var(--accent);
+  font-weight: bold;
+}
 
 /* Profile Section */
-.profileSection { display: flex; align-items: center; gap: 12px; }
-.profileInfo { text-align: right; }
-.name { margin: 0; font-weight: 700; font-size: 14px; color: var(--foreground); white-space: nowrap; }
-.role { font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; font-weight: 600; }
-.avatarCircle img { width: 38px; height: 38px; border-radius: 50%; border: 2px solid var(--border); object-fit: cover; }
+.profileSection {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.profileInfo {
+  text-align: right;
+}
+.name {
+  margin: 0;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--foreground);
+  white-space: nowrap;
+}
+.role {
+  font-size: 10px;
+  color: var(--muted-foreground);
+  text-transform: uppercase;
+  font-weight: 600;
+}
+.avatarCircle img {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  object-fit: cover;
+}
 
-.rotated { transform: rotate(180deg); transition: 0.2s; }
+.rotated {
+  transform: rotate(180deg);
+  transition: 0.2s;
+}
 
-@keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.notifItem {
+  padding: 12px 15px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column; /* Stack verb and time vertically */
+  align-items: flex-start;
+  gap: 4px;
+  transition: background 0.2s;
+  background: var(--popover); /* Ensure default background */
+}
+
+/* Ensure the text is ALWAYS visible */
+.notifTitle {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--foreground) !important; /* Force the theme's text color */
+  line-height: 1.4;
+}
+
+.notifTime {
+  font-size: 10px;
+  color: var(--muted-foreground) !important;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Highlight for unread notifications */
+.unreadItem {
+  background: var(
+    --accent
+  ); /* Uses your theme's accent color (usually a subtle blue/gray) */
+  border-left: 3px solid #6366f1; /* Add a small indigo strip to the left for "New" feel */
+}
+
+.notifItem:hover {
+  background: var(--secondary);
+}

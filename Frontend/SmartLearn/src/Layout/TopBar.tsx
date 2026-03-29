@@ -1,7 +1,18 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Menu, Search, Bell, Moon, Sun, Maximize2, ChevronDown, Clock } from 'lucide-react'; 
+import React, { useState, useEffect, useRef } from "react";
+import {
+  Menu,
+  Search,
+  Bell,
+  Moon,
+  Sun,
+  Maximize2,
+  ChevronDown,
+  Clock,
+} from "lucide-react";
 import styles from "./TopBar.module.css";
-import { useAuthStore } from "@/store/useAuthStore"; 
+import { useAuthStore } from "@/store/useAuthStore";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
+import NotificationDropdown from "@/components/notifications/NotificationDropdown";
 
 interface TopBarProps {
   toggleSidebar: () => void;
@@ -12,30 +23,45 @@ const TopBar = ({ toggleSidebar }: TopBarProps) => {
   const [showLangMenu, setShowLangMenu] = useState(false);
   const [showNotifMenu, setShowNotifMenu] = useState(false);
   const [searchQuery, setSearchQuery] = useState(""); // Search active karne ke liye state
-  
+
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
-  
+
   const langRef = useRef<HTMLDivElement>(null);
   const notifRef = useRef<HTMLDivElement>(null);
 
-  const [currentLang, setCurrentLang] = useState({ 
-    code: 'en', 
-    name: 'English', 
-    flag: 'https://flagcdn.com/w40/us.png' 
+  const [currentLang, setCurrentLang] = useState({
+    code: "en",
+    name: "English",
+    flag: "https://flagcdn.com/w40/us.png",
   });
 
   const languages = [
-    { code: 'en', name: 'English', flag: 'https://flagcdn.com/w40/us.png' },
-    { code: 'ur', name: 'Urdu', flag: 'https://flagcdn.com/w40/pk.png' }, // Urdu with Pakistan flag added
-    { code: 'fr', name: 'French', flag: 'https://flagcdn.com/w40/fr.png' },
-    { code: 'de', name: 'German', flag: 'https://flagcdn.com/w40/de.png' }
+    { code: "en", name: "English", flag: "https://flagcdn.com/w40/us.png" },
+    { code: "ur", name: "Urdu", flag: "https://flagcdn.com/w40/pk.png" }, // Urdu with Pakistan flag added
+    { code: "fr", name: "French", flag: "https://flagcdn.com/w40/fr.png" },
+    { code: "de", name: "German", flag: "https://flagcdn.com/w40/de.png" },
   ];
 
   const notifications = [
-    { id: 1, title: 'New Lecture Generated', time: '5 min ago', status: 'unread' },
-    { id: 2, title: 'Course "Parallel" Validated', time: '1 hour ago', status: 'unread' },
-    { id: 3, title: 'System Update Completed', time: '2 hours ago', status: 'read' },
+    {
+      id: 1,
+      title: "New Lecture Generated",
+      time: "5 min ago",
+      status: "unread",
+    },
+    {
+      id: 2,
+      title: 'Course "Parallel" Validated',
+      time: "1 hour ago",
+      status: "unread",
+    },
+    {
+      id: 3,
+      title: "System Update Completed",
+      time: "2 hours ago",
+      status: "read",
+    },
   ];
 
   // Search trigger function
@@ -50,8 +76,10 @@ const TopBar = ({ toggleSidebar }: TopBarProps) => {
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (langRef.current && !langRef.current.contains(event.target as Node)) setShowLangMenu(false);
-      if (notifRef.current && !notifRef.current.contains(event.target as Node)) setShowNotifMenu(false);
+      if (langRef.current && !langRef.current.contains(event.target as Node))
+        setShowLangMenu(false);
+      if (notifRef.current && !notifRef.current.contains(event.target as Node))
+        setShowNotifMenu(false);
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -60,20 +88,22 @@ const TopBar = ({ toggleSidebar }: TopBarProps) => {
   useEffect(() => {
     const root = window.document.documentElement;
     if (isDark) {
-      root.classList.add('dark');
+      root.classList.add("dark");
     } else {
-      root.classList.remove('dark');
+      root.classList.remove("dark");
     }
   }, [isDark]);
 
   const changeLanguage = (lang: any) => {
     setCurrentLang(lang);
     setShowLangMenu(false);
-    
-    const googleCombo = document.querySelector('.goog-te-combo') as HTMLSelectElement;
+
+    const googleCombo = document.querySelector(
+      ".goog-te-combo",
+    ) as HTMLSelectElement;
     if (googleCombo) {
       googleCombo.value = lang.code;
-      googleCombo.dispatchEvent(new Event('change', { bubbles: true }));
+      googleCombo.dispatchEvent(new Event("change", { bubbles: true }));
     }
   };
 
@@ -86,16 +116,26 @@ const TopBar = ({ toggleSidebar }: TopBarProps) => {
     <header className={styles.topbar}>
       <div className={styles.leftSide}>
         <button onClick={toggleSidebar} className={styles.iconBtn}>
-           <Menu size={20} />
+          <Menu size={20} />
         </button>
         {/* Search Bar activated with Form */}
         <form onSubmit={handleSearch} className={styles.searchBar}>
-          <button type="submit" style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+          <button
+            type="submit"
+            style={{
+              background: "none",
+              border: "none",
+              padding: 0,
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+            }}
+          >
             <Search size={18} className={styles.searchIcon} />
           </button>
-          <input 
-            type="text" 
-            placeholder="Search anything..." 
+          <input
+            type="text"
+            placeholder="Search anything..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -104,63 +144,65 @@ const TopBar = ({ toggleSidebar }: TopBarProps) => {
 
       <div className={styles.rightSide}>
         <div className={styles.actionButtons}>
-          <button className={styles.iconBtn} onClick={() => document.documentElement.requestFullscreen()}>
+          <button
+            className={styles.iconBtn}
+            onClick={() => document.documentElement.requestFullscreen()}
+          >
             <Maximize2 size={18} />
           </button>
-          
+
           <button onClick={() => setIsDark(!isDark)} className={styles.iconBtn}>
             {isDark ? <Sun size={20} color="#fbbf24" /> : <Moon size={20} />}
           </button>
 
           <div className={styles.relativeWrapper} ref={notifRef}>
-            <button 
-              className={`${styles.iconBtn} ${showNotifMenu ? styles.activeIcon : ''}`} 
-              onClick={() => { setShowNotifMenu(!showNotifMenu); setShowLangMenu(false); }}
-            >
-              <Bell size={20} />
-              <span className={styles.countBadge}>3</span>
-            </button>
+            <NotificationBell
+              onClick={() => {
+                setShowNotifMenu(!showNotifMenu);
+                setShowLangMenu(false);
+              }}
+              className={`${styles.iconBtn} ${showNotifMenu ? styles.activeIcon : ""}`}
+            />
 
-            {showNotifMenu && (
-              <div className={styles.notifBox}>
-                <div className={styles.notifHeader}>
-                  <span>Notifications</span>
-                  <button className={styles.markAll}>Mark all</button>
-                </div>
-                <div className={styles.notifList}>
-                  {notifications.map((notif) => (
-                    <div key={notif.id} className={styles.notifItem} onClick={() => setShowNotifMenu(false)}>
-                      <div>
-                        <p className={styles.notifTitle}>{notif.title}</p>
-                        <span className={styles.notifTime}><Clock size={10} /> {notif.time}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+            {showNotifMenu && <NotificationDropdown />}
           </div>
         </div>
 
         <div className={styles.relativeWrapper} ref={langRef}>
-          <button 
-            className={styles.langPicker} 
-            onClick={() => { setShowLangMenu(!showLangMenu); setShowNotifMenu(false); }}
+          <button
+            className={styles.langPicker}
+            onClick={() => {
+              setShowLangMenu(!showLangMenu);
+              setShowNotifMenu(false);
+            }}
           >
-            <img src={currentLang.flag} alt={currentLang.name} className={styles.flagImg} />
-            <span className={styles.langTxt}>{currentLang.code.toUpperCase()}</span>
-            <ChevronDown size={14} className={showLangMenu ? styles.rotated : ""} />
+            <img
+              src={currentLang.flag}
+              alt={currentLang.name}
+              className={styles.flagImg}
+            />
+            <span className={styles.langTxt}>
+              {currentLang.code.toUpperCase()}
+            </span>
+            <ChevronDown
+              size={14}
+              className={showLangMenu ? styles.rotated : ""}
+            />
           </button>
 
           {showLangMenu && (
             <div className={styles.langBox}>
               {languages.map((lang) => (
-                <div 
-                  key={lang.code} 
+                <div
+                  key={lang.code}
                   className={`${styles.langRow} ${currentLang.code === lang.code ? styles.activeRow : ""}`}
                   onClick={() => changeLanguage(lang)}
                 >
-                  <img src={lang.flag} alt={lang.name} className={styles.flagImg} />
+                  <img
+                    src={lang.flag}
+                    alt={lang.name}
+                    className={styles.flagImg}
+                  />
                   <span>{lang.name}</span>
                 </div>
               ))}
@@ -170,19 +212,20 @@ const TopBar = ({ toggleSidebar }: TopBarProps) => {
 
         <div className={styles.profileSection}>
           <div className={styles.profileInfo}>
-             <p className={styles.name}>{displayName}</p>
-             <span className={styles.role}>{displayRole}</span>
+            <p className={styles.name}>{displayName}</p>
+            <span className={styles.role}>{displayRole}</span>
           </div>
           <div className={styles.avatarCircle}>
-             <img 
-               src={avatarUrl} 
-               alt="User Profile" 
-               className={styles.profileImg}
-               onError={(e) => {
-                 (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${displayName}&background=4f46e5&color=fff`;
-               }}
-             />
-             <div className={styles.onlineStatus}></div>
+            <img
+              src={avatarUrl}
+              alt="User Profile"
+              className={styles.profileImg}
+              onError={(e) => {
+                (e.target as HTMLImageElement).src =
+                  `https://ui-avatars.com/api/?name=${displayName}&background=4f46e5&color=fff`;
+              }}
+            />
+            <div className={styles.onlineStatus}></div>
           </div>
         </div>
       </div>

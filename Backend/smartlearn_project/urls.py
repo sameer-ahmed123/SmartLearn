@@ -30,6 +30,7 @@ urlpatterns = [
         path('ai/', include('ai_core.urls')),
         path('dashboard/', include('dashboard.urls')),
         path('chat/', include('chatbot.urls')),
+        path('notifications/',include('notifications.urls'))
     ])),
     path('silk/', include('silk.urls')),
 ]

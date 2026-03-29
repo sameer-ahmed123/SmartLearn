@@ -1,3 +1,18 @@
-from django.shortcuts import render
+from rest_framework import generics, status
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+from .models import Notification
+from .serializers import NotificationSerializer
 
-# Create your views here.
+class NotificationListView(generics.ListAPIView):
+    serializer_class = NotificationSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        # Only show notifications for the logged-in student
+        return Notification.objects.filter(recipient=self.request.user)
+
+    def patch(self, request, *args, **kwargs):
+        """Mark all notifications as read for this user"""
+        Notification.objects.filter(recipient=request.user, is_read=False).update(is_read=True)
+        return Response({"detail": "All notifications marked as read"}, status=status.HTTP_200_OK)
