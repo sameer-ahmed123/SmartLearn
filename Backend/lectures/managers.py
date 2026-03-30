@@ -1,6 +1,7 @@
 from django.db import models
 from assessment.models import Assignment, QuizSubmission, Quiz, AssignmentSubmission
 from django.contrib.auth import get_user_model
+from django.db.models.functions import Coalesce
 
 
 class CourseQuerySet(models.QuerySet):
@@ -270,4 +271,19 @@ class LectureQuerySet(models.QuerySet):
                 'user_progress__last_watched',
                 filter=models.Q(user_progress__user=student)
             ),
+        )
+
+    def with_user_review_progress(self, user):
+        """
+        Annotates the lecture with the user's review progress percentage.
+        Avoids N+1 queries by fetching progress at the database level.
+        """
+        return self.annotate(
+            review_progress=Coalesce(
+                models.Max(
+                    'user_progress__progress_percentage',
+                    filter=models.Q(user_progress__user=user)
+                ),
+                0
+            )
         )
