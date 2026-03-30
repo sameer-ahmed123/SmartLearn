@@ -131,7 +131,7 @@ class LectureSerializer(serializers.ModelSerializer):
     quiz_id = serializers.SerializerMethodField()
     assignment_data = serializers.SerializerMethodField()
     assignment_id = serializers.SerializerMethodField()
-    review_progress = serializers.SerializerMethodField()  # Changed to MethodField
+    review_progress = serializers.IntegerField(read_only=True, default=0)
 
     class Meta:
         model = Lecture
@@ -188,7 +188,7 @@ class LectureDetailSerializer(serializers.ModelSerializer):
     validated_by = TeacherDetailSerializer(read_only=True)
     status_display = serializers.CharField(
         source='get_validation_status_display', read_only=True)
-    review_progress = serializers.SerializerMethodField()
+    review_progress = serializers.IntegerField(read_only=True, default=0)
     has_quiz = serializers.SerializerMethodField()
     has_assignment = serializers.SerializerMethodField()
 
@@ -236,7 +236,7 @@ class LectureQuerySerializer(serializers.ModelSerializer):
     status_display = serializers.CharField(
         source='get_validation_status_display', read_only=True)
     review_url = serializers.SerializerMethodField()
-    review_progress = serializers.SerializerMethodField()  # Changed to MethodField
+    review_progress = serializers.IntegerField(read_only=True, default=0)
 
     class Meta:
         model = Lecture
@@ -301,7 +301,7 @@ class CourseLectureListItem(serializers.ModelSerializer):
     quiz_id = serializers.SerializerMethodField()
     assignment_data = serializers.SerializerMethodField()
     assignment_id = serializers.SerializerMethodField()
-    review_progress = serializers.SerializerMethodField()  # Changed to MethodField
+    review_progress = serializers.IntegerField(read_only=True, default=0)
 
     quiz_status = serializers.CharField(source='quiz.status', read_only=True)
     assignment_status = serializers.CharField(

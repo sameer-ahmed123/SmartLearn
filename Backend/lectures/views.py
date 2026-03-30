@@ -256,7 +256,7 @@ def lecture_validation_queue(request):
     ).select_related(
         'content_source',
         'content_source__course'
-    ).order_by('created_at')
+    ).with_user_review_progress(user).order_by('created_at')
 
     serializer = LectureQuerySerializer(queryset, many=True)
     return Response(serializer.data)
@@ -269,7 +269,7 @@ def lecture_detail(request, id):
         Lecture.objects.select_related(
             'content_source',
             'content_source__course'
-        ),
+        ).with_user_review_progress(request.user),
         id=id)
 
     if request.method == 'GET':
@@ -327,7 +327,7 @@ def course_lecture_list(request, course_id):
         'content_source__course',
         'quiz',
         'assignment'
-    ).order_by('created_at')
+    ).with_user_review_progress(request.user).order_by('created_at')
 
     serializer = CourseLectureListItem(
         lecture_list, many=True, context={'request': request})
