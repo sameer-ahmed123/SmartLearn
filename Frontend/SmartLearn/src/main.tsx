@@ -4,15 +4,25 @@ import "./index.css";
 import App from "./App.tsx";
 import { BrowserRouter } from "react-router-dom";
 import { NotificationProvider } from "./context/NotificationContext.tsx";
-import { useAuthStore } from "./store/useAuthStore.ts";
-
-const token = useAuthStore.getState().accessToken
+import { ToastContainer } from "react-toastify";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <BrowserRouter>
-      <NotificationProvider userToken={token}>
+      <NotificationProvider>
         <App />
+        <ToastContainer
+          position="bottom-right"
+          autoClose={15000}
+          hideProgressBar={false}
+          newestOnTop={false}
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme="colored"
+        />
       </NotificationProvider>
     </BrowserRouter>
   </StrictMode>,

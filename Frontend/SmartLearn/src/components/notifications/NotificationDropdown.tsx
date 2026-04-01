@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNotifications } from '@/context/NotificationContext';
 import styles from '../../Layout/TopBar.module.css';
-import { Clock, Check } from 'lucide-react';
+import { Clock } from 'lucide-react';
 
 const NotificationDropdown = () => {
   const { notifications, markAllAsRead } = useNotifications();
@@ -21,6 +21,7 @@ const NotificationDropdown = () => {
             No notifications yet
           </div>
         ) : (
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           notifications.map((notif: any) => (
             <div 
               key={notif.id} 

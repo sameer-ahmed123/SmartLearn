@@ -2,12 +2,10 @@ import React, { useState, useEffect, useRef } from "react";
 import {
   Menu,
   Search,
-  Bell,
   Moon,
   Sun,
   Maximize2,
   ChevronDown,
-  Clock,
 } from "lucide-react";
 import styles from "./TopBar.module.css";
 import { useAuthStore } from "@/store/useAuthStore";
@@ -25,10 +23,9 @@ const TopBar = ({ toggleSidebar }: TopBarProps) => {
   const [searchQuery, setSearchQuery] = useState(""); // Search active karne ke liye state
 
   const user = useAuthStore((state) => state.user);
-  const logout = useAuthStore((state) => state.logout);
 
   const langRef = useRef<HTMLDivElement>(null);
-  const notifRef = useRef<HTMLDivElement>(null);
+  const notifRef = useRef<HTMLDivElement>(null); // handles the clickout for notification dropdown
 
   const [currentLang, setCurrentLang] = useState({
     code: "en",
@@ -43,26 +40,6 @@ const TopBar = ({ toggleSidebar }: TopBarProps) => {
     { code: "de", name: "German", flag: "https://flagcdn.com/w40/de.png" },
   ];
 
-  const notifications = [
-    {
-      id: 1,
-      title: "New Lecture Generated",
-      time: "5 min ago",
-      status: "unread",
-    },
-    {
-      id: 2,
-      title: 'Course "Parallel" Validated',
-      time: "1 hour ago",
-      status: "unread",
-    },
-    {
-      id: 3,
-      title: "System Update Completed",
-      time: "2 hours ago",
-      status: "read",
-    },
-  ];
 
   // Search trigger function
   const handleSearch = (e: React.FormEvent) => {
@@ -94,6 +71,7 @@ const TopBar = ({ toggleSidebar }: TopBarProps) => {
     }
   }, [isDark]);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const changeLanguage = (lang: any) => {
     setCurrentLang(lang);
     setShowLangMenu(false);

@@ -1,17 +1,25 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useRef,
+} from "react";
 import { toast } from "react-toastify";
+import apiClient from "@/api/apiClient";
+import { useAuthStore } from "@/store/useAuthStore";
 
 const NotificationContext = createContext<any>(null);
 
 export const NotificationProvider = ({
   children,
-  userToken,
 }: {
   children: React.ReactNode;
-  userToken: string | null;
 }) => {
+  const userToken = useAuthStore((state) => state.accessToken);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const socketRef = useRef<WebSocket | null>(null);
 
   // 1. Fetch History from Backend on Load
   useEffect(() => {
@@ -19,22 +27,11 @@ export const NotificationProvider = ({
 
     const fetchNotifications = async () => {
       try {
-        const response = await fetch(
-          "http://localhost:8000/api/v1/notifications/",
-          {
-            headers: {
-              Authorization: `Bearer ${userToken}`,
-              "Content-Type": "application/json",
-            },
-          },
-        );
-        if (response.ok) {
-          const data = await response.json();
-          setNotifications(data);
-          // Calculate unread count from fetched history
-          const unread = data.filter((n: any) => !n.is_read).length;
-          setUnreadCount(unread);
-        }
+        const response = await apiClient.get("/notifications/");
+        setNotifications(response.data);
+        // Calculate unread count from fetched history
+        const unread = response.data.filter((n: any) => !n.is_read).length;
+        setUnreadCount(unread);
       } catch (error) {
         console.error("Failed to fetch notification history:", error);
       }
@@ -47,9 +44,15 @@ export const NotificationProvider = ({
   useEffect(() => {
     if (!userToken) return;
 
+    //close existing socket before opening new
+    if (socketRef.current) {
+      socketRef.current.close();
+    }
+
     const socket = new WebSocket(
       `ws://localhost:8000/ws/notifications/?token=${userToken}`,
     );
+    socketRef.current = socket; // set socket connection as current referenc in sockerRef
 
     socket.onopen = () => console.log("✅ Notification WebSocket Connected");
 
@@ -59,16 +62,12 @@ export const NotificationProvider = ({
 
       // Trigger Toast Pop-up
       toast.info(data.verb, {
-        position: "top-right",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
+        // autoClose: 5000,
       });
 
       // Update State: Add new notification to the top of the list
       setNotifications((prev) => [data, ...prev]);
-      setUnreadCount((prev) => prev + 1);
+      setUnreadCount((prev) => prev + 1); //update unread count
     };
 
     socket.onerror = (err) => console.error("WebSocket Error:", err);
@@ -77,7 +76,10 @@ export const NotificationProvider = ({
       console.log("❌ Notification WebSocket Disconnected");
 
     return () => {
-      socket.close();
+      // close socket on component unmount
+      if (socketRef.current) {
+        socketRef.current.close();
+      }
     };
   }, [userToken]);
 
@@ -86,18 +88,8 @@ export const NotificationProvider = ({
     if (!userToken || unreadCount === 0) return;
 
     try {
-      const response = await fetch(
-        "http://localhost:8000/api/v1/notifications/",
-        {
-          method: "PATCH",
-          headers: {
-            Authorization: `Bearer ${userToken}`,
-            "Content-Type": "application/json",
-          },
-        },
-      );
-
-      if (response.ok) {
+      const response = await apiClient.patch("/notifications/");
+      if (response.status === 200) {
         setUnreadCount(0);
         // Update local list to show everything as read
         setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
@@ -116,6 +108,7 @@ export const NotificationProvider = ({
   );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useNotifications = () => {
   const context = useContext(NotificationContext);
   if (!context) {
