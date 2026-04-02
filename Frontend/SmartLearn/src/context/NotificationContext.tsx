@@ -99,9 +99,44 @@ export const NotificationProvider = ({
     }
   };
 
+  //  4. mark a single notification as read
+  const markSingleAsRead = async (notif: any) => {
+    if (!userToken || unreadCount === 0) return;
+
+    try {
+      const response = await apiClient.patch(`/notifications/mark-by-target/`, {
+        target_type: notif.target_type,
+        target_id: notif.target_id,
+      });
+      if (response.status === 200) {
+        // 2. Update the local UI state
+        // We find ANY notification with the matching target and mark it true
+        let matchedCount = 0;
+
+        setNotifications((prev) =>
+          prev.map((n) => {
+            if (
+              n.target_type === notif.target_type && //matching target_type
+              n.target_id === notif.target_id && //matching target_id
+              !n.is_read //is not read
+            ) {
+              matchedCount++;
+              return { ...n, is_read: true };
+            }
+            return n;
+          }),
+        );
+
+        // 3. Decrement the bell counter by however many we just marked as read
+        setUnreadCount((prev) => Math.max(0, prev - matchedCount));
+      }
+    } catch (e) {
+      console.log("unable to mark notification as read", e);
+    }
+  };
   return (
     <NotificationContext.Provider
-      value={{ notifications, unreadCount, markAllAsRead }}
+      value={{ notifications, unreadCount, markAllAsRead, markSingleAsRead }}
     >
       {children}
     </NotificationContext.Provider>
