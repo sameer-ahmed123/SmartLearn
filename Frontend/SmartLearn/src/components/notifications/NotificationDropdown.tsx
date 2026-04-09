@@ -16,9 +16,9 @@ const NotificationDropdown = () => {
     if (notif.target_type === "lecture") {
       url = `/student/lecture/${notif.target_id}/review/`;
     } else if (notif.target_type === "quiz") {
-      url = `/student/quizzes/${notif.target_id}`;
+      url = `/student/lecture/${notif.target_id}/quiz/`;
     } else if (notif.target_type === "assignment") {
-      url = `/student/assignments/${notif.target_id}`;
+      url = `/student/lecture/${notif.target_id}/assignment/`;
     }
     else{
       url = "/dashboard"
