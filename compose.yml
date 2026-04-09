@@ -1,0 +1,64 @@
+services:
+  db:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_ROOT_PASSWORD: ${DB_PASS}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  django:
+    build: ./Backend
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - ./Backend:/app
+      - django_media:/app/media  # Persistent storage for AI-generated content
+      - django_static:/app/static
+    ports:
+      - "8000:8000"
+    environment:
+      - DB_HOST=db
+      - CELERY_BROKER=redis://redis:6379/0
+    env_file:
+      - ./Backend/.env
+    depends_on:
+      - db
+      - redis
+
+  celery_worker:
+    build: ./Backend
+    command: celery -A smartlearn_project worker --loglevel=info
+    volumes:
+      - ./Backend:/app
+    env_file:
+      - ./Backend/.env
+    environment:
+      - DB_HOST=db
+      - CELERY_BROKER=redis://redis:6379/0
+    depends_on:
+      - redis
+      - db
+
+  react:
+    build: ./Frontend/SmartLearn
+    volumes:
+      - ./Frontend/SmartLearn:/app/SmartLearn
+      - /app/SmartLearn/node_modules
+    ports:
+      - "5173:5173"
+    
+    depends_on:
+      - django
+
+volumes:
+  mysql_data:
+  django_media:
+  django_static:
