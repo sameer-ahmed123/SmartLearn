@@ -31,3 +31,16 @@ def assignment_published_signal(sender, instance, created, **kwargs):
             target_ct.id, 
             instance.id
         )
+
+@receiver(post_save, sender=Quiz)
+def quiz_published_signal(sender,instance,created,**kwargs):
+    if instance.status == 'published':
+        course_id = instance.lecture.content_source.course_id
+        target_ct = ContentType.objects.get_for_model(instance)
+        
+        create_bulk_notifications.delay(
+            course_id,
+            f"New Quiz for {instance.lecture.topic}",
+            target_ct.id,
+            instance.id
+        )
