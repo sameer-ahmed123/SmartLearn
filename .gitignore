@@ -5,6 +5,8 @@
 # Virtual Environment
 # Ignores the entire 'venv' directory inside the Backend folder
 /Backend/venv
+/Backend/venv_linux
+
 
 # Byte-code files
 *.pyc
