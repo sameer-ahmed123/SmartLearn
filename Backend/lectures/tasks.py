@@ -127,7 +127,9 @@ def generate_video_task(lecture_id):
     Contains Mock, HeyGen, and D-ID engines.
     """
     try:
-        lecture = Lecture.objects.get(id=lecture_id)
+        lecture = Lecture.objects.select_related(
+            'content_source__course__teacher'
+        ).get(id=lecture_id)
         
         lecture.video_status = 'processing'
         lecture.save(update_fields=['video_status'])
