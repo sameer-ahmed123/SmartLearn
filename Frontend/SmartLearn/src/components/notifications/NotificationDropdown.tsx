@@ -1,42 +1,53 @@
-import React from "react";
 import { useNotifications } from "@/context/NotificationContext";
 import styles from "../../Layout/TopBar.module.css";
 import { Clock } from "lucide-react";
-import apiClient from "@/api/apiClient";
 import { useNavigate } from "react-router-dom";
-
+import { useAuthStore } from "@/store/useAuthStore";
 const NotificationDropdown = () => {
-  const { notifications, markAllAsRead,markSingleAsRead } = useNotifications();
+  const { notifications, markAllAsRead, markSingleAsRead } = useNotifications();
   const navigate = useNavigate();
+  const role = useAuthStore((e) => e.role);
 
   const handelNotificationClick = async (notif: any) => {
     console.log("Notification Clicked:", notif);
     // 1. Logic to determine the notification path
     let url = "";
-    if (notif.target_type === "lecture") {
-      url = `/student/lecture/${notif.target_id}/review/`;
-    } else if (notif.target_type === "quiz") {
-      url = `/student/lecture/${notif.target_id}/quiz/`;
-    } else if (notif.target_type === "assignment") {
-      url = `/student/lecture/${notif.target_id}/assignment/`;
+    if (role === "student") {
+      if (notif.target_type === "lecture") {
+        url = `/student/lecture/${notif.target_id}/review/`;
+      } else if (notif.target_type === "quiz") {
+        url = `/student/lecture/${notif.target_id}/quiz/`;
+      } else if (notif.target_type === "assignment") {
+        url = `/student/lecture/${notif.target_id}/assignment/`;
+      } else {
+        url = "/dashboard";
+      }
+    } else if (role === "teacher") {
+      if (notif.target_type === "lecture") {
+        url = `/teacher/lecture/${notif.target_id}/review/`;
+      } else if (notif.target_type === "quiz") {
+        // this takes lecture id and maps to a quiz (QuizDetailView.tsx)
+        url = `/teacher/lecture/${notif.lecture_id}/quiz/`;
+      } else if (notif.target_type === "assignment") {
+        url = `/teacher/lecture/${notif.target_id}/assignment/`;
+      } else {
+        url = "/dashboard";
+      }
     }
-    else{
-      url = "/dashboard"
-    }
+
     console.log("Target URL:", url);
 
     if (url) {
-      // 2. Mark as read on the backend 
+      // 2. Mark as read on the backend
       try {
-        await markSingleAsRead(notif)
+        await markSingleAsRead(notif);
       } catch (e) {
         console.error("error marking as read", e);
       }
       // console.log("Attempting to navigate to:", url);
       // 3. Navigate
       navigate(url);
-    }
-    else{
+    } else {
       console.warn("No URL generated for target_type:", notif.target_type);
     }
   };

@@ -18,7 +18,7 @@ def create_bulk_notifications(course_id, verb, target_ct_id, target_id):
     User = get_user_model()
     target_ct = ContentType.objects.get_for_id(target_ct_id)
     target_type = target_ct.model
-    student_ids =list(Enrollment.objects.filter(
+    student_ids = list(Enrollment.objects.filter(
         course_id=course_id).values_list('student_id', flat=True))
 
     print(f"DEBUG: Found {len(student_ids)} students for course {course_id}")
