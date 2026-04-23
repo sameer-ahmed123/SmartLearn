@@ -67,3 +67,38 @@
   .headerArea { flex-direction: column-reverse; }
   .totalPointsBadge { align-self: flex-start; }
 }
+
+
+
+
+/* In your CSS Module file (styles.module.css) */
+
+.dropZone {
+  /* same default styles as above */
+  border: 2px dashed #D0D7DE;
+  border-radius: 12px;
+  background-color: #F6F8FA;
+  padding: 30px;
+  /* ... */
+}
+
+/* The 'isLate' state */
+.dropZone.lateZone {
+  /* BORDER is the color with 20% opacity */
+  border-color: #FF746C44;
+
+  /* BACKGROUND is a very faint tint (8% opacity) */
+  background-color: #FF746C14;
+  cursor: not-allowed;
+}
+
+/* Specific color for the icon (keeping the React code the same) */
+.lateZone .lateIcon {
+  color: #FF746C; /* Apply bright color ONLY to the icon */
+}
+
+/* Specific color for the text in the late state */
+.lateZone .fileName {
+  color: #55585C; /* Text should be dark and legible */
+  font-weight: 500;
+}
