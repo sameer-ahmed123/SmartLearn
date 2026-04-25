@@ -38,6 +38,7 @@ services:
     command: celery -A smartlearn_project worker --loglevel=info
     volumes:
       - ./Backend:/app
+      - django_media:/app/media
     env_file:
       - ./Backend/.env
     environment:

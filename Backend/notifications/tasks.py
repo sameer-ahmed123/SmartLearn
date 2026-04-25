@@ -13,8 +13,7 @@ channel_layer = get_channel_layer()
 @celery_app.task
 def create_bulk_notifications(course_id, verb, target_ct_id, target_id):
     now = timezone.now()
-    # Format: "Mar 30, 08:52 AM"
-    formated_time = now.strftime("%b %d, %I:%M %p")
+    formated_time = now.isoformat()
     User = get_user_model()
     target_ct = ContentType.objects.get_for_id(target_ct_id)
     target_type = target_ct.model
@@ -53,8 +52,7 @@ def create_bulk_notifications(course_id, verb, target_ct_id, target_id):
 @celery_app.task
 def create_single_notification(user_id, verb, target_ct_id, target_id):
     now = timezone.now()
-    # Format: "Mar 30, 08:52 AM"
-    formated_time = now.strftime("%b %d, %I:%M %p")
+    formated_time = now.isoformat()
     target_ct = ContentType.objects.get_for_id(target_ct_id)
     target_type = target_ct.model
 

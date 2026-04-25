@@ -58,6 +58,8 @@ export const NotificationProvider = ({
 
     socket.onmessage = (event) => {
       const data = JSON.parse(event.data);
+      const audio = new Audio("/audio.wav")
+      audio.play().catch(err => console.log("Audio play blocked by browser:", err));
       console.log("🔔 New Real-time Notification:", data);
 
       // Trigger Toast Pop-up
