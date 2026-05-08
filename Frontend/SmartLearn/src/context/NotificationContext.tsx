@@ -19,26 +19,54 @@ export const NotificationProvider = ({
   const userToken = useAuthStore((state) => state.accessToken);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [nextPage, setNextPage] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
   const socketRef = useRef<WebSocket | null>(null);
-
   // 1. Fetch History from Backend on Load
   useEffect(() => {
     if (!userToken) return;
 
     const fetchNotifications = async () => {
       try {
+        setLoading(true);
         const response = await apiClient.get("/notifications/");
-        setNotifications(response.data);
+        // console.log("notification data , through pagination", response.data);
+        setNotifications(response.data.results);
+        setNextPage(response.data.next);
         // Calculate unread count from fetched history
-        const unread = response.data.filter((n: any) => !n.is_read).length;
+        const unread = response.data.results.filter((n: any) => !n.is_read).length;
         setUnreadCount(unread);
       } catch (error) {
         console.error("Failed to fetch notification history:", error);
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchNotifications();
   }, [userToken]);
+
+  // funtion to load more notifications
+  const loadMore = async () => {
+    if (!nextPage || loading) return;
+
+    try {
+      setLoading(true);
+      // nextPage gives : http://127.0.0.1:8000/api/v1/notifications/?page=2
+      // we only need "notifications/?page=2/" part because of baseUrl of "http://127.0.0.1:8000/api/v1/"
+      const url = new URL(nextPage);
+      const pathwithQuery = url.pathname + url.search;
+      const cleanedPath = pathwithQuery.replace("/api/v1/", "");
+
+      const response = await apiClient.get(cleanedPath);
+      setNotifications((prev) => [...prev, ...response.data.results ]);
+      setNextPage(response.data.next);
+    } catch (error) {
+      console.error("Error loading more notifications:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // 2. Real-time WebSocket Logic
   useEffect(() => {
@@ -58,8 +86,10 @@ export const NotificationProvider = ({
 
     socket.onmessage = (event) => {
       const data = JSON.parse(event.data);
-      const audio = new Audio("/audio.wav")
-      audio.play().catch(err => console.log("Audio play blocked by browser:", err));
+      const audio = new Audio("/audio.wav");
+      audio
+        .play()
+        .catch((err) => console.log("Audio play blocked by browser:", err));
       console.log("🔔 New Real-time Notification:", data);
 
       // Trigger Toast Pop-up
@@ -138,7 +168,15 @@ export const NotificationProvider = ({
   };
   return (
     <NotificationContext.Provider
-      value={{ notifications, unreadCount, markAllAsRead, markSingleAsRead }}
+      value={{
+        notifications,
+        unreadCount,
+        markAllAsRead,
+        markSingleAsRead,
+        loadMore,
+        loading,
+        hasmore: !!nextPage,
+      }}
     >
       {children}
     </NotificationContext.Provider>

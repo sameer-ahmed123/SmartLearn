@@ -2,6 +2,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.pagination import PageNumberPagination
 from .models import Notification
 from django.contrib.contenttypes.models import ContentType
 from .serializers import NotificationSerializer
@@ -16,8 +17,13 @@ def notification_list_view(request):
     if request.method == 'GET':
         # Show latest notifications first
         notifications = Notification.objects.filter(recipient=request.user).order_by('-created_at')
-        serializer = NotificationSerializer(notifications, many=True)
-        return Response(serializer.data)
+        paginatior  = PageNumberPagination()
+        paginatior.page_size = 10
+        
+        result_page = paginatior.paginate_queryset(notifications, request)
+        
+        serializer = NotificationSerializer(result_page, many=True)
+        return paginatior.get_paginated_response(serializer.data)
 
     elif request.method == 'PATCH':
         # Mark all as read

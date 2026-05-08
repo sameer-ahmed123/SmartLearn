@@ -48,6 +48,20 @@ services:
       - redis
       - db
 
+  celery_beat:
+    build: ./Backend
+    command: celery -A smartlearn_project beat --loglevel=info
+    volumes:
+      - ./Backend:/app
+    env_file:
+      - ./Backend/.env
+    environment:
+      - DB_HOST=db
+      - CELERY_BROKER=redis://redis:6379/0
+    depends_on:
+      - redis
+      - db
+      - celery_worker
   react:
     build: ./Frontend/SmartLearn
     volumes:

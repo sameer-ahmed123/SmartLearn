@@ -61,6 +61,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
+    'django_celery_beat',
     ### django helpers ###
     'django_extensions',
     'silk',
@@ -127,6 +128,14 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'smartlearn_project.wsgi.application'
 
+
+# Celery Beat Settings
+CELERY_BEAT_SCHEDULE = {
+    'check-deadlines-every-hour': {
+        'task': 'notifications.tasks.check_deadline_reminders',
+        'schedule': 3600.0, # Runs every hour (3600 seconds)
+    },
+}
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases

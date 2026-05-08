@@ -18,12 +18,15 @@ class Quiz(models.Model):
         'lectures.Lecture', on_delete=models.CASCADE)
     quiz_data = models.JSONField()
     created_at = models.DateTimeField(auto_now_add=True)
+    deadline = models.DateTimeField(null=True, blank=True)
     status = models.CharField(
         max_length=100, default='generating', choices=status_choices)
 
     class Meta:
         db_table = "quiz"
 
+    def __str__(self):
+        return f"{self.lecture}"
 
 class QuizSubmission(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL,

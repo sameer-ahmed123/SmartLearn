@@ -20,3 +20,6 @@ class Notification(models.Model):
     class Meta:
         ordering = ['-created_at']
         db_table = 'notification'
+        
+    def __str__(self):
+        return f"{self.recipient.full_name}___:___{self.verb}"

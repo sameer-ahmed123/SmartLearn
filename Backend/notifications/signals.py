@@ -9,16 +9,19 @@ from .tasks import create_bulk_notifications, create_single_notification
 @receiver(post_save, sender=Lecture)
 def lecture_published_signal(sender, instance, created, **kwargs):
     # Triggered when a lecture is validated
-    if instance.validation_status == 'validated':
-        course_id = instance.content_source.course_id
-        target_ct = ContentType.objects.get_for_model(instance)
+    if instance.content_source and instance.content_source.course:
+        if instance.validation_status == 'validated':
+            course_id = instance.content_source.course_id
+            target_ct = ContentType.objects.get_for_model(instance)
 
-        create_bulk_notifications.delay(
-            course_id,
-            f"New Lecture: {instance.topic}",
-            target_ct.id,
-            instance.id
-        )
+            create_bulk_notifications.delay(
+                course_id,
+                f"New Lecture: {instance.topic}",
+                target_ct.id,
+                instance.id
+            )
+    else:
+        print(f"Skipping notification: Lecture '{instance.topic}' has no course source.")
 
 @receiver(post_save,sender=Quiz)
 @receiver(post_save,sender=Assignment)

@@ -141,8 +141,8 @@ def generate_video_task(lecture_id):
         # ==========================================
         
         # ENGINE 1: MOCK MODE (For fast, free local development)
-        time.sleep(20)
-        temp_video_url = "https://www.w3schools.com/html/mov_bbb.mp4"
+        time.sleep(30)
+        temp_video_url = "https://res.cloudinary.com/ddvcpb2tv/video/upload/v1775491099/The_Diffie-Hellman_Algorithm_Explained_60s__720p_caption_fhiq7i.mp4"
         
         # ENGINE 2: HEYGEN (3D Avatars - Strict API limits)
         # temp_video_url = generate_heygen_video(lecture.script)
