@@ -319,7 +319,8 @@ def generate_quiz_json(script, context, num_questions=5):
     based on the provided lecture script and context.
     """
     # 1. Setup Model
-    model_name = "gemini-2.5-flash"
+    # model_name = "gemini-2.5-flash"
+    model_name = "gemini-3-flash-preview"
 
     system_instructions = (
         "You are an expert assessment creator. Your task is to generate a set of "
@@ -394,7 +395,9 @@ def generate_assignment_json(script, context,num_questions=5):
     """
     Generates a structured practical assignment based on the lecture script.
     """
-    model_name = "gemini-2.5-flash"
+    # model_name = "gemini-2.5-flash"
+    model_name = "gemini-3-flash-preview"
+    
 
     system_instructions = (
         "You are an expert university professor. Your task is to generate a practical, "

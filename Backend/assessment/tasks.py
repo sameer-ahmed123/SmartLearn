@@ -34,6 +34,7 @@ def generate_assessment_task(lecture_id, assessment_type):
             # 2. Save to Quiz Model
             Quiz.objects.update_or_create(
                 lecture=lecture,
+                status = 'ready',
                 defaults={'quiz_data': quiz_data}
             )
             return "Quiz Generated Successfully"

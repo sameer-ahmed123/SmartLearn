@@ -14,6 +14,7 @@ const ValidationActionPanel: React.FC<ValidationActionPanelProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleValidationAction = async (status: "validated" | "rejected") => {
+    if (isSubmitting) return;
     setIsSubmitting(true);
     try {
       const response = await apiClient.patch(
@@ -22,13 +23,16 @@ const ValidationActionPanel: React.FC<ValidationActionPanelProps> = ({
           validation_status: status,
           rejection_comment: status === "rejected" ? comment : null,
         }
+       
       );
+       
 
       if (response.status === 200) {
         // Success notification logic remains same as per your original code
         window.location.href = "/teacher/dashboard";
       } else {
         alert(`Error submitting validation: ${response.status}`);
+        setIsSubmitting(false)
       }
     } catch (error) {
       console.error("Validation API error:", error);

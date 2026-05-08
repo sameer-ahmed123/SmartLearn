@@ -1,14 +1,20 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { 
-  ArrowLeft, CheckCircle, HelpCircle, 
-  Award, RefreshCcw, ChevronRight, Loader2, XCircle 
+import {
+  ArrowLeft,
+  CheckCircle,
+  HelpCircle,
+  Award,
+  RefreshCcw,
+  ChevronRight,
+  Loader2,
+  XCircle,
 } from "lucide-react";
 import apiClient from "@/api/apiClient";
 import "./StudentQuizPage.css";
 
 const StudentQuizPage = () => {
-  const { id } = useParams(); 
+  const { id } = useParams();
   const navigate = useNavigate();
 
   const [quizData, setQuizData] = useState<any[]>([]);
@@ -17,6 +23,7 @@ const StudentQuizPage = () => {
   const [selectedAnswers, setSelectedAnswers] = useState<any>({});
   const [showResult, setShowResult] = useState(false);
   const [score, setScore] = useState(0);
+  const [quizLectureTitle, setQuizLectureTitle] = useState("");
 
   useEffect(() => {
     const fetchQuiz = async () => {
@@ -24,8 +31,9 @@ const StudentQuizPage = () => {
         setLoading(true);
         const response = await apiClient.get(`/assessments/quiz/${id}/`);
         const data = response.data.quiz_data;
+        setQuizLectureTitle(response.data.title);
         const parsedData = typeof data === "string" ? JSON.parse(data) : data;
-        
+
         if (parsedData && Array.isArray(parsedData)) {
           setQuizData(parsedData);
         } else if (parsedData && parsedData.questions) {
@@ -45,7 +53,7 @@ const StudentQuizPage = () => {
   const handleOptionSelect = (optionIndex: number) => {
     setSelectedAnswers({
       ...selectedAnswers,
-      [currentQuestion]: optionIndex
+      [currentQuestion]: optionIndex,
     });
   };
 
@@ -59,30 +67,33 @@ const StudentQuizPage = () => {
 
   const calculateScoreAndSave = async () => {
     const formattedAnswers: any = {};
-    
+
     quizData.forEach((question, index) => {
       const selectedOptionIndex = selectedAnswers[index];
       const options = question.options;
       const selectedOption = options[selectedOptionIndex];
-      
-      let finalValue = typeof selectedOption === 'object' ? selectedOption.text : selectedOption;
+
+      let finalValue =
+        typeof selectedOption === "object"
+          ? selectedOption.text
+          : selectedOption;
       formattedAnswers[index] = finalValue;
     });
 
     try {
       const response = await apiClient.post(`/assessments/quiz/${id}/submit/`, {
-        student_answers: formattedAnswers 
+        student_answers: formattedAnswers,
       });
 
       if (response.data && response.data.correct_count !== undefined) {
-        setScore(response.data.correct_count); 
+        setScore(response.data.correct_count);
       } else {
         setScore(response.data.score || 0);
       }
       setShowResult(true);
     } catch (err) {
       console.error("Failed to save score to backend:", err);
-      
+
       let localCount = 0;
       quizData.forEach((q, idx) => {
         if (selectedAnswers[idx] === q.correct_index) localCount++;
@@ -100,9 +111,9 @@ const StudentQuizPage = () => {
   };
 
   const cardStyle = {
-    backgroundColor: 'var(--card)',
-    color: 'var(--foreground)',
-    borderColor: 'var(--border)'
+    backgroundColor: "var(--card)",
+    color: "var(--foreground)",
+    borderColor: "var(--border)",
   };
 
   if (loading) {
@@ -126,94 +137,164 @@ const StudentQuizPage = () => {
   return (
     <div className="quiz-container">
       <div className="quiz-header">
-        <h1 style={{ color: 'var(--foreground)' }}>{showResult ? "Quiz Results" : "Lecture Quiz"}</h1>
-        <div className="progress-text" style={{ color: 'var(--muted-foreground)' }}>
-          {showResult ? "Finished" : `Question ${currentQuestion + 1} of ${quizData.length}`}
+        <h1 style={{ color: "var(--foreground)" }}>
+          {showResult ? (
+            "Quiz Results"
+          ) : (
+            <>
+              Quiz for <strong> {quizLectureTitle}</strong>
+            </>
+          )}
+        </h1>
+        <div
+          className="progress-text"
+          style={{ color: "var(--muted-foreground)" }}
+        >
+          {showResult
+            ? "Finished"
+            : `Question ${currentQuestion + 1} of ${quizData.length}`}
         </div>
       </div>
 
       {!showResult ? (
         <div className="quiz-card" style={cardStyle}>
-          <div className="progress-bar" style={{ backgroundColor: 'var(--muted)' }}>
-            <div 
-              className="progress-fill" 
-              style={{ width: `${((currentQuestion + 1) / quizData.length) * 100}%` }}
+          <div
+            className="progress-bar"
+            style={{ backgroundColor: "var(--muted)" }}
+          >
+            <div
+              className="progress-fill"
+              style={{
+                width: `${((currentQuestion + 1) / quizData.length) * 100}%`,
+              }}
             ></div>
           </div>
 
           <div className="question-section">
             <div className="question-header">
-               <HelpCircle size={24} color="#6366f1" />
-               <h2 className="question-text" style={{ color: 'var(--foreground)' }}>
-                 {quizData[currentQuestion].question_text || 
-                  quizData[currentQuestion].question || 
-                  quizData[currentQuestion].text || 
+              <HelpCircle size={24} color="#6366f1" />
+              <h2
+                className="question-text"
+                style={{ color: "var(--foreground)" }}
+              >
+                {quizData[currentQuestion].question_text ||
+                  quizData[currentQuestion].question ||
+                  quizData[currentQuestion].text ||
                   "Question not found"}
-               </h2>
+              </h2>
             </div>
 
             <div className="options-grid">
-              {quizData[currentQuestion].options.map((option: any, index: number) => (
-                <button
-                  key={index}
-                  className={`option-btn ${selectedAnswers[currentQuestion] === index ? 'selected' : ''}`}
-                  onClick={() => handleOptionSelect(index)}
-                  style={{ 
-                    borderColor: 'var(--border)',
-                    color: 'var(--foreground)'
-                  }}
-                >
-                  <span className="option-label" style={{ backgroundColor: 'var(--muted)', color: 'var(--foreground)' }}>
-                    {String.fromCharCode(65 + index)}
-                  </span>
-                  <span className="option-text">
-                    {typeof option === 'object' ? option.text : option}
-                  </span>
-                </button>
-              ))}
+              {quizData[currentQuestion].options.map(
+                (option: any, index: number) => (
+                  <button
+                    key={index}
+                    className={`option-btn ${selectedAnswers[currentQuestion] === index ? "selected" : ""}`}
+                    onClick={() => handleOptionSelect(index)}
+                    style={{
+                      borderColor: "var(--border)",
+                      color: "var(--foreground)",
+                    }}
+                  >
+                    <span
+                      className="option-label"
+                      style={{
+                        backgroundColor: "var(--muted)",
+                        color: "var(--foreground)",
+                      }}
+                    >
+                      {String.fromCharCode(65 + index)}
+                    </span>
+                    <span className="option-text">
+                      {typeof option === "object" ? option.text : option}
+                    </span>
+                  </button>
+                ),
+              )}
             </div>
           </div>
 
-          <button 
-            className="next-btn" 
+          <button
+            className="next-btn"
             disabled={selectedAnswers[currentQuestion] === undefined}
             onClick={handleNext}
           >
-            {currentQuestion === quizData.length - 1 ? "Submit Quiz" : "Next Question"}
+            {currentQuestion === quizData.length - 1
+              ? "Submit Quiz"
+              : "Next Question"}
             <ChevronRight size={20} />
           </button>
         </div>
       ) : (
         <div className="result-card" style={cardStyle}>
-          <Award size={80} color="#f59e0b" style={{ marginBottom: '20px' }} />
-          <h2 style={{ color: 'var(--foreground)' }}>Well Done!</h2>
+          <Award size={80} color="#f59e0b" style={{ marginBottom: "20px" }} />
+          <h2 style={{ color: "var(--foreground)" }}>Well Done!</h2>
           <div className="score-display">
             <span className="final-score">{score}</span>
-            <span className="total-score" style={{ color: 'var(--muted-foreground)' }}> / {quizData.length}</span>
+            <span
+              className="total-score"
+              style={{ color: "var(--muted-foreground)" }}
+            >
+              {" "}
+              / {quizData.length}
+            </span>
           </div>
-          
-          <div className="review-breakdown" style={{ borderTopColor: 'var(--border)' }}>
-            <h3 style={{ color: 'var(--foreground)' }}>Review Answers</h3>
+
+          <div
+            className="review-breakdown"
+            style={{ borderTopColor: "var(--border)" }}
+          >
+            <h3 style={{ color: "var(--foreground)" }}>Review Answers</h3>
             {quizData.map((question, qIdx) => {
               const studentIdx = selectedAnswers[qIdx];
               const options = question.options || [];
               const correctIdx = question.correct_index;
 
               const isCorrect = studentIdx === correctIdx;
-              
-              const studentAnsText = options[studentIdx] ? (typeof options[studentIdx] === 'object' ? options[studentIdx].text : options[studentIdx]) : "Not Answered";
-              const correctAnsText = options[correctIdx] ? (typeof options[correctIdx] === 'object' ? options[correctIdx].text : options[correctIdx]) : "N/A";
+
+              const studentAnsText = options[studentIdx]
+                ? typeof options[studentIdx] === "object"
+                  ? options[studentIdx].text
+                  : options[studentIdx]
+                : "Not Answered";
+              const correctAnsText = options[correctIdx]
+                ? typeof options[correctIdx] === "object"
+                  ? options[correctIdx].text
+                  : options[correctIdx]
+                : "N/A";
 
               return (
-                <div key={qIdx} className={`review-item ${isCorrect ? 'is-correct' : 'is-wrong'}`} style={{ borderColor: 'var(--border)' }}>
+                <div
+                  key={qIdx}
+                  className={`review-item ${isCorrect ? "is-correct" : "is-wrong"}`}
+                  style={{ borderColor: "var(--border)" }}
+                >
                   <div className="review-question-row">
-                    {isCorrect ? <CheckCircle size={18} className="icon-c" /> : <XCircle size={18} className="icon-w" />}
-                    <p style={{ color: 'var(--foreground)' }}><strong>Q{qIdx + 1}:</strong> {question.question_text || question.question || question.text}</p>
+                    {isCorrect ? (
+                      <CheckCircle size={18} className="icon-c" />
+                    ) : (
+                      <XCircle size={18} className="icon-w" />
+                    )}
+                    <p style={{ color: "var(--foreground)" }}>
+                      <strong>Q{qIdx + 1}:</strong>{" "}
+                      {question.question_text ||
+                        question.question ||
+                        question.text}
+                    </p>
                   </div>
                   <div className="review-answers-row">
-                    <p style={{ color: 'var(--muted-foreground)' }}>Your Answer: <span style={{color: isCorrect ? '#16a34a' : '#dc2626'}}>{studentAnsText}</span></p>
+                    <p style={{ color: "var(--muted-foreground)" }}>
+                      Your Answer:{" "}
+                      <span
+                        style={{ color: isCorrect ? "#16a34a" : "#dc2626" }}
+                      >
+                        {studentAnsText}
+                      </span>
+                    </p>
                     {!isCorrect && (
-                      <p className="correct-text">Correct Answer: <span>{correctAnsText}</span></p>
+                      <p className="correct-text">
+                        Correct Answer: <span>{correctAnsText}</span>
+                      </p>
                     )}
                   </div>
                 </div>

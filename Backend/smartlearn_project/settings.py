@@ -38,6 +38,10 @@ X_FRAME_OPTIONS = 'SAMEORIGIN'
 # Application definition
 
 INSTALLED_APPS = [
+    #### for notifications (channels)####
+    'daphne',
+    'channels',
+    #### django defaults #####
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -57,10 +61,22 @@ INSTALLED_APPS = [
     'corsheaders',
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
+    'django_celery_beat',
     ### django helpers ###
     'django_extensions',
     'silk',
 ]
+
+ASGI_APPLICATION = 'smartlearn_project.asgi.application'
+
+CHANNEL_LAYERS = {
+    "default":{
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG":{
+            "hosts": [("redis",6379)]
+        }
+    }
+}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -112,6 +128,14 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'smartlearn_project.wsgi.application'
 
+
+# Celery Beat Settings
+CELERY_BEAT_SCHEDULE = {
+    'check-deadlines-every-hour': {
+        'task': 'notifications.tasks.check_deadline_reminders',
+        'schedule': 3600.0, # Runs every hour (3600 seconds)
+    },
+}
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases

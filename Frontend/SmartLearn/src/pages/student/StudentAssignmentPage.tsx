@@ -247,7 +247,7 @@ const StudentAssignmentPage = () => {
                 ${styles.dropZone} 
                 ${file ? styles.activeZone : ""} 
                 ${submission ? styles.alreadySubmitted : ""}
-                ${isLate ? styles.disabledZone : ""}
+                ${isLate ? styles.lateZone : ""}
             `}
             >
               <input
@@ -264,7 +264,7 @@ const StudentAssignmentPage = () => {
                 style={{ cursor: isLate ? "not-allowed" : "pointer" }}
               >
                 {isLate ? (
-                  <Clock size={48} color="#94a3b8" />
+                  <Clock size={48} color="#FF746C" />
                 ) : submission && !file ? (
                   <CheckCircle size={48} className={styles.successIcon} />
                 ) : file ? (
