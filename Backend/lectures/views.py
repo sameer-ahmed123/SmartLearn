@@ -17,6 +17,7 @@ from users.permissions import CanViewLecture, IsCourseOwner, IsTeacher
 from rest_framework.permissions import IsAuthenticated
 from .tasks import generate_lecture_from_source
 from lectures.services import ProgressService, AnalyticsService
+from .models import GroupMessage
 
 # Load environment variables from .env
 load_dotenv()
@@ -351,3 +352,226 @@ def course_lecture_list(request, course_id):
 #     )
 
 #     return Response(data, status=status.HTTP_200_OK)
+
+
+from django.db.models import Q
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from django.contrib.auth import get_user_model
+from lectures.models import Course, Lecture
+from assessment.models import Quiz, Assignment
+
+User = get_user_model()
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def global_search(request):
+    try:
+        query = request.query_params.get('q', '').strip()
+        results = []
+
+        if len(query) < 2:
+            return Response([])
+
+        # Role-based path prefix decide karein (student ya teacher)
+        role_path = 'student' if request.user.role == 'student' else 'teacher'
+
+        # 1. Search Courses - URL FIXED to match App.tsx
+        courses = Course.objects.filter(title__icontains=query)[:5]
+        for c in courses:
+            results.append({
+                'id': c.id, 
+                'title': c.title, 
+                'type': 'course', 
+                # App.tsx route: /student/course/:courseid OR /teacher/course/:courseid
+                'url': f'/{role_path}/course/{c.id}' 
+            })
+
+        # 2. Search Lectures - URL FIXED
+        lectures = Lecture.objects.filter(topic__icontains=query, validation_status='validated')[:5]
+        for l in lectures:
+            results.append({
+                'id': l.id, 
+                'title': l.topic, 
+                'type': 'lecture', 
+                # App.tsx route: /student/lecture/:id/review OR /teacher/lecture/:id/review
+                'url': f'/{role_path}/lecture/{l.id}/review'
+            })
+
+        # 3. Search Quizzes
+        quizzes = Quiz.objects.filter(lecture__topic__icontains=query)[:5]
+        for q in quizzes:
+            results.append({
+                'id': q.id, 
+                'title': f"Quiz: {q.lecture.topic}", 
+                'type': 'quiz', 
+                # App.tsx route: /student/lecture/:id/quiz OR /teacher/lecture/:id/quiz
+                'url': f'/{role_path}/lecture/{q.lecture.id}/quiz'
+            })
+
+        # 4. Search Assignments
+        assignments = Assignment.objects.filter(lecture__topic__icontains=query)[:5]
+        for a in assignments:
+            results.append({
+                'id': a.id, 
+                'title': f"Assignment: {a.lecture.topic}", 
+                'type': 'assignment', 
+                # App.tsx route: /student/lecture/:id/assignment OR /teacher/lecture/:id/assignment
+                'url': f'/{role_path}/lecture/{a.lecture.id}/assignment'
+            })
+
+        # 5. Search Users
+        users = User.objects.filter(full_name__icontains=query)[:5]
+        for u in users:
+            # Profile ke liye agar koi specific route nahi hai to dashboard par bhej sakte hain
+            # Ya agar aapne profile page banaya hai to uska path yahan likhein
+            results.append({
+                'id': u.id, 
+                'title': u.full_name, 
+                'type': u.role, 
+                'url': f'/{role_path}/dashboard' 
+            })
+
+        return Response(results)
+
+    except Exception as e:
+        print(f"SEARCH ERROR: {str(e)}")
+        return Response({"detail": "Error performing search"}, status=500)
+
+
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from django.shortcuts import get_object_or_404
+from django.db.models import Q  
+from .models import StudyConnection, Course, Enrollment
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
+
+# 1. Same course ke students dhoondna (Find Peers Tab ke liye)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_same_course_students(request):
+    try:
+        user_enrollments = request.user.course_enrollments.all()
+        user_course_ids = user_enrollments.values_list('course_id', flat=True)
+        
+        if not user_course_ids:
+            return Response([])
+
+        students = User.objects.filter(
+            course_enrollments__course_id__in=user_course_ids,
+            role='student'
+        ).exclude(id=request.user.id).distinct()
+
+        data = []
+        for s in students:
+            # Connection dhoonden
+            connection = StudyConnection.objects.filter(
+                (Q(sender=request.user) & Q(receiver=s)) | 
+                (Q(sender=s) & Q(receiver=request.user))
+            ).first()
+            
+            status = "none"
+            connection_id = None
+            
+            if connection:
+                connection_id = connection.id
+                if connection.status == 'accepted':
+                    status = 'accepted'
+                elif connection.status == 'pending':
+                    # Yahan asli logic hai: Check karein sender kaun hai
+                    if connection.sender == request.user:
+                        status = 'pending_outgoing' # Aapne bheji hai
+                    else:
+                        status = 'pending_incoming' # Usne bheji hai (Aapko accept karni hai)
+
+            data.append({
+                "id": s.id,
+                "full_name": s.full_name,
+                "connection_status": status,
+                "connection_id": connection_id
+            })
+        
+        return Response(data)
+    except Exception as e:
+        return Response({"error": str(e)}, status=500)
+
+# 2. Connection Request bhejna
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def send_study_request(request, receiver_id):
+    receiver = get_object_or_404(User, id=receiver_id)
+    
+    if receiver == request.user:
+        return Response({"detail": "You cannot add yourself"}, status=400)
+
+    connection, created = StudyConnection.objects.get_or_create(
+        sender=request.user, 
+        receiver=receiver
+    )
+    if not created:
+        return Response({"detail": "Request already sent"}, status=400)
+    return Response({"detail": "Request sent successfully"})
+
+# 3. Accepted Connections ki list (Members Tab ke liye)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_my_connections(request):
+    connections = StudyConnection.objects.filter(
+        (Q(sender=request.user) | Q(receiver=request.user)),
+        status='accepted'
+    )
+    
+    data = []
+    for c in connections:
+        friend = c.receiver if c.sender == request.user else c.sender
+        data.append({
+            "id": c.id,
+            "friend_id": friend.id,
+            "name": friend.full_name,
+            "avatar": friend.full_name[0] if friend.full_name else "?"
+        })
+    return Response(data)
+
+# 4. Request Accept ya Reject karna
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def handle_request_action(request, connection_id):
+    action = request.data.get('action')
+    # Request sirf wo accept/reject kar sakta hai jo 'receiver' hai
+    connection = get_object_or_404(StudyConnection, id=connection_id, receiver=request.user)
+    
+    if action == 'accept':
+        connection.status = 'accepted'
+        connection.save()
+        return Response({"detail": "Request accepted"})
+    elif action == 'reject':
+        connection.status = 'rejected'
+        connection.save()
+        return Response({"detail": "Request rejected"})
+    
+    return Response({"detail": "Invalid action"}, status=400)
+
+# 5. Purana accept logic (agar aap handle_request_action use nahi kar rahe)
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def accept_study_request(request, request_id):
+    connection = get_object_or_404(StudyConnection, id=request_id, receiver=request.user)
+    connection.status = 'accepted'
+    connection.save()
+    return Response({"detail": "Request accepted"})
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_room_messages(request, room_id):
+    messages = GroupMessage.objects.filter(room_id=room_id).order_by('timestamp')
+    data = [{
+        "sender": m.sender.full_name,
+        "content": m.content,
+        "timestamp": m.timestamp
+    } for m in messages]
+    return Response(data)

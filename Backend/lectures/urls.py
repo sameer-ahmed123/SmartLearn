@@ -15,6 +15,15 @@ from .views import (
     # DASHBOARD METRICS
     teacher_dashboard_metrics, # Naya view import kiya
     # student_analytics_data,    # <--- NAYA ANALYTICS VIEW IMPORT KIYA
+    global_search, # <--- NAYA GLOBAL SEARCH VIEW IMPORT KIYA
+    
+    # --- VIRTUAL ROOM / SOCIAL VIEWS ---
+    get_same_course_students,
+    send_study_request,
+    accept_study_request,
+    get_my_connections,      # Naya import add kiya
+    handle_request_action,   # Naya import add kiya
+    get_room_messages,       # <--- CHAT HISTORY VIEW IMPORT KIYA
 )
 
 app_name = "lectures"
@@ -22,6 +31,28 @@ app_name = "lectures"
 urlpatterns = [
     # --- DASHBOARD METRICS ---
     path('dashboard/metrics/', teacher_dashboard_metrics, name='teacher-dashboard-metrics'),
+
+    # --- GLOBAL SEARCH ---
+    path('search/', global_search, name='global-search'),
+
+    # --- STUDY CONNECTIONS / VIRTUAL ROOM ---
+    # Same course ke students dhoondne ke liye
+    path('same-course-students/', get_same_course_students, name='same-course-students'),
+    
+    # Request bhejne ke liye
+    path('request/<int:receiver_id>/', send_study_request, name='send-study-request'),
+    
+    # Accepted connections ki list (Members list)
+    path('connections/', get_my_connections, name='get-my-connections'),
+    
+    # Request accept ya reject karne ke liye (Action logic)
+    path('request-action/<int:connection_id>/', handle_request_action, name='handle-request-action'),
+    
+    # Purana direct accept path (back-up ke liye)
+    path('accept/<int:connection_id>/', accept_study_request, name='accept-study-request'),
+
+    # --- CHAT MESSAGES HISTORY ---
+    path('messages/<str:room_id>/', get_room_messages, name='room-messages'),
 
     # --- SHOULD BE REMOVED  ------NOT BEING ACCESSD  (MOVED TO DASHBOARD APP [NEW VIEW] )  NOT NEEDED 
     # path('student/analytics/', student_analytics_data, name='student-analytics-data'), # <--- NAYA ENDPOINT

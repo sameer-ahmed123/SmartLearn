@@ -18,6 +18,13 @@
   gap: 20px;
 }
 
+/* --- Global Search Wrapper & Dropdown Added --- */
+.searchWrapper {
+  position: relative;
+  width: 100%;
+  max-width: 400px; /* Width thodi barha di hai */
+}
+
 .searchBar {
   background: var(--muted);
   border-radius: 10px;
@@ -25,7 +32,13 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  width: 280px;
+  width: 100%; /* Wrapper ke mutabiq adjust hoga */
+  transition: all 0.2s ease;
+}
+
+.searchBar:focus-within {
+  background: var(--background);
+  box-shadow: 0 0 0 2px #6366f1;
 }
 
 .searchBar input {
@@ -35,6 +48,70 @@
   width: 100%;
   color: var(--foreground);
 }
+
+/* Search Results Dropdown Box */
+.searchDropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  width: 100%;
+  background: var(--popover);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  z-index: 9999 !important; /* Taake har cheez ke upar dikhe */
+  max-height: 400px;
+  overflow-y: auto;
+  padding: 8px;
+  pointer-events: all; /* Click confirm karne ke liye */
+  animation: fadeIn 0.2s ease-out;
+}
+
+/* Individual Result Item */
+.searchItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+  color: var(--foreground);
+}
+
+.searchItem:hover {
+  background: var(--accent);
+}
+
+.itemIcon {
+  background: var(--muted);
+  padding: 6px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6366f1;
+}
+
+.itemInfo {
+  display: flex;
+  flex-direction: column;
+}
+
+.itemTitle {
+  font-size: 13px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.itemType {
+  font-size: 10px;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+  font-weight: 700;
+}
+
+/* --- Action Buttons & Others (As It Is) --- */
 
 .actionButtons {
   display: flex;
@@ -112,24 +189,28 @@
   border-bottom: 1px solid var(--border);
   cursor: pointer;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  transition: background 0.2s;
+  background: var(--popover);
 }
 .notifItem:hover {
-  background: var(--accent);
+  background: var(--secondary);
 }
 .notifTitle {
   margin: 0;
   font-size: 12px;
   font-weight: 600;
-  color: var(--foreground);
+  color: var(--foreground) !important;
+  line-height: 1.4;
 }
 .notifTime {
   font-size: 10px;
-  color: var(--muted-foreground);
+  color: var(--muted-foreground) !important;
   display: flex;
   align-items: center;
-  gap: 3px;
+  gap: 4px;
 }
 .unreadDot {
   width: 6px;
@@ -147,7 +228,6 @@
   color: var(--muted-foreground);
   cursor: pointer;
 }
-
 .langPicker {
   display: flex;
   align-items: center;
@@ -231,47 +311,10 @@
   }
 }
 
-.notifItem {
-  padding: 12px 15px;
-  border-bottom: 1px solid var(--border);
-  cursor: pointer;
-  display: flex;
-  flex-direction: column; /* Stack verb and time vertically */
-  align-items: flex-start;
-  gap: 4px;
-  transition: background 0.2s;
-  background: var(--popover); /* Ensure default background */
-}
-
-/* Ensure the text is ALWAYS visible */
-.notifTitle {
-  margin: 0;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--foreground) !important; /* Force the theme's text color */
-  line-height: 1.4;
-}
-
-.notifTime {
-  font-size: 10px;
-  color: var(--muted-foreground) !important;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-/* Highlight for unread notifications */
 .unreadItem {
-  background: var(
-    --accent
-  ); /* Uses your theme's accent color (usually a subtle blue/gray) */
-  border-left: 3px solid #6366f1; /* Add a small indigo strip to the left for "New" feel */
+  background: var(--accent);
+  border-left: 3px solid #6366f1;
 }
-
-.notifItem:hover {
-  background: var(--secondary);
-}
-
 
 .filterTabs {
   display: flex;
@@ -291,10 +334,10 @@
 }
 
 .activeTab {
-  color: #7c3aed; /* Your primary purple color */
+  color: #7c3aed;
   border-bottom: 2px solid #7c3aed;
 }
 
 .unreadItem {
-  background-color: #f5f3ff; /* Very light purple for unread */
+  background-color: #f5f3ff;
 }

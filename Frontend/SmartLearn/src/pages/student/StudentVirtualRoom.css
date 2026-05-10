@@ -1,7 +1,6 @@
 .room-wrapper {
     display: flex;
     height: calc(100vh - 80px);
-    /* Dark mode variables use kiye hain */
     background: var(--background, #0f172a); 
     color: var(--foreground, white);
     overflow: hidden;
@@ -25,7 +24,6 @@
 }
 
 .video-card {
-    /* Card variable use kiya taake theme ke sath match kare */
     background: var(--card, #1e293b);
     border-radius: 16px;
     position: relative;
@@ -39,14 +37,13 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    /* Soft gradient jo background ke sath blend ho */
     background: radial-gradient(circle, var(--muted) 0%, var(--background) 100%);
 }
 
 .avatar-big {
     width: 80px;
     height: 80px;
-    background: #6366f1; /* Brand color constant rakha hai */
+    background: #6366f1; 
     border-radius: 50%;
     display: flex;
     justify-content: center;
@@ -60,7 +57,7 @@
     position: absolute;
     bottom: 15px;
     left: 15px;
-    background: rgba(0, 0, 0, 0.6); /* Text ko readable rakhne ke liye dark overlay */
+    background: rgba(0, 0, 0, 0.6); 
     padding: 6px 14px;
     border-radius: 8px;
     display: flex;
@@ -162,34 +159,170 @@
     color: var(--foreground);
 }
 
+/* --- NEW SOCIAL & SEARCH STYLING --- */
+
+.search-box-mini {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--background);
+    padding: 8px 12px;
+    border-radius: 10px;
+    margin-bottom: 15px;
+    border: 1px solid var(--border);
+}
+
+.search-box-mini input {
+    background: none;
+    border: none;
+    outline: none;
+    color: var(--foreground);
+    font-size: 0.85rem;
+    width: 100%;
+}
+
 .member-item {
     display: flex;
     align-items: center;
     gap: 12px;
-    margin-bottom: 18px;
-    padding: 10px;
+    margin-bottom: 12px;
+    padding: 12px;
     border-radius: 12px;
     background: var(--muted);
+    transition: 0.2s;
 }
 
-.member-avatar {
-    width: 40px;
-    height: 40px;
+.member-info p {
+    margin: 0;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.member-info span {
+    font-size: 0.75rem;
+    color: var(--muted-foreground);
+}
+
+.online-tag {
+    color: #10b981 !important;
+    font-weight: 600;
+}
+
+.add-peer-btn {
+    margin-left: auto;
     background: #6366f1;
     color: white;
-    border-radius: 50%;
+    border: none;
+    padding: 8px;
+    border-radius: 8px;
+    cursor: pointer;
     display: flex;
-    justify-content: center;
     align-items: center;
-    font-weight: bold;
+    justify-content: center;
+}
+
+.add-peer-btn:hover {
+    background: #4f46e5;
+}
+
+.pending-section {
+    margin-top: 25px;
+    border-top: 1px solid var(--border);
+    padding-top: 15px;
+}
+
+.section-label {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    color: var(--muted-foreground);
+    margin-bottom: 10px;
+    letter-spacing: 1px;
+}
+
+.member-item.pending {
+    opacity: 0.7;
+    background: transparent;
+    border: 1px dashed var(--border);
+}
+
+/* --- CHAT & MESSAGES --- */
+
+.chat-section {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.messages {
+    flex: 1;
+    overflow-y: auto;
+    padding-bottom: 15px;
+}
+
+.msg {
+    background: var(--muted);
+    padding: 10px;
+    border-radius: 10px;
+    margin-bottom: 8px;
+    font-size: 0.85rem;
+    line-height: 1.4;
+}
+
+.chat-input-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--background);
+    padding: 5px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
 }
 
 .chat-input {
+    flex: 1;
+    border: none !important;
+    margin-top: 0 !important;
+    padding: 8px 0;
+}
+
+.attachment-icon {
+    color: var(--muted-foreground);
+    cursor: pointer;
+}
+
+.attachment-icon:hover {
+    color: #6366f1;
+}
+
+/* --- FILES SECTION --- */
+
+.file-box {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 15px;
+    background: var(--muted);
+    border-radius: 12px;
+    margin-bottom: 15px;
+}
+
+.file-box p {
+    margin: 0;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.upload-btn {
     width: 100%;
     padding: 12px;
-    background: var(--background);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    color: var(--foreground);
-    margin-top: 10px;
+    background: transparent;
+    border: 1px solid #6366f1;
+    color: #6366f1;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.upload-btn:hover {
+    background: rgba(99, 102, 241, 0.1);
 }
