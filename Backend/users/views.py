@@ -1,9 +1,9 @@
 from django.shortcuts import render
-from rest_framework.decorators import api_view,permission_classes
-from rest_framework.permissions import AllowAny,IsAuthenticated
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
-from users.serializers import UserSerializer
+from users.serializers import UserSerializer, ProfileSerializer
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
 
@@ -42,7 +42,7 @@ def login_user(request):
                 'email': user.email
             }
         }, status=status.HTTP_200_OK)
-    
+
     return Response({"detail": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
 
 
@@ -50,13 +50,41 @@ def login_user(request):
 @permission_classes([IsAuthenticated])
 def logout_user(request):
     try:
-        #1. gets the refresh token from frontend 
+        # 1. gets the refresh token from frontend
         refresh_token = request.data.get("refresh")
         token = RefreshToken(refresh_token)
-        
-        #2. permanently Blocks the token
+
+        # 2. permanently Blocks the token
         token.blacklist()
 
         return Response({"message": "Successfully logged out"}, status=status.HTTP_205_RESET_CONTENT)
     except Exception as e:
         return Response({"detail": "Invalid or expired token"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(["GET", "PATCH"])
+@permission_classes([IsAuthenticated])
+def manage_profile(request):
+    """
+    Endpoint: /api/profiles/me/
+    GET: Fetch logged-in user's profile
+    PATCH: Update profile details (bio, avatar, etc.)
+    """
+
+    try:
+        profile = request.user.profile
+    except AttributeError:
+        return Response({"error": "Profile not found."}, status=status.HTTP_404_NOT_FOUND)
+
+    if request.method == "GET":
+        serializer = ProfileSerializer(profile)
+        return Response(serializer.data)
+
+    if request.method == "PATCH":
+        print("FILES:", request.FILES)
+        serializer = ProfileSerializer(
+            profile, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

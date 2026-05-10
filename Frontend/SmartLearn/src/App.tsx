@@ -9,7 +9,6 @@ import StudentDashboardPage from "./pages/student/DashboardPage";
 import LectureReviewPage from "./pages/teacher/LectureReviewPage";
 import TeacherCourseDetailPage from "./pages/teacher/TeacherCourseDetailPage";
 import DummyAnalytics from "./pages/dummy/DummyAnalytics";
-import DummyStudentDashboard from "./pages/dummy/DummyStudentDashboard";
 import DummySettings from "./pages/dummy/DummySettings";
 import DummyGradebook from "./pages/dummy/DummyGradebook";
 import DashboardLayout from "./Layout/DashboardLayout";
@@ -35,6 +34,7 @@ import AssignmentSubmission from "./pages/teacher/AssignmentSubmissions";
 import QuizDetailView from "./pages/teacher/QuizDetailView";
 import StudentReportPage from "./pages/teacher/StudentReportPage";
 import StudentVideoProgress from "./pages/teacher/StudentVideoProgress";
+import ProfilePage from "./pages/ProfileUpdate";
 
 // --- FIX: TypeScript interface for Google Translate ---
 declare global {
@@ -70,6 +70,7 @@ const App: React.FC = () => {
           {/* PROTECTED DASHBOARD */}
           <Route element={<ProtectedRoute />}>
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/settings/profile" element={<ProfilePage />} />
           </Route>
 
           {/* STUDENT ROUTES */}
