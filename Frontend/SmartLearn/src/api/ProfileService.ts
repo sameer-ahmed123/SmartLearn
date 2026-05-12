@@ -20,6 +20,10 @@ export const profileService = {
             }
         })
         return response.data
+    },
+    changePassword:async(passwords:any)=>{
+        const response = await apiClient.post("auth/change-pass/", passwords)
+        return response.data
     }
     
 }

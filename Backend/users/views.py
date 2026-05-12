@@ -39,7 +39,8 @@ def login_user(request):
             'user': {
                 'full_name': user.full_name,
                 'role': user.role,
-                'email': user.email
+                'email': user.email,
+                'avatar':user.profile.avatar.url
             }
         }, status=status.HTTP_200_OK)
 
@@ -88,3 +89,25 @@ def manage_profile(request):
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def change_password(request):
+    user = request.user
+    old_pass = request.data.get("old_password")
+    new_pass = request.data.get("new_password")
+
+    if not old_pass or not new_pass:
+        return Response(
+            {"error": "Both old_password and new_password are required"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    if not user.check_password(old_pass):
+        return Response({"old_password": ["wrong current Password!"]}, status=status.HTTP_400_BAD_REQUEST)
+
+    user.set_password(new_pass)
+    user.save()
+
+    return Response({"message": "Password Updated successfully!"}, status=status.HTTP_200_OK)

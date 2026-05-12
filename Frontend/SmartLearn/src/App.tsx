@@ -34,7 +34,7 @@ import AssignmentSubmission from "./pages/teacher/AssignmentSubmissions";
 import QuizDetailView from "./pages/teacher/QuizDetailView";
 import StudentReportPage from "./pages/teacher/StudentReportPage";
 import StudentVideoProgress from "./pages/teacher/StudentVideoProgress";
-import ProfilePage from "./pages/ProfileUpdate";
+import ProfilePage from "./pages/ProfilePage";
 
 // --- FIX: TypeScript interface for Google Translate ---
 declare global {
