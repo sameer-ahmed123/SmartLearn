@@ -6,8 +6,7 @@ import { toast } from "react-toastify";
 import styles from "../../pages/ProfileUpdate.module.css";
 
 const ProfileUpdateForm = () => {
-  const { user, userData } = useAuthStore();
-  const updateUserGlobal = useAuthStore((state) => state.updateUser);
+  const updateUserGlobal = useAuthStore((state) => state.updateUserProfile);
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -134,6 +133,57 @@ const ProfileUpdateForm = () => {
             value={profile?.birth_date || ""}
             onChange={(e) =>
               setProfile({ ...profile!, birth_date: e.target.value })
+            }
+            className={styles.input}
+          />
+        </div>
+
+        <div className={styles.formGroup}>
+          <label className={styles.label}>LinkedIn Profile</label>
+          <input
+            type="url"
+            placeholder="https://linkedin.com/in/username"
+            value={profile?.linkedin_url || ""}
+            onChange={(e) =>
+              setProfile({ ...profile!, linkedin_url: e.target.value })
+            }
+            className={styles.input}
+          />
+        </div>
+
+        <div className={styles.formGroup}>
+          <label className={styles.label}>GitHub Profile</label>
+          <input
+            type="url"
+            placeholder="https://github.com/in/username"
+            value={profile?.github_url || ""}
+            onChange={(e) =>
+              setProfile({ ...profile!, github_url: e.target.value })
+            }
+            className={styles.input}
+          />
+        </div>
+
+        <div className={styles.formGroup}>
+          <label className={styles.label}>Instagram Profile</label>
+          <input
+            type="url"
+            placeholder="https://instagram.com/in/username"
+            value={profile?.instagram_url || ""}
+            onChange={(e) =>
+              setProfile({ ...profile!, instagram_url: e.target.value })
+            }
+            className={styles.input}
+          />
+        </div>
+        <div className={styles.formGroup}>
+          <label className={styles.label}>Personal Website</label>
+          <input
+            type="url"
+            placeholder="https://website.com/"
+            value={profile?.website_url || ""}
+            onChange={(e) =>
+              setProfile({ ...profile!, website_url: e.target.value })
             }
             className={styles.input}
           />

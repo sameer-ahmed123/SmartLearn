@@ -1,12 +1,13 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import type { ProfileData } from "@/types/Profile/Types";
 
 // --- 1. INTERFACE DEFINITIONS ---
 interface User {
   email: string;
   full_name: string; // Django response mein 'full_name' hai
   role: "student" | "teacher";
-  avatar: string | null;
+  profile: ProfileData;
 }
 
 interface AuthState {
@@ -21,7 +22,7 @@ interface AuthState {
   logout: () => void;
   setAccessToken: (token: string) => void;
   isRole: (role: "student" | "teacher") => boolean;
-  updateUser: (userData: User) => void;
+  updateUserProfile: (userProfile: ProfileData) => void;
 }
 
 // --- 2. THE ZUSTAND STORE ---
@@ -67,9 +68,10 @@ export const useAuthStore = create<AuthState>()(
         return get().role === requiredRole;
       },
 
-      updateUser: (userData: User) => {
-        set({ user: userData });
-      },
+      updateUserProfile: (userProfile: ProfileData) =>
+        set((state) => ({
+          user: state.user ? { ...state.user, profile: userProfile } : null,
+        })),
     }),
     {
       name: "smartlearn-auth-storage",
