@@ -17,6 +17,7 @@ const TopBar = ({ toggleSidebar }: TopBarProps) => {
   const [searchQuery, setSearchQuery] = useState(""); // Search active karne ke liye state
 
   const user = useAuthStore((state)=> state.user)
+  console.log(user?.profile?.avatar, "on top bar user")
   // if (loading) return
 
   const langRef = useRef<HTMLDivElement>(null);
@@ -185,7 +186,7 @@ const TopBar = ({ toggleSidebar }: TopBarProps) => {
           <div className={styles.avatarCircle}>
             <Link to="/settings/profile">
               <img
-                src={user?.profile.avatar || "/default-avatar.png"}
+                src={user?.profile?.avatar || "/default-avatar.png"}
                 alt="User Profile"
                 className={styles.profileImg}
                 onError={(e) => {

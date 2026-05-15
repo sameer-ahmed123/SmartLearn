@@ -44,6 +44,7 @@ export const useAuthStore = create<AuthState>()(
           refreshToken: refresh,
           user: userData,
           role: userData.role,
+          
         });
       },
 

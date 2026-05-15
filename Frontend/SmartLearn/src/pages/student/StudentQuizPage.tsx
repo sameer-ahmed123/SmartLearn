@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -12,6 +12,8 @@ import {
 } from "lucide-react";
 import apiClient from "@/api/apiClient";
 import "./StudentQuizPage.css";
+import QuizSentinel from "@/components/Proctoring/QuizSentinal";
+import { toast } from "react-toastify";
 
 const StudentQuizPage = () => {
   const { id } = useParams();
@@ -25,6 +27,34 @@ const StudentQuizPage = () => {
   const [score, setScore] = useState(0);
   const [quizLectureTitle, setQuizLectureTitle] = useState("");
 
+  const logViolation = async (quizId: string, type: string) => {
+    try {
+      await apiClient.post(`/assessments/quiz/${quizId}/violation/`, { type });
+    } catch (err) {
+      console.error("Failed to log proctoring violation", err);
+    }
+  };
+
+  const handleViolation = useCallback(
+    async (type: string) => {
+      console.log(`Violation Detected: ${type}`);
+
+      if (id) {
+        await logViolation(id, type);
+      }
+
+      if (type === "MULTI_FACE") {
+        toast.error(
+          "Multiple people detected! Please maintain a solo environment.",
+        );
+      } else if (type === "NO_FACE") {
+        toast.warn("Face not detected. Please stay in view of the camera.");
+      }
+    },
+    [id],
+  );
+
+  // 1. Fetch Quiz Data Effect
   useEffect(() => {
     const fetchQuiz = async () => {
       try {
@@ -49,6 +79,28 @@ const StudentQuizPage = () => {
     };
     fetchQuiz();
   }, [id]);
+
+  // 2. NEW: Tab Switching Detection Effect
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      // Only log if the quiz is ongoing and not in result mode
+      if (document.hidden && !showResult && !loading) {
+        handleViolation("TAB_SWITCH");
+        toast.error(
+          "Security Warning: Tab switching is prohibited and has been recorded.",
+          {
+            position: "top-center",
+            autoClose: 5000,
+          },
+        );
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [showResult, loading, handleViolation]);
 
   const handleOptionSelect = (optionIndex: number) => {
     setSelectedAnswers({
@@ -103,13 +155,6 @@ const StudentQuizPage = () => {
     }
   };
 
-  const restartQuiz = () => {
-    setCurrentQuestion(0);
-    setSelectedAnswers({});
-    setShowResult(false);
-    setScore(0);
-  };
-
   const cardStyle = {
     backgroundColor: "var(--card)",
     color: "var(--foreground)",
@@ -136,6 +181,9 @@ const StudentQuizPage = () => {
 
   return (
     <div className="quiz-container">
+      {/* AI PROCTORING : Active only during quiz */}
+      {!showResult && <QuizSentinel onViolation={handleViolation} />}
+
       <div className="quiz-header">
         <h1 style={{ color: "var(--foreground)" }}>
           {showResult ? (
@@ -249,7 +297,6 @@ const StudentQuizPage = () => {
               const studentIdx = selectedAnswers[qIdx];
               const options = question.options || [];
               const correctIdx = question.correct_index;
-
               const isCorrect = studentIdx === correctIdx;
 
               const studentAnsText = options[studentIdx]

@@ -3,7 +3,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
-from users.serializers import UserSerializer, ProfileSerializer
+from users.serializers import UserSerializer, ProfileSerializer,ProfileLoginSerializer
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
 
@@ -33,6 +33,7 @@ def login_user(request):
 
     if user is not None:
         refresh = RefreshToken.for_user(user)
+        profile_data = ProfileLoginSerializer(user.profile).data
         return Response({
             'refresh': str(refresh),
             'access': str(refresh.access_token),
@@ -40,7 +41,7 @@ def login_user(request):
                 'full_name': user.full_name,
                 'role': user.role,
                 'email': user.email,
-                'avatar':user.profile.avatar.url
+                'profile':profile_data
             }
         }, status=status.HTTP_200_OK)
 
