@@ -70,6 +70,10 @@ export const NotificationProvider = ({
 
   // 2. Real-time WebSocket Logic
   useEffect(() => {
+    const protocol = window.location.protocol === "https:" ? "wss" : "ws";
+    const host = window.location.host;
+    const socketUrl = `${protocol}://${host}/ws/notifications/?token=${userToken}`;
+    
     if (!userToken) return;
 
     //close existing socket before opening new
@@ -77,9 +81,7 @@ export const NotificationProvider = ({
       socketRef.current.close();
     }
 
-    const socket = new WebSocket(
-      `ws://localhost:8000/ws/notifications/?token=${userToken}`,
-    );
+    const socket = new WebSocket(socketUrl);
     socketRef.current = socket; // set socket connection as current referenc in sockerRef
 
     socket.onopen = () => console.log("✅ Notification WebSocket Connected");

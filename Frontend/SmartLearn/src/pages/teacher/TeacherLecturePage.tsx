@@ -1,9 +1,10 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { useState, useEffect } from "react";
 import { 
   BookOpen, Video, Clock, CheckCircle, Plus, 
-  GraduationCap, PlayCircle, Lock, XCircle 
+  GraduationCap, PlayCircle
 } from "lucide-react"; 
-import { useNavigate, useParams } from "react-router-dom"; 
+import {  useParams } from "react-router-dom"; 
 import "./TeacherLecture.css"; 
 import CreateCourseModal from "../../components/Dashboard/teacher/CreateCourseModal";
 import LectureValidationQueueTable from "@/components/Dashboard/teacher/LectureValidationQueueTable";
@@ -76,6 +77,7 @@ const TeacherLecturePage = () => {
     fetchData();
   }, [id]);
 
+  
   const handleValidationAction = async (status: 'validated' | 'rejected') => {
     if (!selectedLecture) return;
     try {

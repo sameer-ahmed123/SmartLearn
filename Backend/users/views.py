@@ -1,6 +1,6 @@
 from django.shortcuts import render
-from rest_framework.decorators import api_view,permission_classes
-from rest_framework.permissions import AllowAny,IsAuthenticated
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 from users.serializers import UserSerializer
@@ -42,7 +42,7 @@ def login_user(request):
                 'email': user.email
             }
         }, status=status.HTTP_200_OK)
-    
+
     return Response({"detail": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
 
 
@@ -50,11 +50,11 @@ def login_user(request):
 @permission_classes([IsAuthenticated])
 def logout_user(request):
     try:
-        #1. gets the refresh token from frontend 
+        # 1. gets the refresh token from frontend
         refresh_token = request.data.get("refresh")
         token = RefreshToken(refresh_token)
-        
-        #2. permanently Blocks the token
+
+        # 2. permanently Blocks the token
         token.blacklist()
 
         return Response({"message": "Successfully logged out"}, status=status.HTTP_205_RESET_CONTENT)

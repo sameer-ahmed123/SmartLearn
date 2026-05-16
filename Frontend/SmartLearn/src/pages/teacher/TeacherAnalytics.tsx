@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { useState, useEffect } from "react";
 import {
   TrendingUp,
   Users,
@@ -117,7 +118,7 @@ const AnalyticsPage = () => {
     fetchStudents();
   }, [selectedCourse]);
 
-  const getProgressColor = (score) => {
+  const getProgressColor = (score: number) => {
     if (score >= 80) return "#22c55e"; // Green
     if (score >= 50) return "#eab308"; // Yellow
     return "#ef4444"; // Red
