@@ -48,7 +48,7 @@ const StudentQuizPage = () => {
   const isSystemReadyRef = useRef(false);
 
   const calculateScoreAndSave = useCallback(
-    async (wasTerminated: boolean = false) => {
+    async (wasTerminated: boolean = false,termination_reason:string = '') => {
       const formattedAnswers: any = {};
 
       quizData.forEach((question, index) => {
@@ -69,6 +69,7 @@ const StudentQuizPage = () => {
           {
             student_answers: formattedAnswers,
             is_flagged: wasTerminated,
+            termination_reason:termination_reason
           },
         );
 
@@ -147,22 +148,23 @@ const StudentQuizPage = () => {
     const { type, verdict } = pendingAction.current;
     pendingAction.current = null; // Clear immediately
     const wasTerminated = verdict.terminate;
+    const terminationReason = verdict.reason;
     const executeAction = async () => {
       console.log(
-        `Executing Action for: ${type}. Terminate: ${verdict.terminate}`,
+        `Executing Action for: ${type}. Terminate: ${wasTerminated}`,
       );
       // Sync to Database
       if (id) logViolation(id, type);
 
       if (wasTerminated) {
         setIsTerminated(true);
-        toast.error(`QUIZ TERMINATED: ${verdict.reason}`, {
+        toast.error(`QUIZ TERMINATED: ${terminationReason}`, {
           autoClose: false,
           closeOnClick: false,
           draggable: false,
         });
         // Auto-complete the quiz
-        await calculateScoreAndSave(wasTerminated);
+        await calculateScoreAndSave(wasTerminated,terminationReason);
       } else {
         // Trigger Warning Toast
         triggerWarningToast(type);

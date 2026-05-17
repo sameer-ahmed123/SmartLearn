@@ -92,6 +92,7 @@ def submit_quiz_score(request, quiz_id):
     quiz = get_object_or_404(Quiz, id=quiz_id)
     student_answers = request.data.get('student_answers')
     is_flagged = request.data.get('is_flagged', False)
+    termination_reason = request.data.get('termination_reason', '')
 
     if student_answers is None:
         return Response({"error": "No answers provided"}, status=400)
@@ -100,7 +101,8 @@ def submit_quiz_score(request, quiz_id):
         request.user,
         quiz,
         student_answers,
-        is_flagged
+        termination_reason,
+        is_flagged,
     )
 
     return Response({

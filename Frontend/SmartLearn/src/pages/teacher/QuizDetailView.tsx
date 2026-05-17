@@ -46,7 +46,6 @@ const QuizDetailView = () => {
         const subResponse = await apiClient.get(
           `/assessments/quiz/${quizId}/submissions/`,
         );
-       console.log(subResponse.data)
         
         setSubmissions(subResponse.data);
       }

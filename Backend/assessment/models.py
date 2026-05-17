@@ -37,6 +37,7 @@ class QuizSubmission(models.Model):
     is_overridden = models.BooleanField(default=False)
     is_graded = models.BooleanField(default=True)
     is_flagged = models.BooleanField(default=False)
+    termination_reason = models.TextField(null=True, blank=True)
     submitted_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -51,11 +52,18 @@ class QuizViolation(models.Model):
         ('NO_FACE', 'Face Not Detected'),
         ('LOOK_DOWN', 'Looking Down/Phone'),
     )
-
+    submission = models.ForeignKey(
+        QuizSubmission, 
+        on_delete=models.CASCADE, 
+        related_name='violation_sub',
+        null=True,
+        blank=True
+    )
     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE, related_name='violations')
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     violation_type = models.CharField(max_length=20, choices=VIOLATION_TYPES)
     timestamp = models.DateTimeField(auto_now_add=True)
+    reason = models.TextField(blank=True)
 
     class Meta:
         db_table = "quiz_violation"
