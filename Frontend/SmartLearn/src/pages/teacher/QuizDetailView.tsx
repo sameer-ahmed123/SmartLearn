@@ -10,6 +10,7 @@ import {
   Eye,
   ShieldCheck,
   Zap,
+  ShieldAlert,
 } from "lucide-react";
 import apiClient from "@/api/apiClient";
 import styles from "./QuizDetailView.module.css";
@@ -45,6 +46,8 @@ const QuizDetailView = () => {
         const subResponse = await apiClient.get(
           `/assessments/quiz/${quizId}/submissions/`,
         );
+       console.log(subResponse.data)
+        
         setSubmissions(subResponse.data);
       }
       setLoading(false);
@@ -216,7 +219,12 @@ const QuizDetailView = () => {
                         {formatStudentScore(sub.score)}
                       </td>
                       <td>
-                        {sub.is_overridden ? (
+                        {/* MERGED LOGIC: Flagged > Overridden > Default */}
+                        {sub.is_flagged ? (
+                          <span className={styles.statusFlagged}>
+                            <ShieldAlert size={12} /> Terminated
+                          </span>
+                        ) : sub.is_overridden ? (
                           <span className={styles.statusVerified}>
                             <ShieldCheck size={12} /> Verified
                           </span>

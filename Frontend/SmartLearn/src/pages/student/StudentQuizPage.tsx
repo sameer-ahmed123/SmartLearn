@@ -47,43 +47,50 @@ const StudentQuizPage = () => {
   const isTerminatedRef = useRef(false);
   const isSystemReadyRef = useRef(false);
 
-  const calculateScoreAndSave = useCallback(async () => {
-    const formattedAnswers: any = {};
+  const calculateScoreAndSave = useCallback(
+    async (wasTerminated: boolean = false) => {
+      const formattedAnswers: any = {};
 
-    quizData.forEach((question, index) => {
-      const selectedOptionIndex = selectedAnswers[index];
-      const options = question.options;
-      const selectedOption = options[selectedOptionIndex];
+      quizData.forEach((question, index) => {
+        const selectedOptionIndex = selectedAnswers[index];
+        const options = question.options;
+        const selectedOption = options[selectedOptionIndex];
 
-      const finalValue =
-        typeof selectedOption === "object"
-          ? selectedOption.text
-          : selectedOption;
-      formattedAnswers[index] = finalValue;
-    });
-
-    try {
-      const response = await apiClient.post(`/assessments/quiz/${id}/submit/`, {
-        student_answers: formattedAnswers,
+        const finalValue =
+          typeof selectedOption === "object"
+            ? selectedOption.text
+            : selectedOption;
+        formattedAnswers[index] = finalValue;
       });
 
-      if (response.data && response.data.correct_count !== undefined) {
-        setScore(response.data.correct_count);
-      } else {
-        setScore(response.data.score || 0);
+      try {
+        const response = await apiClient.post(
+          `/assessments/quiz/${id}/submit/`,
+          {
+            student_answers: formattedAnswers,
+            is_flagged: wasTerminated,
+          },
+        );
+
+        if (response.data && response.data.correct_count !== undefined) {
+          setScore(response.data.correct_count);
+        } else {
+          setScore(response.data.score || 0);
+        }
+        setShowResult(true);
+      } catch (err) {
+        console.error("Failed to save score to backend:", err);
+
+        let localCount = 0;
+        quizData.forEach((q, idx) => {
+          if (selectedAnswers[idx] === q.correct_index) localCount++;
+        });
+        setScore(localCount);
+        setShowResult(true);
       }
-      setShowResult(true);
-    } catch (err) {
-      console.error("Failed to save score to backend:", err);
-
-      let localCount = 0;
-      quizData.forEach((q, idx) => {
-        if (selectedAnswers[idx] === q.correct_index) localCount++;
-      });
-      setScore(localCount);
-      setShowResult(true);
-    }
-  }, [id, quizData, selectedAnswers]);
+    },
+    [id, quizData, selectedAnswers],
+  );
 
   const logViolation = async (quizId: string, type: string) => {
     const backendType = typeMap(type);
@@ -139,7 +146,7 @@ const StudentQuizPage = () => {
 
     const { type, verdict } = pendingAction.current;
     pendingAction.current = null; // Clear immediately
-
+    const wasTerminated = verdict.terminate;
     const executeAction = async () => {
       console.log(
         `Executing Action for: ${type}. Terminate: ${verdict.terminate}`,
@@ -147,16 +154,15 @@ const StudentQuizPage = () => {
       // Sync to Database
       if (id) logViolation(id, type);
 
-      if (verdict.terminate) {
+      if (wasTerminated) {
         setIsTerminated(true);
         toast.error(`QUIZ TERMINATED: ${verdict.reason}`, {
           autoClose: false,
           closeOnClick: false,
           draggable: false,
         });
-
         // Auto-complete the quiz
-        await calculateScoreAndSave();
+        await calculateScoreAndSave(wasTerminated);
       } else {
         // Trigger Warning Toast
         triggerWarningToast(type);

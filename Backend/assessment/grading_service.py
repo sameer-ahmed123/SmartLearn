@@ -1,7 +1,7 @@
 from .models import QuizSubmission, AssignmentSubmission
 from .services import calculate_quiz_score, extract_text_from_file, grade_assignment_with_ai
 
-def process_quiz_submission(user, quiz, student_answers):
+def process_quiz_submission(user, quiz, student_answers,is_flagged=False):
     """
     Calculates the score and saves/updates the submission record.
     Reused by the 'submit_quiz_score' view.
@@ -18,7 +18,8 @@ def process_quiz_submission(user, quiz, student_answers):
         defaults={
             'score': final_score,
             'answers_data': student_answers,
-            'is_graded': True
+            'is_graded': True,
+            'is_flagged': is_flagged
         }
     )
     

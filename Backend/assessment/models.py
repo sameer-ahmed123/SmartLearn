@@ -36,6 +36,7 @@ class QuizSubmission(models.Model):
     score = models.FloatField()
     is_overridden = models.BooleanField(default=False)
     is_graded = models.BooleanField(default=True)
+    is_flagged = models.BooleanField(default=False)
     submitted_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
