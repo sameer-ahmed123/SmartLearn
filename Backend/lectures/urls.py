@@ -24,6 +24,9 @@ from .views import (
     get_my_connections,      # Naya import add kiya
     handle_request_action,   # Naya import add kiya
     get_room_messages,       # <--- CHAT HISTORY VIEW IMPORT KIYA
+    
+    # 🔥 NEW IMPORT: Teacher Calendar Lectures view import kiya gaya hai
+    teacher_calendar_lectures
 )
 
 app_name = "lectures"
@@ -53,6 +56,9 @@ urlpatterns = [
 
     # --- CHAT MESSAGES HISTORY ---
     path('messages/<str:room_id>/', get_room_messages, name='room-messages'),
+
+    # 🔥 NEW: Teacher Calendar Endpoint for displaying lecture creation dates
+    path('teacher-calendar-lectures/', teacher_calendar_lectures, name='teacher-calendar-lectures'),
 
     # --- SHOULD BE REMOVED  ------NOT BEING ACCESSD  (MOVED TO DASHBOARD APP [NEW VIEW] )  NOT NEEDED 
     # path('student/analytics/', student_analytics_data, name='student-analytics-data'), # <--- NAYA ENDPOINT

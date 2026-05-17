@@ -56,6 +56,11 @@ def process_assignment_submission(user, assignment, file_obj):
     # 4. Final Save
     submission.score = ai_result.get('score', 0)
     submission.feedback = ai_result.get('feedback', 'No feedback provided.')
+    
+    # 🔥 AI response se plagiarism fields uthayein aur database mein save karein
+    submission.plagiarism_percentage = ai_result.get('plagiarism_percentage', 0)
+    submission.is_plagiarized = ai_result.get('is_plagiarized', False)
+    
     submission.save()
     
     return submission
