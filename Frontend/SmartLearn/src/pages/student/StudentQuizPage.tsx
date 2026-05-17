@@ -1,11 +1,9 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
-  ArrowLeft,
   CheckCircle,
   HelpCircle,
   Award,
-  RefreshCcw,
   ChevronRight,
   Loader2,
   XCircle,
@@ -13,12 +11,19 @@ import {
 import apiClient from "@/api/apiClient";
 import "./StudentQuizPage.css";
 import QuizSentinel from "@/components/Proctoring/QuizSentinal";
+import { getVerdict } from "@/components/Proctoring/ProctorJudge";
+import type { ViolationStats } from "@/components/Proctoring/ProctorJudge";
 import { toast } from "react-toastify";
+import {
+  triggerWarningToast,
+  typeMap,
+} from "@/components/Proctoring/Proctorhelper";
 
 const StudentQuizPage = () => {
+  const [isSystemReady, setIsSystemReady] = useState(false);
+  const [isTerminated, setIsTerminated] = useState(false);
   const { id } = useParams();
   const navigate = useNavigate();
-
   const [quizData, setQuizData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -26,35 +31,160 @@ const StudentQuizPage = () => {
   const [showResult, setShowResult] = useState(false);
   const [score, setScore] = useState(0);
   const [quizLectureTitle, setQuizLectureTitle] = useState("");
+  const [, setViolationStats] = useState<ViolationStats>({
+    TAB_SWITCH: 0,
+    MULTI_FACE: 0,
+    LOOK_LEFT: 0,
+    LOOK_RIGHT: 0,
+    LOOK_DOWN: 0,
+    NO_FACE: 0,
+  });
+  const pendingAction = useRef<{ type: string; verdict: any } | null>(null);
+  const systemReadyRef = useRef(false);
+  const [violationTrigger, setViolationTrigger] = useState(0);
+  const mountTimeRef = useRef(Date.now());
+
+  const isTerminatedRef = useRef(false);
+  const isSystemReadyRef = useRef(false);
+
+  const calculateScoreAndSave = useCallback(async () => {
+    const formattedAnswers: any = {};
+
+    quizData.forEach((question, index) => {
+      const selectedOptionIndex = selectedAnswers[index];
+      const options = question.options;
+      const selectedOption = options[selectedOptionIndex];
+
+      const finalValue =
+        typeof selectedOption === "object"
+          ? selectedOption.text
+          : selectedOption;
+      formattedAnswers[index] = finalValue;
+    });
+
+    try {
+      const response = await apiClient.post(`/assessments/quiz/${id}/submit/`, {
+        student_answers: formattedAnswers,
+      });
+
+      if (response.data && response.data.correct_count !== undefined) {
+        setScore(response.data.correct_count);
+      } else {
+        setScore(response.data.score || 0);
+      }
+      setShowResult(true);
+    } catch (err) {
+      console.error("Failed to save score to backend:", err);
+
+      let localCount = 0;
+      quizData.forEach((q, idx) => {
+        if (selectedAnswers[idx] === q.correct_index) localCount++;
+      });
+      setScore(localCount);
+      setShowResult(true);
+    }
+  }, [id, quizData, selectedAnswers]);
 
   const logViolation = async (quizId: string, type: string) => {
+    const backendType = typeMap(type);
     try {
-      await apiClient.post(`/assessments/quiz/${quizId}/violation/`, { type });
+      await apiClient.post(`/assessments/quiz/${quizId}/violation/`, {
+        type: backendType,
+      });
     } catch (err) {
       console.error("Failed to log proctoring violation", err);
     }
   };
 
-  const handleViolation = useCallback(
-    async (type: string) => {
-      console.log(`Violation Detected: ${type}`);
+  const handleViolation = useCallback(async (type: string) => {
+    console.log(
+      `Checking violation: ${type}. SystemReady: ${isSystemReadyRef.current}, Terminated: ${isTerminatedRef.current}`,
+    );
+    const secondsSinceMount = (Date.now() - mountTimeRef.current) / 1000;
 
-      if (id) {
-        await logViolation(id, type);
+    if (secondsSinceMount < 10) {
+      console.warn(
+        `Warm-up phase: Ignoring ${type} (${secondsSinceMount.toFixed(1)}s)`,
+      );
+      return;
+    }
+
+    if (isTerminatedRef.current) return;
+
+    console.log(type, "from handel violation function");
+    // Use the functional update to get the latest state
+    setViolationStats((prev) => {
+      // 1. Calculate what the NEW stats WOULD be
+      const nextStats = {
+        ...prev,
+        [type]: prev[type as keyof ViolationStats] + 1,
+      };
+      // 2. Ask the judge based on those future stats
+      const verdict = getVerdict(nextStats, type);
+      if (verdict.isSpam) {
+        console.log(`Verdict for ${type}: SPAM (ignored)`);
+        return prev;
       }
+      console.log(`Verdict for ${type}: VALID. Counts:`, nextStats);
+      // 3. If NOT spam, proceed with side effects
+      pendingAction.current = { type, verdict };
+      setViolationTrigger((v) => v + 1);
+      return nextStats;
+    });
+  }, []);
+  // 2. This Effect listens for changes and handles Toasts/API calls safely
+  useEffect(() => {
+    console.log("Effect Triggered! PendingAction:", pendingAction.current);
+    if (!pendingAction.current) return;
 
-      if (type === "MULTI_FACE") {
-        toast.error(
-          "Multiple people detected! Please maintain a solo environment.",
-        );
-      } else if (type === "NO_FACE") {
-        toast.warn("Face not detected. Please stay in view of the camera.");
+    const { type, verdict } = pendingAction.current;
+    pendingAction.current = null; // Clear immediately
+
+    const executeAction = async () => {
+      console.log(
+        `Executing Action for: ${type}. Terminate: ${verdict.terminate}`,
+      );
+      // Sync to Database
+      if (id) logViolation(id, type);
+
+      if (verdict.terminate) {
+        setIsTerminated(true);
+        toast.error(`QUIZ TERMINATED: ${verdict.reason}`, {
+          autoClose: false,
+          closeOnClick: false,
+          draggable: false,
+        });
+
+        // Auto-complete the quiz
+        await calculateScoreAndSave();
+      } else {
+        // Trigger Warning Toast
+        triggerWarningToast(type);
       }
-    },
-    [id],
-  );
+    };
 
-  // 1. Fetch Quiz Data Effect
+    executeAction();
+  }, [violationTrigger, id, calculateScoreAndSave]);
+
+  useEffect(() => {
+    // Start the timer immediately when the page loads
+    const timer = setTimeout(() => {
+      console.log("PROCTOR SYSTEM ONLINE");
+      setIsSystemReady(true);
+      systemReadyRef.current = true;
+    }, 5000); // 5 seconds to let the camera/AI warm up
+
+    return () => clearTimeout(timer);
+  }, []); // Empty dependency array means it runs once on mount
+
+  useEffect(() => {
+    isTerminatedRef.current = isTerminated;
+  }, [isTerminated]);
+
+  useEffect(() => {
+    isSystemReadyRef.current = isSystemReady;
+  }, [isSystemReady]);
+  // Fetch Quiz Data Effect
   useEffect(() => {
     const fetchQuiz = async () => {
       try {
@@ -80,7 +210,7 @@ const StudentQuizPage = () => {
     fetchQuiz();
   }, [id]);
 
-  // 2. NEW: Tab Switching Detection Effect
+  // Tab Switching Detection Effect
   useEffect(() => {
     const handleVisibilityChange = () => {
       // Only log if the quiz is ongoing and not in result mode
@@ -117,44 +247,6 @@ const StudentQuizPage = () => {
     }
   };
 
-  const calculateScoreAndSave = async () => {
-    const formattedAnswers: any = {};
-
-    quizData.forEach((question, index) => {
-      const selectedOptionIndex = selectedAnswers[index];
-      const options = question.options;
-      const selectedOption = options[selectedOptionIndex];
-
-      let finalValue =
-        typeof selectedOption === "object"
-          ? selectedOption.text
-          : selectedOption;
-      formattedAnswers[index] = finalValue;
-    });
-
-    try {
-      const response = await apiClient.post(`/assessments/quiz/${id}/submit/`, {
-        student_answers: formattedAnswers,
-      });
-
-      if (response.data && response.data.correct_count !== undefined) {
-        setScore(response.data.correct_count);
-      } else {
-        setScore(response.data.score || 0);
-      }
-      setShowResult(true);
-    } catch (err) {
-      console.error("Failed to save score to backend:", err);
-
-      let localCount = 0;
-      quizData.forEach((q, idx) => {
-        if (selectedAnswers[idx] === q.correct_index) localCount++;
-      });
-      setScore(localCount);
-      setShowResult(true);
-    }
-  };
-
   const cardStyle = {
     backgroundColor: "var(--card)",
     color: "var(--foreground)",
@@ -183,6 +275,9 @@ const StudentQuizPage = () => {
     <div className="quiz-container">
       {/* AI PROCTORING : Active only during quiz */}
       {!showResult && <QuizSentinel onViolation={handleViolation} />}
+      {/* <div style={{ display: showResult ? "none" : "block" }}>
+        <QuizSentinel onViolation={(type) => handleViolation(type)} />
+      </div> */}
 
       <div className="quiz-header">
         <h1 style={{ color: "var(--foreground)" }}>

@@ -1,8 +1,7 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { FaceMesh } from "@mediapipe/face_mesh";
-import * as cam from "@mediapipe/camera_utils";
+// import * as cam from "@mediapipe/camera_utils";
 import styles from "./QuizSentinal.module.css";
-
 interface ProctorProps {
   onViolation: (type: string) => void;
 }
@@ -10,28 +9,38 @@ interface ProctorProps {
 const QuizSentinel: React.FC<ProctorProps> = ({ onViolation }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isModelLoaded, setIsModelLoaded] = useState(false);
+  const isInitialized = useRef(false);
 
   const violationBuffer = useRef<{ [key: string]: number }>({});
 
-  const throttledViolation = (type: string) => {
-    const now = Date.now();
-    // Only trigger the same violation type once every 3 seconds
-    if (
-      !violationBuffer.current[type] ||
-      now - violationBuffer.current[type] > 3000
-    ) {
-      violationBuffer.current[type] = now;
-      onViolation(type);
-    }
-  };
+  const throttledViolation = useCallback(
+    (type: string) => {
+      const now = Date.now();
+      // Only trigger the same violation type once every 3 seconds
+      if (
+        !violationBuffer.current[type] ||
+        now - violationBuffer.current[type] > 3000
+      ) {
+        violationBuffer.current[type] = now;
+        onViolation(type);
+      }
+    },
+    [onViolation],
+  );
 
   useEffect(() => {
-    if (!videoRef.current) return;
+    if (isInitialized.current) return;
+    isInitialized.current = true;
+    let isMounted = true;
+    const videoElement = videoRef.current;
+    if (!videoElement) return;
 
     // 1. Initialize FaceMesh
     const faceMesh = new FaceMesh({
-      locateFile: (file) =>
-        `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`,
+      locateFile: (file: string) => {
+        // If you named your folder 'facemesh' inside 'models'
+        return `/models/facemesh/${file}`;
+      },
     });
 
     faceMesh.setOptions({
@@ -45,11 +54,11 @@ const QuizSentinel: React.FC<ProctorProps> = ({ onViolation }) => {
     faceMesh.onResults((results) => {
       // 1. Basic Presence Checks
       if (results.multiFaceLandmarks.length === 0) {
-        onViolation("NO_FACE");
+        throttledViolation("NO_FACE");
         return;
       }
       if (results.multiFaceLandmarks.length > 1) {
-        onViolation("MULTI_FACE");
+        throttledViolation("MULTI_FACE");
         return;
       }
 
@@ -84,32 +93,87 @@ const QuizSentinel: React.FC<ProctorProps> = ({ onViolation }) => {
 
       // If verticalDeviation is high, they are looking down at a phone/paper
       if (verticalDeviation > 0.15) {
-        onViolation("LOOK_DOWN");
+        throttledViolation("LOOK_DOWN");
       }
     });
 
     // 3. Setup Camera Loop
-    const camera = new cam.Camera(videoRef.current, {
-      onFrame: async () => {
-        if (videoRef.current) {
-          await faceMesh.send({ image: videoRef.current });
-        }
-      },
-      width: 640,
-      height: 480,
-    });
+    let stream: MediaStream | null = null;
+    const startCamera = async () => {
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            width: 640,
+            height: 480,
+          },
+          audio: false,
+        });
 
-    camera.start().then(() => setIsModelLoaded(true));
+        if (!isMounted) return;
+
+        videoElement.srcObject = stream;
+
+        await videoElement.play();
+
+        const detectFrame = async () => {
+          if (!isMounted) return;
+
+          try {
+            await faceMesh.send({ image: videoElement });
+          } catch (err) {
+            console.warn("FaceMesh send error:", err);
+          }
+
+          if (isMounted) {
+            requestAnimationFrame(detectFrame);
+          }
+        };
+
+        detectFrame();
+
+        setIsModelLoaded(true);
+      } catch (err) {
+        console.error("Camera access failed:", err);
+      }
+    };
+
+    startCamera();
 
     return () => {
-      camera.stop();
-      faceMesh.close();
+      console.log("QUIZ SENTINEL UNMOUNTING");
+      isMounted = false;
+
+      if (stream) {
+        stream.getTracks().forEach((track) => {
+          track.stop();
+        });
+      }
+
+      // Fully detach stream from video
+      videoElement.pause();
+      videoElement.srcObject = null;
+
+      setTimeout(() => {
+        try {
+          faceMesh.close();
+        } catch (err) {
+          console.warn("FaceMesh cleanup error:", err);
+        }
+      }, 100);
+
+      isInitialized.current = false;
     };
-  }, []);
+  }, [throttledViolation]);
 
   return (
     <div className={styles.sentinelWrapper}>
-      <video ref={videoRef} className={styles.videoFeed} autoPlay muted />
+      <video
+        ref={videoRef}
+        className={styles.videoFeed}
+        autoPlay
+        muted
+        playsInline
+      />
       <div className={styles.statusIndicator}>
         <div className={isModelLoaded ? styles.dotGreen : styles.dotPulse} />
         <span>

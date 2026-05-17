@@ -17,7 +17,7 @@ const TopBar = ({ toggleSidebar }: TopBarProps) => {
   const [searchQuery, setSearchQuery] = useState(""); // Search active karne ke liye state
 
   const user = useAuthStore((state)=> state.user)
-  console.log(user?.profile?.avatar, "on top bar user")
+  // console.log(user?.profile?.avatar, "on top bar user")
   // if (loading) return
 
   const langRef = useRef<HTMLDivElement>(null);

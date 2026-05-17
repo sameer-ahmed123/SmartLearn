@@ -42,6 +42,27 @@ class QuizSubmission(models.Model):
         unique_together = ('user', 'quiz')
         db_table = "quiz_submission"
 
+class QuizViolation(models.Model):
+    VIOLATION_TYPES = (
+        ('TAB_SWITCH', 'Tab Switching'),
+        ('LOOK_AWAY', 'Looking Away'),
+        ('MULTI_FACE', 'Multiple People Detected'),
+        ('NO_FACE', 'Face Not Detected'),
+        ('LOOK_DOWN', 'Looking Down/Phone'),
+    )
+
+    quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE, related_name='violations')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    violation_type = models.CharField(max_length=20, choices=VIOLATION_TYPES)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "quiz_violation"
+        ordering = ['-timestamp']
+
+    def __str__(self):
+        return f"{self.user.email} - {self.violation_type} at {self.timestamp}"
+
 # --- ASSIGNMENTS ---
 
 class Assignment(models.Model):

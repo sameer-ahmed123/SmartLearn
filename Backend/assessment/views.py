@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.utils import timezone
 
-from assessment.models import Assignment, Quiz, QuizSubmission, AssignmentSubmission
+from assessment.models import Assignment, Quiz, QuizSubmission, AssignmentSubmission, QuizViolation
 from assessment.serialzers import (
     AssignmentSerializer, QuizSerializer, 
     AssignmentSubmissionSerializer, QuizSubmissionSerializer
@@ -160,6 +160,28 @@ def teacher_quiz_update_score(request, id=None):
     submission.is_overridden = True
     submission.save()
     return Response(QuizSubmissionSerializer(submission).data)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def log_quiz_violation(request, quiz_id):
+    try:
+        quiz = Quiz.objects.get(id=quiz_id)
+        violation_type = request.data.get('type')
+        
+        valid_types = [t[0] for t in QuizViolation.VIOLATION_TYPES]
+        if violation_type not in valid_types:
+            return Response({"error": "Invalid violation type"}, status=status.HTTP_400_BAD_REQUEST)
+
+        QuizViolation.objects.create(
+            quiz=quiz,
+            user=request.user,
+            violation_type=violation_type
+        )
+        
+        return Response({"status": "recorded"}, status=status.HTTP_201_CREATED)
+    except Quiz.DoesNotExist:
+        return Response({"error": "Quiz not found"}, status=status.HTTP_404_NOT_FOUND)
 
 
 # ===========================================================
