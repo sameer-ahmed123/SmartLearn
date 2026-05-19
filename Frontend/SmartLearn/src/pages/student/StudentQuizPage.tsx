@@ -119,7 +119,7 @@ const StudentQuizPage = () => {
 
     if (isTerminatedRef.current) return;
 
-    console.log(type, "from handel violation function");
+    console.log(type, "from handle violation function");
     // Use the functional update to get the latest state
     setViolationStats((prev) => {
       // 1. Calculate what the NEW stats WOULD be
