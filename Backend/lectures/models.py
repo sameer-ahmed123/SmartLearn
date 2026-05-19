@@ -1,6 +1,7 @@
 from django.db import models
 from django.conf import settings
 from lectures.managers import LectureQuerySet, CourseQuerySet
+from django.conf import settings
 
 # 1: COURSE MODEL ---Subject Container
 
@@ -40,7 +41,7 @@ class Course(models.Model):
 
 class ContentSource(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="content_sources",
-                               help_text="the cource this content is intended for")
+                                help_text="the cource this content is intended for")
     raw_file = models.FileField(upload_to='raw_content_uploads/%Y/%m/%d')
     ai_prompt = models.TextField(
         help_text="the teachers help instructions for the AI Lecture generation")
@@ -162,3 +163,73 @@ class Enrollment(models.Model):
         db_table = "enrollment"
         unique_together = (("student", "course"),)
         ordering = ['-enrolled_at']
+
+
+# 5: STUDY CONNECTION MODEL (For Virtual Room Access)
+
+class StudyConnection(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('accepted', 'Accepted'),
+        ('rejected', 'Rejected'),
+    ]
+
+    sender = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.CASCADE, 
+        related_name='sent_study_requests'
+    )
+    receiver = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.CASCADE, 
+        related_name='received_study_requests'
+    )
+    status = models.CharField(max_length=15, choices=STATUS_CHOICES, default='pending')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "study_connection"
+        unique_together = (('sender', 'receiver'),)
+
+    def __str__(self):
+        return f"{self.sender.full_name} -> {self.receiver.full_name} ({self.status})"
+
+
+# 6: GROUP MESSAGE MODEL (For Real-time Virtual Room Chat)
+
+class GroupMessage(models.Model):
+    sender = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.CASCADE,
+        related_name="study_group_messages"
+    )
+    content = models.TextField()
+    timestamp = models.DateTimeField(auto_now_add=True)
+    # room_id can be the course_id or a unique string for the group
+    room_id = models.CharField(max_length=255, db_index=True)
+
+    class Meta:
+        db_table = "group_message"
+        ordering = ['timestamp']
+
+    def __str__(self):
+        return f"{self.sender.full_name}: {self.content[:30]}"
+
+
+class GroupMessage(models.Model):
+    # 'User' ki jagah settings.AUTH_USER_MODEL use karein
+    sender = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.CASCADE,
+        related_name='study_messages'
+    )
+    content = models.TextField()
+    room_id = models.CharField(max_length=255)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['timestamp']
+
+    def __str__(self):
+        return f"{self.sender.full_name}: {self.content[:20]}"

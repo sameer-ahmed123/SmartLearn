@@ -8,10 +8,13 @@ User = get_user_model()
 @database_sync_to_async
 def get_user(token_key):
     try:
+        # Token ko validate karna aur user nikalna
         access_token = AccessToken(token_key)
         user_id = access_token['user_id']
         return User.objects.get(id=user_id)
-    except Exception:
+    except Exception as e:
+        # Agar token expire ho ya invalid ho toh AnonymousUser return karein
+        print(f"WebSocket Auth Error: {e}")
         return AnonymousUser()
 
 class TokenAuthMiddleware:
@@ -19,11 +22,13 @@ class TokenAuthMiddleware:
         self.inner = inner
 
     async def __call__(self, scope, receive, send):
+        # Query string se token nikalna (e.g., ?token=...)
         query_string = scope.get("query_string", b"").decode("utf-8")
         query_params = dict(qc.split("=") for qc in query_string.split("&") if "=" in qc)
         token_key = query_params.get("token")
 
-        if token_key:
+        # FIX: Check karein ke token maujood ho aur wo string 'null' na ho
+        if token_key and token_key != 'null' and token_key != 'undefined':
             scope["user"] = await get_user(token_key)
         else:
             scope["user"] = AnonymousUser()

@@ -424,3 +424,23 @@ class StudentAnalyticsCourseSerializer(serializers.ModelSerializer):
         lectures = Lecture.objects.filter(
             content_source__course=obj, validation_status='validated')
         return StudentAnalyticsLectureSerializer(lectures, many=True, context=self.context).data
+
+
+from rest_framework import serializers
+from .models import StudyConnection
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
+
+class UserMiniSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'full_name', 'role']
+
+class StudyConnectionSerializer(serializers.ModelSerializer):
+    sender = UserMiniSerializer(read_only=True)
+    receiver = UserMiniSerializer(read_only=True)
+
+    class Meta:
+        model = StudyConnection
+        fields = ['id', 'sender', 'receiver', 'status', 'created_at']

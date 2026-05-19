@@ -32,7 +32,13 @@ SECRET_KEY = 'django-insecure-b#l*+n)$8c%e&$wk9qlr=(6s$k7n_+!cch4y^l7b8cx!$oddro
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get("DEBUG")
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['unmorphological-anh-interrogatingly.ngrok-free.dev', 'localhost', '127.0.0.1', 'django']
+CSRF_TRUSTED_ORIGINS = [
+    'https://unmorphological-anh-interrogatingly.ngrok-free.dev',
+    'http://unmorphological-anh-interrogatingly.ngrok-free.dev'
+]
+CORS_ALLOW_ALL_ORIGINS = True # Only for dev/testing
+CORS_ALLOW_CREDENTIALS = True
 X_FRAME_OPTIONS = 'SAMEORIGIN'
 
 # Application definition
