@@ -57,7 +57,7 @@ class QuizSubmissionSerializer(serializers.ModelSerializer):
     class Meta:
         model = QuizSubmission
         fields = ['id', 'user', 'user_name', 'quiz', 'score',
-                  'submitted_at', 'answers', 'is_overridden']
+                  'submitted_at', 'answers', 'is_overridden','is_flagged','termination_reason']
 
     def get_user_name(self, obj):
         return obj.user.full_name if hasattr(obj.user, 'full_name') else obj.user.email

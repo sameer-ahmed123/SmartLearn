@@ -90,7 +90,7 @@
 }
 
 .docxWrapper :global(.docx) {
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
   margin-bottom: 20px !important;
 }
 
@@ -191,57 +191,57 @@
 /* Inside GradingModal.module.css */
 
 .headerInfo {
-    display: flex;
-    flex-direction: column;
+  display: flex;
+  flex-direction: column;
 }
 
 .subHeader {
-    font-size: 0.85rem;
-    color: #64748b;
+  font-size: 0.85rem;
+  color: #64748b;
 }
 
 .scoreInputWrapper {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    background: #fff;
-    border: 1px solid #cbd5e1;
-    padding: 4px 12px;
-    border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #fff;
+  border: 1px solid #cbd5e1;
+  padding: 4px 12px;
+  border-radius: 8px;
 }
 
 .scoreInput {
-    border: none !important; /* Remove individual border */
-    font-size: 1.5rem !important;
-    width: 80px !important;
-    font-weight: 700;
-    color: #0f172a;
-    padding: 4px !important;
+  border: none !important; /* Remove individual border */
+  font-size: 1.5rem !important;
+  width: 80px !important;
+  font-weight: 700;
+  color: #0f172a;
+  padding: 4px !important;
 }
 
 .scoreInput:focus {
-    outline: none;
+  outline: none;
 }
 
 .maxMarkLabel {
-    font-size: 1.2rem;
-    font-weight: 600;
-    color: #94a3b8;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #94a3b8;
 }
 
 .errorState {
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #94a3b8;
-    background: #f8fafc;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #94a3b8;
+  background: #f8fafc;
 }
 
 .instruction {
-    font-size: 0.85rem;
-    color: #64748b;
-    margin-bottom: 16px;
+  font-size: 0.85rem;
+  color: #64748b;
+  margin-bottom: 16px;
 }
 
 .loadingPlaceholder {
@@ -265,9 +265,10 @@
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
-
 
 .quizReview {
   padding: 24px;
@@ -313,28 +314,34 @@
   gap: 16px;
 }
 
-.studentAnswer span, .correctAnswer span {
+.studentAnswer span,
+.correctAnswer span {
   font-size: 0.7rem;
   color: #94a3b8;
   display: block;
   margin-bottom: 4px;
 }
 
-.correct { color: #10b981; font-weight: 600; }
-.incorrect { color: #ef4444; font-weight: 600; }
+.correct {
+  color: #10b981;
+  font-weight: 600;
+}
+.incorrect {
+  color: #ef4444;
+  font-weight: 600;
+}
 
 .correctAnswer p {
   color: #1e293b;
   font-weight: 600;
 }
 
-
 .txtWrapper {
   padding: 30px;
   background: #fff;
   height: 100%;
   overflow-y: auto;
-  font-family: 'Courier New', Courier, monospace;
+  font-family: "Courier New", Courier, monospace;
 }
 
 .txtWrapper pre {
@@ -342,4 +349,46 @@
   word-wrap: break-word;
   color: #334155;
   line-height: 1.6;
+}
+
+.proctoringAlert {
+  margin-bottom: 20px;
+  padding: 16px;
+  border-radius: 8px;
+  background-color: #fef2f2; /* Very light red */
+  border-left: 4px solid #ef4444; /* Solid red accent */
+  border-top: 1px solid #fee2e2;
+  border-right: 1px solid #fee2e2;
+  border-bottom: 1px solid #fee2e2;
+}
+
+.proctoringAlert h4 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 8px 0;
+  color: #991b1b; /* Darker red for text */
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.proctoringAlert p {
+  margin: 4px 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: #b91c1c;
+}
+
+.proctoringAlert strong {
+  color: #7f1d1d;
+}
+
+.disclaimer {
+  font-size: 0.75rem !important;
+  font-style: italic;
+  margin-top: 8px !important;
+  opacity: 0.8;
+  color: #ef4444 !important;
 }

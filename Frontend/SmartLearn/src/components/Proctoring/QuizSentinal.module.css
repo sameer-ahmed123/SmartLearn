@@ -1,0 +1,49 @@
+.sentinelWrapper {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 180px;
+  z-index: 1000;
+  background: #000;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+  border: 2px solid var(--border);
+}
+
+.videoFeed {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+  transform: scaleX(-1); /* Mirror view */
+}
+
+.statusIndicator {
+  display: flex;
+  align-items: center;
+  padding: 8px;
+  gap: 8px;
+  color: #fff;
+  font-size: 10px;
+}
+
+.dotGreen {
+  width: 8px;
+  height: 8px;
+  background: #4caf50;
+  border-radius: 50%;
+}
+
+.dotPulse {
+  width: 8px;
+  height: 8px;
+  background: #ff9800;
+  border-radius: 50%;
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.4; }
+  100% { opacity: 1; }
+}
