@@ -65,6 +65,11 @@ class Profile(models.Model):
     location = models.CharField(max_length=100,blank=True)
     department = models.CharField(max_length=100, blank=True)
     
+    linkedin_url = models.URLField(max_length=500, blank=True, null=True)
+    github_url = models.URLField(max_length=500, blank=True, null=True)
+    website_url = models.URLField(max_length=500, blank=True, null=True)
+    instagram_url = models.URLField(max_length=500,blank=True,null=True)
+    
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     

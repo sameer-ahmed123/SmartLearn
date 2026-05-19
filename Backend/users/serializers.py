@@ -21,7 +21,7 @@ class ProfileSerializer(serializers.ModelSerializer):
     role = serializers.CharField(source='user.role',read_only=True)
     class Meta:
         model = Profile
-        fields = ['id','email','full_name','role','avatar','bio','location','department','phone_number','birth_date']
+        fields = ['id','email','full_name','role','avatar','bio','location','department','phone_number','birth_date','instagram_url','linkedin_url','website_url','github_url']
         read_only_fields =['id']
         
     def to_representation(self, instance):

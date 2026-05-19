@@ -110,4 +110,5 @@ def change_password(request):
     user.set_password(new_pass)
     user.save()
 
+
     return Response({"message": "Password Updated successfully!"}, status=status.HTTP_200_OK)

@@ -7,6 +7,10 @@ export interface ProfileData {
   bio: string;
   location: string;
   department: string;
-  phone_number:string;
-  birth_date:string|null;
+  phone_number: string;
+  birth_date: string | null;
+  linkedin_url: string | null;
+  instagram_url: string | null;
+  website_url: string | null;
+  github_url: string | null;
 }

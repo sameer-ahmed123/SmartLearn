@@ -185,7 +185,7 @@ const TopBar = ({ toggleSidebar }: TopBarProps) => {
           <div className={styles.avatarCircle}>
             <Link to="/settings/profile">
               <img
-                src={user?.avatar || "/default-avatar.png"}
+                src={user?.profile.avatar || "/default-avatar.png"}
                 alt="User Profile"
                 className={styles.profileImg}
                 onError={(e) => {
