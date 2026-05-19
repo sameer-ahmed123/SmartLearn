@@ -13,6 +13,7 @@ import {
   User as UserIcon,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import type { ReactNode } from "react";
 import styles from "./TopBar.module.css";
 import { useAuthStore } from "@/store/useAuthStore";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
@@ -23,7 +24,19 @@ interface TopBarProps {
   toggleSidebar: () => void;
 }
 
-const typeIcons: any = {
+interface SearchResult {
+  title: string;
+  type: string;
+  url: string;
+}
+
+interface LanguageOption {
+  code: string;
+  name: string;
+  flag: string;
+}
+
+const typeIcons: Record<string, ReactNode> = {
   course: <Book size={14} />,
   lecture: <Video size={14} />,
   quiz: <HelpCircle size={14} />,
@@ -37,7 +50,7 @@ const TopBar = ({ toggleSidebar }: TopBarProps) => {
   const [showLangMenu, setShowLangMenu] = useState(false);
   const [showNotifMenu, setShowNotifMenu] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState([]);
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [showSearchDropdown, setShowSearchDropdown] = useState(false);
 
   const user = useAuthStore((state) => state.user);
@@ -47,7 +60,7 @@ const TopBar = ({ toggleSidebar }: TopBarProps) => {
   const notifRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLDivElement>(null);
 
-  const [currentLang, setCurrentLang] = useState({
+  const [currentLang, setCurrentLang] = useState<LanguageOption>({
     code: "en",
     name: "English",
     flag: "https://flagcdn.com/w40/us.png",
@@ -110,7 +123,7 @@ const TopBar = ({ toggleSidebar }: TopBarProps) => {
     }
   }, [isDark]);
 
-  const changeLanguage = (lang: any) => {
+  const changeLanguage = (lang: LanguageOption) => {
     setCurrentLang(lang);
     setShowLangMenu(false);
 
@@ -148,7 +161,7 @@ const TopBar = ({ toggleSidebar }: TopBarProps) => {
 
           {showSearchDropdown && searchResults.length > 0 && (
             <div className={styles.searchDropdown}>
-              {searchResults.map((item: any, index) => (
+              {searchResults.map((item, index) => (
                 <div
                   key={index}
                   className={styles.searchItem}
