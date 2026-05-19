@@ -5,9 +5,9 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.utils import timezone
 
-from assessment.models import Assignment, Quiz, QuizSubmission, AssignmentSubmission
+from assessment.models import Assignment, Quiz, QuizSubmission, AssignmentSubmission, QuizViolation
 from assessment.serialzers import (
-    AssignmentSerializer, QuizSerializer, 
+    AssignmentSerializer, QuizSerializer,
     AssignmentSubmissionSerializer, QuizSubmissionSerializer
 )
 from users.permissions import IsCourseOwner
@@ -15,13 +15,14 @@ from .tasks import generate_assessment_task
 
 # === REFACTORED: IMPORTING NEW GRADING SERVICES ===
 from assessment.grading_service import (
-    process_quiz_submission, 
+    process_quiz_submission,
     process_assignment_submission
 )
 
 # ===========================================================
 # GENERAL / TRIGGER VIEWS
 # ===========================================================
+
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated, IsCourseOwner])
@@ -45,19 +46,21 @@ def generate_assessment_trigger(request):
 def student_quiz_list(request):
     user = request.user
     quizzes = Quiz.objects.student_dashboard(user)
-    
+
     # Get all submissions for this user at once to avoid heavy DB hits in the loop
-    submissions = QuizSubmission.objects.filter(user=user).select_related('quiz')
+    submissions = QuizSubmission.objects.filter(
+        user=user).select_related('quiz')
     submission_map = {sub.quiz_id: sub for sub in submissions}
 
     quiz_list = []
     for quiz in quizzes:
         submission = submission_map.get(quiz.id)
         is_completed = submission is not None
-        
+
         # Get count from the JSON list
-        total_questions = len(quiz.quiz_data) if isinstance(quiz.quiz_data, list) else 0
-        
+        total_questions = len(quiz.quiz_data) if isinstance(
+            quiz.quiz_data, list) else 0
+
         score_display = None
         if is_completed:
             # sub.score is a float/int percentage (e.g., 80.0)
@@ -71,12 +74,13 @@ def student_quiz_list(request):
             "duration": "15 min",
             "status": "Completed" if is_completed else "Pending",
             "score": score_display,
-            "questions_count": total_questions, # Helpful to keep for UI
+            "questions_count": total_questions,  # Helpful to keep for UI
             "due_date": "Active"
         })
 
     stats = Quiz.objects.get_student_stats(user)
     return Response({"quizzes": quiz_list, "stats": stats})
+
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -87,12 +91,20 @@ def submit_quiz_score(request, quiz_id):
     """
     quiz = get_object_or_404(Quiz, id=quiz_id)
     student_answers = request.data.get('student_answers')
+    is_flagged = request.data.get('is_flagged', False)
+    termination_reason = request.data.get('termination_reason', '')
 
     if student_answers is None:
         return Response({"error": "No answers provided"}, status=400)
 
-    result = process_quiz_submission(request.user, quiz, student_answers)
-    
+    result = process_quiz_submission(
+        request.user,
+        quiz,
+        student_answers,
+        termination_reason,
+        is_flagged,
+    )
+
     return Response({
         "message": "Score calculated successfully",
         "score": result['score'],
@@ -117,7 +129,8 @@ def quiz_detail_update(request, quiz_id):
         return Response(QuizSerializer(quiz, context={'request': request}).data)
 
     elif request.method in ['PUT', 'PATCH']:
-        if not is_teacher: return Response({"error": "Teacher only"}, status=403)
+        if not is_teacher:
+            return Response({"error": "Teacher only"}, status=403)
         serializer = QuizSerializer(quiz, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
@@ -144,7 +157,8 @@ def quiz_detail_by_lecture(request, lecture_id):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_quiz_submissions(request, quiz_id):
-    submissions = QuizSubmission.objects.filter(quiz_id=quiz_id).select_related('user')
+    submissions = QuizSubmission.objects.filter(
+        quiz_id=quiz_id).select_related('user')
     return Response(QuizSubmissionSerializer(submissions, many=True).data)
 
 
@@ -153,13 +167,36 @@ def get_quiz_submissions(request, quiz_id):
 def teacher_quiz_update_score(request, id=None):
     submission = get_object_or_404(QuizSubmission, id=id)
     new_score = request.data.get('score')
-    if new_score is None: return Response({"error": "Required"}, status=400)
+    if new_score is None:
+        return Response({"error": "Required"}, status=400)
 
     submission.score = float(new_score)
     submission.is_graded = True
     submission.is_overridden = True
     submission.save()
     return Response(QuizSubmissionSerializer(submission).data)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def log_quiz_violation(request, quiz_id):
+    try:
+        quiz = Quiz.objects.get(id=quiz_id)
+        violation_type = request.data.get('type')
+
+        valid_types = [t[0] for t in QuizViolation.VIOLATION_TYPES]
+        if violation_type not in valid_types:
+            return Response({"error": "Invalid violation type"}, status=status.HTTP_400_BAD_REQUEST)
+
+        QuizViolation.objects.create(
+            quiz=quiz,
+            user=request.user,
+            violation_type=violation_type
+        )
+
+        return Response({"status": "recorded"}, status=status.HTTP_201_CREATED)
+    except Quiz.DoesNotExist:
+        return Response({"error": "Quiz not found"}, status=status.HTTP_404_NOT_FOUND)
 
 
 # ===========================================================
@@ -179,7 +216,7 @@ def student_assignment_list(request):
     graded = 0
 
     for asm in assignments:
-        
+
         sub = submissions.filter(assignment=asm).first()
         status_val, score_val = "Pending", None
 
@@ -187,7 +224,8 @@ def student_assignment_list(request):
             completed += 1
             status_val = "Graded" if sub.score is not None else "Submitted"
             score_val = sub.score
-            if sub.score is not None: graded += 1
+            if sub.score is not None:
+                graded += 1
 
         assignment_list.append({
             "id": asm.id,
@@ -199,7 +237,8 @@ def student_assignment_list(request):
             "assignment_data": asm.assignment_data
         })
 
-    stats = {"total": assignments.count(), "completed": completed, "pending": assignments.count() - completed, "graded": graded}
+    stats = {"total": assignments.count(), "completed": completed,
+             "pending": assignments.count() - completed, "graded": graded}
     return Response({"assignments": assignment_list, "stats": stats})
 
 
@@ -215,10 +254,12 @@ def submit_assignment(request, assignment_id):
         return Response({"error": "Deadline passed"}, status=400)
 
     file_obj = request.FILES.get('file_upload')
-    if not file_obj: return Response({"error": "No file"}, status=400)
+    if not file_obj:
+        return Response({"error": "No file"}, status=400)
 
     try:
-        submission = process_assignment_submission(request.user, assignment, file_obj)
+        submission = process_assignment_submission(
+            request.user, assignment, file_obj)
         return Response({
             "message": "Assignment graded by AI",
             "submission": {"score": submission.score, "feedback": submission.feedback}
@@ -239,10 +280,10 @@ def assignment_detail_update(request, assignment_id):
     to keep the view clean and avoid repetitive 'if' checks.
     """
     user = request.user
-    
+
     # 1. FETCH & CHECK PERMISSIONS VIA MANAGER
     assignment, has_access = Assignment.objects.can_access(user, assignment_id)
-    
+
     if not assignment:
         return Response({"error": "Assignment not found"}, status=404)
     if not has_access:
@@ -252,30 +293,33 @@ def assignment_detail_update(request, assignment_id):
 
     # --- GET: Fetch Detail & User Submission ---
     if request.method == 'GET':
-        # We pass the user to the serializer context to handle 
+        # We pass the user to the serializer context to handle
         # 'user_submission' logic internally if needed.
-        serializer = AssignmentSerializer(assignment, context={'request': request})
+        serializer = AssignmentSerializer(
+            assignment, context={'request': request})
         data = serializer.data
-        
-        sub = AssignmentSubmission.objects.filter(user=user, assignment=assignment).first()
+
+        sub = AssignmentSubmission.objects.filter(
+            user=user, assignment=assignment).first()
         data['user_submission'] = {
             "score": sub.score if sub and sub.score is not None else 0,
             "feedback": sub.feedback if sub else "No feedback available yet.",
             "submitted_at": sub.submitted_at if sub else None
         } if sub else None
-        
+
         return Response(data)
 
     # --- PUT/PATCH: Teacher Updates ---
     elif request.method in ['PUT', 'PATCH']:
         if not is_teacher:
             return Response({"error": "Only the course teacher can edit this."}, status=403)
-            
-        serializer = AssignmentSerializer(assignment, data=request.data, partial=True)
+
+        serializer = AssignmentSerializer(
+            assignment, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
-            
+
         return Response(serializer.errors, status=400)
 
 
@@ -284,7 +328,7 @@ def assignment_detail_update(request, assignment_id):
 def teacher_assignment_list(request):
     """=== REFACTORED: USING Assignment.objects.teacher_dashboard() ==="""
     assignments = Assignment.objects.teacher_dashboard(request.user)
-    
+
     data = [{
         "id": a.id, "lecture_id": a.lecture.id, "title": a.assignment_data.get('title', 'Untitled'),
         "course_name": a.lecture.content_source.course.title, "submission_count": a.sub_count,
@@ -297,9 +341,10 @@ def teacher_assignment_list(request):
 @permission_classes([IsAuthenticated])
 def get_lecture_submissions(request, lecture_id):
     assignment = get_object_or_404(Assignment, lecture_id=lecture_id)
-    submissions = AssignmentSubmission.objects.filter(assignment=assignment).select_related('user')
+    submissions = AssignmentSubmission.objects.filter(
+        assignment=assignment).select_related('user')
     return Response({
-        "assignment": assignment.assignment_data, 
+        "assignment": assignment.assignment_data,
         "submissions": AssignmentSubmissionSerializer(submissions, many=True, context={'request': request}).data
     })
 

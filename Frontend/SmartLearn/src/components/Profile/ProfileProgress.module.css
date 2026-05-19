@@ -1,0 +1,39 @@
+.container {
+  width: 100%;
+  margin-bottom: 1.5rem;
+}
+
+.labelRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.labelText {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #4b5563; /* Gray-600 */
+}
+
+.percentText {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #1f2937; /* Gray-800 */
+}
+
+/* The background bar */
+.track {
+  width: 100%;
+  height: 6px; /* This makes it "slim" */
+  background-color: #e5e7eb; /* Light gray track */
+  border-radius: 999px;
+  overflow: hidden; /* Ensures the fill stays inside the rounded corners */
+}
+
+/* The actual colored progress */
+.fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.4s ease-in-out; /* Makes the bar slide smoothly when data changes */
+}

@@ -12,7 +12,7 @@ import {
   FileText,
   User as UserIcon,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import styles from "./TopBar.module.css";
 import { useAuthStore } from "@/store/useAuthStore";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
@@ -23,7 +23,6 @@ interface TopBarProps {
   toggleSidebar: () => void;
 }
 
-// Icons map for search results
 const typeIcons: any = {
   course: <Book size={14} />,
   lecture: <Video size={14} />,
@@ -37,9 +36,7 @@ const TopBar = ({ toggleSidebar }: TopBarProps) => {
   const [isDark, setIsDark] = useState(false);
   const [showLangMenu, setShowLangMenu] = useState(false);
   const [showNotifMenu, setShowNotifMenu] = useState(false);
-  const [searchQuery, setSearchQuery] = useState(""); 
-  
-  // New States for Search Results
+  const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [showSearchDropdown, setShowSearchDropdown] = useState(false);
 
@@ -48,7 +45,7 @@ const TopBar = ({ toggleSidebar }: TopBarProps) => {
 
   const langRef = useRef<HTMLDivElement>(null);
   const notifRef = useRef<HTMLDivElement>(null);
-  const searchRef = useRef<HTMLDivElement>(null); // To handle click outside search
+  const searchRef = useRef<HTMLDivElement>(null);
 
   const [currentLang, setCurrentLang] = useState({
     code: "en",
@@ -63,7 +60,6 @@ const TopBar = ({ toggleSidebar }: TopBarProps) => {
     { code: "de", name: "German", flag: "https://flagcdn.com/w40/de.png" },
   ];
 
-  // --- SEARCH LOGIC WITH DEBOUNCE ---
   useEffect(() => {
     const delayDebounceFn = setTimeout(async () => {
       if (searchQuery.trim().length > 1) {
@@ -91,12 +87,15 @@ const TopBar = ({ toggleSidebar }: TopBarProps) => {
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (langRef.current && !langRef.current.contains(event.target as Node))
+      if (langRef.current && !langRef.current.contains(event.target as Node)) {
         setShowLangMenu(false);
-      if (notifRef.current && !notifRef.current.contains(event.target as Node))
+      }
+      if (notifRef.current && !notifRef.current.contains(event.target as Node)) {
         setShowNotifMenu(false);
-      if (searchRef.current && !searchRef.current.contains(event.target as Node))
+      }
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
         setShowSearchDropdown(false);
+      }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -124,7 +123,9 @@ const TopBar = ({ toggleSidebar }: TopBarProps) => {
 
   const displayName = user?.full_name || "User";
   const displayRole = user?.role ? user.role.toUpperCase() : "GUEST";
-  const avatarUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${displayName}&backgroundColor=b6e3f4,c0aede,d1d4f9`;
+  const avatarUrl =
+    user?.profile?.avatar ||
+    `https://api.dicebear.com/7.x/avataaars/svg?seed=${displayName}&backgroundColor=b6e3f4,c0aede,d1d4f9`;
 
   return (
     <header className={styles.topbar}>
@@ -132,8 +133,7 @@ const TopBar = ({ toggleSidebar }: TopBarProps) => {
         <button onClick={toggleSidebar} className={styles.iconBtn}>
           <Menu size={20} />
         </button>
-        
-        {/* UPDATED: Search Bar with Dropdown Container */}
+
         <div className={styles.searchWrapper} ref={searchRef}>
           <div className={styles.searchBar}>
             <Search size={18} className={styles.searchIcon} />
@@ -146,19 +146,20 @@ const TopBar = ({ toggleSidebar }: TopBarProps) => {
             />
           </div>
 
-          {/* Search Dropdown Results - FIXED with onMouseDown */}
           {showSearchDropdown && searchResults.length > 0 && (
             <div className={styles.searchDropdown}>
               {searchResults.map((item: any, index) => (
-                <div 
-                  key={index} 
-                  className={styles.searchItem} 
+                <div
+                  key={index}
+                  className={styles.searchItem}
                   onMouseDown={(e) => {
-                    e.preventDefault(); // Prevents input blur before click
+                    e.preventDefault();
                     handleSearchResultClick(item.url);
                   }}
                 >
-                  <span className={styles.itemIcon}>{typeIcons[item.type] || <Search size={14}/>}</span>
+                  <span className={styles.itemIcon}>
+                    {typeIcons[item.type] || <Search size={14} />}
+                  </span>
                   <div className={styles.itemInfo}>
                     <p className={styles.itemTitle}>{item.title}</p>
                     <span className={styles.itemType}>{item.type.toUpperCase()}</span>
@@ -230,14 +231,17 @@ const TopBar = ({ toggleSidebar }: TopBarProps) => {
             <span className={styles.role}>{displayRole}</span>
           </div>
           <div className={styles.avatarCircle}>
-            <img
-              src={avatarUrl}
-              alt="User Profile"
-              className={styles.profileImg}
-              onError={(e) => {
-                (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${displayName}&background=4f46e5&color=fff`;
-              }}
-            />
+            <Link to="/settings/profile">
+              <img
+                src={avatarUrl}
+                alt="User Profile"
+                className={styles.profileImg}
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src =
+                    `https://ui-avatars.com/api/?name=${displayName}&background=4f46e5&color=fff`;
+                }}
+              />
+            </Link>
             <div className={styles.onlineStatus}></div>
           </div>
         </div>

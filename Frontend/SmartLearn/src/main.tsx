@@ -9,21 +9,21 @@ import { ToastContainer } from "react-toastify";
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <BrowserRouter>
-      <NotificationProvider>
-        <App />
-        <ToastContainer
-          position="bottom-right"
-          autoClose={15000}
-          hideProgressBar={false}
-          newestOnTop={false}
-          closeOnClick
-          rtl={false}
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
-          theme="colored"
-        />
-      </NotificationProvider>
+        <NotificationProvider>
+          <App />
+          <ToastContainer
+            position="bottom-right"
+            autoClose={15000}
+            hideProgressBar={false}
+            newestOnTop={false}
+            closeOnClick
+            rtl={false}
+            pauseOnFocusLoss
+            draggable
+            pauseOnHover
+            theme="colored"
+          />
+        </NotificationProvider>
     </BrowserRouter>
   </StrictMode>,
 );
