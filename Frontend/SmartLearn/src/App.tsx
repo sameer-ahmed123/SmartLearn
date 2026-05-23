@@ -63,7 +63,13 @@ const App: React.FC = () => {
           <Route
             path="/"
             element={
-              user ? <Navigate to="/dashboard" /> : <Navigate to="/login" />
+              !user ? (
+                <Navigate to="/login" replace />
+              ) : role === "teacher" ? (
+                <Navigate to="/teacher/dashboard" replace />
+              ) : (
+                <Navigate to="/student/dashboard" replace />
+              )
             }
           />
 
@@ -165,7 +171,7 @@ const App: React.FC = () => {
             }
           />
 
-          <Route path="*" element={<Navigate to="/" />} />
+          <Route path="*" element={<div>404</div>} />
         </Route>
       </Routes>
 

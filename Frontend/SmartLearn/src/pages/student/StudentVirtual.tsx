@@ -85,17 +85,17 @@ const VirtualStudyRoomPage = () => {
   const connectWebSocket = () => {
     const token = accessToken;
 
-    const protocol = window.location.protocol === "https:" ? "wss" : "ws";
-    const host = window.location.host;
-    const socketUrl = `${protocol}://${host}/ws/study-room/${roomId}/?token=${token}`;
+    // const protocol = window.location.protocol === "https:" ? "wss" : "ws";
+    // const host = window.location.host;
+    // const socketUrl = `${protocol}://${host}/ws/study-room/${roomId}/?token=${token}`;
     
     if (!token) {
         console.error(" Auth Token nahi mila!");
         return;
     }
 
-    // const wsUrl = `${protocol}://127.0.0.1:8000/ws/study-room/${roomId}/?token=${token}`;
-    socketRef.current = new WebSocket(socketUrl);
+    const wsUrl = `http://127.0.0.1:8000/ws/study-room/${roomId}/?token=${token}`;
+    socketRef.current = new WebSocket(wsUrl);
 
     socketRef.current.onopen = () => console.log("Study Room WebSocket Connected ✅");
 

@@ -11,11 +11,13 @@ interface User {
 }
 
 interface AuthState {
-  isAuthenticated: boolean;
   accessToken: string | null; // Naming consistent ki gayi hai
   refreshToken: string | null;
   user: User | null;
   role: "student" | "teacher" | null;
+
+  hydrated: boolean;
+  setHydrated: () => void;
 
   // Actions
   login: (userData: User, access: string, refresh: string) => void;
@@ -29,8 +31,8 @@ interface AuthState {
 export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
-      // INITIAL STATE
-      isAuthenticated: false,
+      // INITIAL STATE\
+      hydrated: false,
       accessToken: null,
       refreshToken: null,
       user: null,
@@ -39,19 +41,17 @@ export const useAuthStore = create<AuthState>()(
       // LOGIN ACTION
       login: (userData, access, refresh) => {
         set({
-          isAuthenticated: true,
           accessToken: access,
           refreshToken: refresh,
           user: userData,
           role: userData.role,
-          
         });
       },
 
       // LOGOUT ACTION
       logout: () => {
+        localStorage.removeItem("smartlearn-auth-storage");
         set({
-          isAuthenticated: false,
           accessToken: null,
           refreshToken: null,
           user: null,
@@ -73,6 +73,7 @@ export const useAuthStore = create<AuthState>()(
         set((state) => ({
           user: state.user ? { ...state.user, profile: userProfile } : null,
         })),
+      setHydrated: () => set({ hydrated: true }),
     }),
     {
       name: "smartlearn-auth-storage",
@@ -81,8 +82,10 @@ export const useAuthStore = create<AuthState>()(
         refreshToken: state.refreshToken,
         user: state.user,
         role: state.role,
-        isAuthenticated: state.isAuthenticated,
       }),
+      onRehydrateStorage: () => (state) => {
+        state?.setHydrated();
+      },
     },
   ),
 );

@@ -75,6 +75,7 @@ const TeacherDashboardPage = () => {
         setCourses(courseRes.data.results || courseRes.data || []);
         // Student progress mapping
         const sProgress = analyticsRes.data.studentProgress || [];
+        console.log(sProgress)
         setStudentProgress(sProgress);
 
         console.log("metricsRes from dashboardPage", metricsRes);

@@ -49,7 +49,7 @@ const AssignmentEditorModal: React.FC<AssignmentEditorModalProps> = ({
                 })
                 .catch(err => {
                     console.error("Failed to load assignment", err);
-                    alert("Could not load assignment data");
+                    // alert("Could not load assignment data");
                     onClose();
                 })
                 .finally(() => setLoading(false));
@@ -69,7 +69,7 @@ const AssignmentEditorModal: React.FC<AssignmentEditorModalProps> = ({
             setStatus(response.data.status);
         } catch (error) {
             console.error("Failed to update status:", error);
-            alert("Failed to update assignment status.");
+            // alert("Failed to update assignment status.");
         } finally {
             setIsUpdatingStatus(false);
         }
@@ -84,12 +84,12 @@ const AssignmentEditorModal: React.FC<AssignmentEditorModalProps> = ({
                 deadline: deadline || null // Save button par deadline bhi jayegi
 
             });
-            alert("Assignment saved successfully!");
+            // alert("Assignment saved successfully!");
             onSaveSuccess();
             onClose();
         } catch (error) {
             console.error("Save failed", error);
-            alert("Failed to save changes.");
+            // alert("Failed to save changes.");
         } finally {
             setSaving(false);
         }

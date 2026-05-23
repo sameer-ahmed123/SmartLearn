@@ -70,9 +70,9 @@ export const NotificationProvider = ({
 
   // 2. Real-time WebSocket Logic
   useEffect(() => {
-    const protocol = window.location.protocol === "https:" ? "wss" : "ws";
-    const host = window.location.host;
-    const socketUrl = `${protocol}://${host}/ws/notifications/?token=${userToken}`;
+    // const protocol = window.location.protocol === "http:" ? "wss" : "ws";
+    // const host = "localhost:8000";
+    const socketUrl = `ws://127.0.0.1:8000/ws/notifications/?token=${userToken}`;
     
     if (!userToken) return;
 
