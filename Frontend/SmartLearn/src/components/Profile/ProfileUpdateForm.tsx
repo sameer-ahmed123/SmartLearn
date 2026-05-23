@@ -68,7 +68,6 @@ const ProfileUpdateForm = () => {
 
   return (
     <>
-      <h2 className={styles.title}>Profile Settings</h2>
       <div className={styles.avatarSection}>
         <img
           src={avatarPreview || profile?.avatar || "/default-avatar.png"}
@@ -217,7 +216,7 @@ const ProfileUpdateForm = () => {
         </div>
 
         {/* Bio - Full Width */}
-        <div className={`${styles.formGroup} md:col-span-2`}>
+        <div className={`${styles.formGroup} ${styles.fullWidth}`}>
           <label className={styles.label}>Bio</label>
           <textarea
             rows={3}

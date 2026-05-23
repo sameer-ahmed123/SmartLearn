@@ -229,7 +229,7 @@ const TopBar = ({ toggleSidebar }: TopBarProps) => {
             <span className={styles.role}>{user?.role}</span>
           </div>
           <div className={styles.avatarCircle}>
-            <Link to="/settings/profile">
+            <Link to={`${user?.role}/settings`}>
               <img
                 src={user?.profile?.avatar || "/default-avatar.png"}
                 alt="User Profile"

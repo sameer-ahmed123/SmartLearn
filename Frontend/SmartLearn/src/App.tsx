@@ -20,11 +20,9 @@ import StudentQuiz from "./pages/student/StudentQuiz";
 import StudentAssignment from "./pages/student/StudentAssignment";
 import TeacherGradebook from "./pages/teacher/TeacherGradebook";
 import TeacherAnalytics from "./pages/teacher/TeacherAnalytics";
-import TeacherSetting from "./pages/teacher/TeacherSetting";
 import StudentGradebook from "./pages/student/StudentGradebook";
 import StudentAnalytics from "./pages/student/StudentAnalytics";
 import StudentVirtual from "./pages/student/StudentVirtual";
-import StudentSetting from "./pages/student/StudentSetting";
 import SmartChat from "./components/Chatbot/SmartChat";
 import StudentCourseDetailPage from "./pages/student/StudentCourseDetailPage";
 import StudentLectureReviewPage from "./pages/student/StudentLectureViewPage";
@@ -35,6 +33,7 @@ import QuizDetailView from "./pages/teacher/QuizDetailView";
 import StudentReportPage from "./pages/teacher/StudentReportPage";
 import StudentVideoProgress from "./pages/teacher/StudentVideoProgress";
 import ProfilePage from "./pages/ProfilePage";
+import SettingsPage from "./pages/SettingsPage";
 
 // --- FIX: TypeScript interface for Google Translate ---
 declare global {
@@ -94,7 +93,7 @@ const App: React.FC = () => {
             <Route path="/student/grades" element={<StudentGradebook />} />
             <Route path="/student/analytics" element={<StudentAnalytics />} />
             <Route path="/student/virtualroom" element={<StudentVirtual />} />
-            <Route path="/student/settings" element={<StudentSetting />} />
+            <Route path="/student/settings" element={<SettingsPage  />} />
             <Route
               path="/student/course/:courseid"
               element={<StudentCourseDetailPage />}
@@ -127,7 +126,7 @@ const App: React.FC = () => {
             />
             <Route path="/teacher/grades" element={<TeacherGradebook />} />
             <Route path="/teacher/analytics" element={<TeacherAnalytics />} />
-            <Route path="/teacher/settings" element={<TeacherSetting />} />
+            <Route path="/teacher/settings" element={<SettingsPage  />} />
             <Route
               path="/teacher/lecture/:id/review"
               element={<LectureReviewPage />}

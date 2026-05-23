@@ -34,7 +34,7 @@ const ChangePassword = () => {
   };
 
   return (
-    <div className={styles.card} style={{ marginTop: '2rem' }}>
+    <div className={styles.card} >
       <h3 className={styles.title}>Account Security</h3>
       <form onSubmit={handleSubmit} className={styles.grid}>
         <div className={styles.formGroup}>
