@@ -79,9 +79,10 @@ services:
       - "5173:5173"
     volumes:
       - ./Frontend/SmartLearn:/app/SmartLearn
-      - /app/SmartLearn/node_modules
-    
-    
+      - react_node_modules:/app/SmartLearn/node_modules
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+      - WATCHPACK_POLLING=true
     depends_on:
       - django
 
@@ -89,3 +90,4 @@ volumes:
   mysql_data:
   django_media:
   django_static:
+  react_node_modules:

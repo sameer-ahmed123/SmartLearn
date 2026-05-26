@@ -2,6 +2,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "./index.css";
 import App from "./App.tsx";
+import './pages/teacher/TeacherLecture.css'
 import { BrowserRouter } from "react-router-dom";
 import { NotificationProvider } from "./context/NotificationContext.tsx";
 import { ToastContainer } from "react-toastify";
