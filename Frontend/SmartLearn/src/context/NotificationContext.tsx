@@ -69,53 +69,50 @@ export const NotificationProvider = ({
   };
 
   // 2. Real-time WebSocket Logic
-  useEffect(() => {
-    // const protocol = window.location.protocol === "http:" ? "wss" : "ws";
-    // const host = "localhost:8000";
-    const socketUrl = `ws://127.0.0.1:8000/ws/notifications/?token=${userToken}`;
-    
-    if (!userToken) return;
+ useEffect(() => {
+  if (!userToken) return;
 
-    //close existing socket before opening new
-    if (socketRef.current) {
-      socketRef.current.close();
+  const socketUrl = `ws://127.0.0.1:8000/ws/notifications/?token=${userToken}`;
+  const socket = new WebSocket(socketUrl);
+
+  socketRef.current = socket;
+
+  socket.onopen = () => {
+    console.log("✅ Notification WebSocket Connected");
+  };
+
+  socket.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+
+    const audio = new Audio("/audio.wav");
+    audio
+      .play()
+      .catch((err) => console.log("Audio play blocked by browser:", err));
+
+    console.log("🔔 New Real-time Notification:", data);
+
+    toast.info(data.verb);
+
+    setNotifications((prev) => [data, ...prev]);
+    setUnreadCount((prev) => prev + 1);
+  };
+
+  socket.onerror = (err) => {
+    console.error("WebSocket Error:", err);
+  };
+
+  socket.onclose = () => {
+    console.log("❌ Notification WebSocket Disconnected");
+  };
+
+  return () => {
+    socket.close();
+
+    if (socketRef.current === socket) {
+      socketRef.current = null;
     }
-
-    const socket = new WebSocket(socketUrl);
-    socketRef.current = socket; // set socket connection as current referenc in sockerRef
-
-    socket.onopen = () => console.log("✅ Notification WebSocket Connected");
-
-    socket.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      const audio = new Audio("/audio.wav");
-      audio
-        .play()
-        .catch((err) => console.log("Audio play blocked by browser:", err));
-      console.log("🔔 New Real-time Notification:", data);
-
-      // Trigger Toast Pop-up
-      toast.info(data.verb, {
-        // autoClose: 5000,
-      });
-
-      // Update State: Add new notification to the top of the list
-      setNotifications((prev) => [data, ...prev]);
-      setUnreadCount((prev) => prev + 1); //update unread count
-    };
-
-    socket.onerror = (err) => console.error("WebSocket Error:", err);
-
-    socket.onclose = () =>
-      console.log("❌ Notification WebSocket Disconnected");
-
-    return () => {
-      // close socket on component unmount
-      if (socketRef.current) {
-        socketRef.current.close();
-      }
-    };
-  }, [userToken]);
+  };
+}, [userToken]);
 
   // 3. Mark All as Read Logic
   const markAllAsRead = async () => {
