@@ -1,33 +1,38 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import type { ProfileData } from "@/types/Profile/Types";
 
 // --- 1. INTERFACE DEFINITIONS ---
 interface User {
   email: string;
   full_name: string; // Django response mein 'full_name' hai
-  role: 'student' | 'teacher';
+  role: "student" | "teacher";
+  profile: ProfileData;
 }
 
 interface AuthState {
-  isAuthenticated: boolean;
   accessToken: string | null; // Naming consistent ki gayi hai
   refreshToken: string | null;
   user: User | null;
-  role: 'student' | 'teacher' | null;
+  role: "student" | "teacher" | null;
+
+  hydrated: boolean;
+  setHydrated: () => void;
 
   // Actions
   login: (userData: User, access: string, refresh: string) => void;
   logout: () => void;
   setAccessToken: (token: string) => void;
-  isRole: (role: 'student' | 'teacher') => boolean;
+  isRole: (role: "student" | "teacher") => boolean;
+  updateUserProfile: (userProfile: ProfileData) => void;
 }
 
 // --- 2. THE ZUSTAND STORE ---
 export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
-      // INITIAL STATE
-      isAuthenticated: false,
+      // INITIAL STATE\
+      hydrated: false,
       accessToken: null,
       refreshToken: null,
       user: null,
@@ -36,7 +41,6 @@ export const useAuthStore = create<AuthState>()(
       // LOGIN ACTION
       login: (userData, access, refresh) => {
         set({
-          isAuthenticated: true,
           accessToken: access,
           refreshToken: refresh,
           user: userData,
@@ -46,14 +50,14 @@ export const useAuthStore = create<AuthState>()(
 
       // LOGOUT ACTION
       logout: () => {
+        localStorage.removeItem("smartlearn-auth-storage");
         set({
-          isAuthenticated: false,
           accessToken: null,
           refreshToken: null,
           user: null,
           role: null,
         });
-        // Persist middleware khud handle kar leta hai, 
+        // Persist middleware khud handle kar leta hai,
         // lekin extra safety ke liye localStorage clear karna theek hai.
       },
 
@@ -61,19 +65,27 @@ export const useAuthStore = create<AuthState>()(
         set({ accessToken: token });
       },
 
-      isRole: (requiredRole: 'student' | 'teacher') => {
+      isRole: (requiredRole: "student" | "teacher") => {
         return get().role === requiredRole;
       },
+
+      updateUserProfile: (userProfile: ProfileData) =>
+        set((state) => ({
+          user: state.user ? { ...state.user, profile: userProfile } : null,
+        })),
+      setHydrated: () => set({ hydrated: true }),
     }),
     {
-      name: 'smartlearn-auth-storage',
+      name: "smartlearn-auth-storage",
       partialize: (state) => ({
         accessToken: state.accessToken,
         refreshToken: state.refreshToken,
         user: state.user,
         role: state.role,
-        isAuthenticated: state.isAuthenticated
       }),
-    }
-  )
+      onRehydrateStorage: () => (state) => {
+        state?.setHydrated();
+      },
+    },
+  ),
 );

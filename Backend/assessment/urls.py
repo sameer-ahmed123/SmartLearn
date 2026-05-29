@@ -2,6 +2,7 @@
 from django.urls import path
 from assessment.views import (
     generate_assessment_trigger,
+    log_quiz_violation,
     quiz_detail_update,
     assignment_detail_update,
     student_quiz_list,
@@ -57,8 +58,13 @@ urlpatterns = [
          get_quiz_submissions, name='quiz-submissions'),
     path('submission/<int:submission_id>/grade/',
          grade_assignment_submission, name='grade-assignment-submission'),
-    
-    #---- manual grading for assingment
-    path('submissions/<int:id>/update-score/',teacher_assignment_update_score,name="manual-grade-assignment"),
-    path('quiz-submissions/<int:id>/update-score/', teacher_quiz_update_score, name="manual-grade-quiz"),
+    # --- Quiz Violations ---
+    path('quiz/<int:quiz_id>/violation/',
+         log_quiz_violation, name='log_quiz_violation'),
+
+    # ---- manual grading for assingment
+    path('submissions/<int:id>/update-score/',
+         teacher_assignment_update_score, name="manual-grade-assignment"),
+    path('quiz-submissions/<int:id>/update-score/',
+         teacher_quiz_update_score, name="manual-grade-quiz"),
 ]

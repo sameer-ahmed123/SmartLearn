@@ -287,12 +287,26 @@
   text-transform: uppercase;
   font-weight: 600;
 }
+
+.avatarCircle {
+  border: 2px solid transparent;
+  border-radius: 50%;
+  transition: border-color 0.3s ease, transform 0.3s ease;
+}
+
 .avatarCircle img {
   width: 38px;
   height: 38px;
   border-radius: 50%;
   border: 2px solid var(--border);
   object-fit: cover;
+  display: block;
+}
+
+.avatarCircle:hover {
+  cursor: pointer;
+  border-color: #406fd4;
+  transform: scale(1.1);
 }
 
 .rotated {
@@ -314,6 +328,10 @@
 .unreadItem {
   background: var(--accent);
   border-left: 3px solid #6366f1;
+}
+
+.notifItem:hover {
+  background: var(--secondary);
 }
 
 .filterTabs {

@@ -78,6 +78,7 @@ const TeacherDashboardPage = () => {
         setCourses(courseRes.data.results || courseRes.data || []);
         // Student progress mapping
         const sProgress = analyticsRes.data.studentProgress || [];
+        console.log(sProgress)
         setStudentProgress(sProgress);
 
         // 🔥 Fetching Teacher's explicit calendar lecture data inside asynchronous block

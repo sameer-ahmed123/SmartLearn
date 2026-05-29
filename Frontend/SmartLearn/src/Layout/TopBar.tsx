@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import  { useState, useEffect, useRef } from "react";
 import {
   Menu,
   Search,
@@ -17,7 +17,9 @@ import styles from "./TopBar.module.css";
 import { useAuthStore } from "@/store/useAuthStore";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import NotificationDropdown from "@/components/notifications/NotificationDropdown";
+import { Link } from "react-router-dom";
 import apiClient from "@/api/apiClient";
+
 
 interface TopBarProps {
   toggleSidebar: () => void;
@@ -122,10 +124,7 @@ const TopBar = ({ toggleSidebar }: TopBarProps) => {
     }
   };
 
-  const displayName = user?.full_name || "User";
-  const displayRole = user?.role ? user.role.toUpperCase() : "GUEST";
-  const avatarUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${displayName}&backgroundColor=b6e3f4,c0aede,d1d4f9`;
-
+ 
   return (
     <header className={styles.topbar}>
       <div className={styles.leftSide}>
@@ -226,18 +225,21 @@ const TopBar = ({ toggleSidebar }: TopBarProps) => {
 
         <div className={styles.profileSection}>
           <div className={styles.profileInfo}>
-            <p className={styles.name}>{displayName}</p>
-            <span className={styles.role}>{displayRole}</span>
+            <p className={styles.name}>{user?.full_name}</p>
+            <span className={styles.role}>{user?.role}</span>
           </div>
           <div className={styles.avatarCircle}>
-            <img
-              src={avatarUrl}
-              alt="User Profile"
-              className={styles.profileImg}
-              onError={(e) => {
-                (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${displayName}&background=4f46e5&color=fff`;
-              }}
-            />
+            <Link to={`${user?.role}/settings`}>
+              <img
+                src={user?.profile?.avatar || "/default-avatar.png"}
+                alt="User Profile"
+                className={styles.profileImg}
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src =
+                    `https://ui-avatars.com/api/?name=${user?.full_name}&background=4f46e5&color=fff`;
+                }}
+              />
+            </Link>
             <div className={styles.onlineStatus}></div>
           </div>
         </div>

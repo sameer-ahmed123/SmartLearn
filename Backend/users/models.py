@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser,BaseUserManager
-
+from cloudinary.models import CloudinaryField
 class UserManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
         if not email:
@@ -43,3 +43,35 @@ class User(AbstractUser):
     
     class Meta:
         db_table = "user"
+        
+        
+class Profile(models.Model):
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        related_name='profile'
+    )
+    
+    avatar = CloudinaryField(
+        'image',
+        folder = 'profiles/avatars/',
+        null = True,
+        blank= True,
+    )
+    
+    bio = models.TextField(max_length=500,blank=True)
+    birth_date = models.DateField(null=True, blank=True)
+    phone_number = models.CharField(max_length=15,blank=True)
+    location = models.CharField(max_length=100,blank=True)
+    department = models.CharField(max_length=100, blank=True)
+    
+    linkedin_url = models.URLField(max_length=500, blank=True, null=True)
+    github_url = models.URLField(max_length=500, blank=True, null=True)
+    website_url = models.URLField(max_length=500, blank=True, null=True)
+    instagram_url = models.URLField(max_length=500,blank=True,null=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return f"{self.user.email}'s Profile"

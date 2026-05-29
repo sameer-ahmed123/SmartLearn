@@ -216,20 +216,3 @@ class GroupMessage(models.Model):
     def __str__(self):
         return f"{self.sender.full_name}: {self.content[:30]}"
 
-
-class GroupMessage(models.Model):
-    # 'User' ki jagah settings.AUTH_USER_MODEL use karein
-    sender = models.ForeignKey(
-        settings.AUTH_USER_MODEL, 
-        on_delete=models.CASCADE,
-        related_name='study_messages'
-    )
-    content = models.TextField()
-    room_id = models.CharField(max_length=255)
-    timestamp = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        ordering = ['timestamp']
-
-    def __str__(self):
-        return f"{self.sender.full_name}: {self.content[:20]}"

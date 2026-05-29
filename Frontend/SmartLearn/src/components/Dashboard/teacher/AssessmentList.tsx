@@ -45,7 +45,7 @@ const AssessmentList = ({
       onRefresh(); 
     } catch (error) {
       console.error("Gen failed", error);
-      alert(`Failed to start ${type} generation.`);
+      // alert(`Failed to start ${type} generation.`);
     } finally {
       if (type === 'quiz') setGeneratingQuizId(null);
       if (type === 'assignment') setGeneratingAssignmentId(null);
@@ -118,7 +118,7 @@ const AssessmentList = ({
                               if (lecture.quiz_id) {
                                 setEditingQuizId(lecture.quiz_id);
                               } else {
-                                alert("Quiz ID missing from data.");
+                                // alert("Quiz ID missing from data.");
                               }
                             }}
                           >
@@ -159,7 +159,7 @@ const AssessmentList = ({
                               if (lecture.assignment_id) {
                                 setEditingAssignmentId(lecture.assignment_id);
                               } else {
-                                alert("Assignment ID missing from data.");
+                                // alert("Assignment ID missing from data.");
                               }
                             }}
                           >

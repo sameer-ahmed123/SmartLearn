@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { 
   Mic, MicOff, Video, VideoOff, ScreenShare, 
-  Hand, MessageSquare, Users, X, 
+  Hand, MessageSquare, Users, 
   FileText, Share2, MoreVertical, PhoneOff,
-  UserPlus, Check, Clock, Search, UserCheck, UserX, Trash2, Send
+  UserPlus, Check, Search, UserCheck,  Trash2, Send
 } from "lucide-react";
 import "./StudentVirtualRoom.css";
 import apiClient from "@/api/apiClient";
@@ -44,7 +44,7 @@ const VirtualStudyRoomPage = () => {
   };
 
   // 🔥 Helper function to format time as 5:15 PM
-  const formatMessageTime = (dateInput: any) => {
+  const formatMessageTime = (dateInput: Date) => {
     return new Date(dateInput).toLocaleTimeString([], { 
       hour: '2-digit', 
       minute: '2-digit',
@@ -86,15 +86,18 @@ const VirtualStudyRoomPage = () => {
   };
 
   const connectWebSocket = () => {
-    const protocol = window.location.protocol === "https:" ? "wss" : "ws";
     const token = accessToken;
+
+    // const protocol = window.location.protocol === "https:" ? "wss" : "ws";
+    // const host = window.location.host;
+    // const socketUrl = `${protocol}://${host}/ws/study-room/${roomId}/?token=${token}`;
     
     if (!token) {
-        console.error("❌ Auth Token nahi mila!");
+        console.error(" Auth Token nahi mila!");
         return;
     }
 
-    const wsUrl = `${protocol}://127.0.0.1:8000/ws/study-room/${roomId}/?token=${token}`;
+    const wsUrl = `http://127.0.0.1:8000/ws/study-room/${roomId}/?token=${token}`;
     socketRef.current = new WebSocket(wsUrl);
 
     socketRef.current.onopen = () => console.log("Study Room WebSocket Connected ✅");

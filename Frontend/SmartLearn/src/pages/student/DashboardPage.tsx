@@ -75,6 +75,7 @@ const StudentDashboardPage = () => {
           "/assessments/student-assignments/",
         );
         const as = assignRes.data.stats;
+        console.log(as)
         setAssignChartData([
           { name: "Total", count: as.total },
           { name: "Completed", count: as.completed },

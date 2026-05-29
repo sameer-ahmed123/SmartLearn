@@ -18,7 +18,7 @@ import axios from 'axios';
 import { useAuthStore } from '../store/useAuthStore';
 
 const apiClient = axios.create({
-  baseURL: 'http://127.0.0.1:8000/api/v1/', 
+  baseURL: 'http://127.0.0.1:8000/api/v1', 
 });
 
 
@@ -49,8 +49,11 @@ apiClient.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
+    const isLoginRequest = originalRequest.url.includes('/auth/login/');
+    const isRefreshRequest = originalRequest.url.includes('/auth/token/refresh/');
+
     // Agar 401 (Unauthorized) error aaye toh token refresh karein
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    if (error.response?.status === 401 && !originalRequest._retry && !isLoginRequest && !isRefreshRequest) {
       
       if (isRefreshing) {
         // If a refresh is already happening, add this request to a queue
@@ -74,7 +77,7 @@ apiClient.interceptors.response.use(
         const response = await axios.post('http://127.0.0.1:8000/api/v1/auth/token/refresh/',{refresh} );        
         const access = response.data.access;
 
-        useAuthStore.setState({ accessToken: access }); // save new token to zustand store
+        useAuthStore.getState().setAccessToken(access); // save new token to zustand store
         processQueue(null, access) // release every request in the ProcessQueue
         
         originalRequest.headers.Authorization = `Bearer ${access}`;

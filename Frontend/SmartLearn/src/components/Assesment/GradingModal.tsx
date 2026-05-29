@@ -1,5 +1,12 @@
 import React, { useEffect, useState, useRef } from "react";
-import { X, Save, Award, FileText, ClipboardList } from "lucide-react";
+import {
+  X,
+  Save,
+  Award,
+  FileText,
+  ClipboardList,
+  ShieldAlert,
+} from "lucide-react";
 import styles from "./GradingModal.module.css";
 import apiClient from "@/api/apiClient";
 import { renderAsync } from "docx-preview";
@@ -24,7 +31,7 @@ const GradingModal = ({
     type === "quiz"
       ? Math.round((submission.score / 100) * total)
       : submission.score;
-
+  console.log(submission, "grading modal");
   const [newScore, setNewScore] = useState(initialPoints);
   const [saving, setSaving] = useState(false);
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
@@ -45,8 +52,8 @@ const GradingModal = ({
   const finalFileUrl = getFileUrl(
     submission.file_upload || submission.submission_file,
   );
-  
-  const fileExt = finalFileUrl?.toLowerCase().split('.').pop();
+
+  const fileExt = finalFileUrl?.toLowerCase().split(".").pop();
   const isDocx = fileExt === "docx";
   const isTxt = fileExt === "txt";
 
@@ -65,15 +72,19 @@ const GradingModal = ({
 
         // If it's a TXT file, we handle it as text immediately
         if (isTxt) {
-          const response = await apiClient.get(finalFileUrl, { responseType: "text" });
+          const response = await apiClient.get(finalFileUrl, {
+            responseType: "text",
+          });
           setTextContent(response.data);
         } else {
           // Handle PDF or DOCX as Blobs
-          const response = await apiClient.get(finalFileUrl, { responseType: "blob" });
-          const mimeType = isDocx 
-            ? "application/vnd.openxmlformats-officedocument.wordprocessingml.document" 
+          const response = await apiClient.get(finalFileUrl, {
+            responseType: "blob",
+          });
+          const mimeType = isDocx
+            ? "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
             : "application/pdf";
-          
+
           const blob = new Blob([response.data], { type: mimeType });
 
           if (isDocx) {
@@ -128,7 +139,11 @@ const GradingModal = ({
         <div className={styles.modalHeader}>
           <div className={styles.headerInfo}>
             <h3>
-              {type === "quiz" ? <ClipboardList size={20} /> : <FileText size={20} />}
+              {type === "quiz" ? (
+                <ClipboardList size={20} />
+              ) : (
+                <FileText size={20} />
+              )}
               Reviewing: {submission.student_name || "Student"}
             </h3>
             <span className={styles.subHeader}>{submission.email}</span>
@@ -157,12 +172,22 @@ const GradingModal = ({
                   {submission.answers && submission.answers.length > 0 ? (
                     submission.answers.map((item: any, index: number) => (
                       <div key={index} className={styles.answerCard}>
-                        <div className={styles.questionNum}>Question {index + 1}</div>
-                        <p className={styles.questionText}>{item.question_text}</p>
+                        <div className={styles.questionNum}>
+                          Question {index + 1}
+                        </div>
+                        <p className={styles.questionText}>
+                          {item.question_text}
+                        </p>
                         <div className={styles.answerComparison}>
                           <div className={styles.studentAnswer}>
                             <span>Student Answer:</span>
-                            <p className={item.is_correct ? styles.correct : styles.incorrect}>
+                            <p
+                              className={
+                                item.is_correct
+                                  ? styles.correct
+                                  : styles.incorrect
+                              }
+                            >
                               {item.student_answer}
                             </p>
                           </div>
@@ -176,7 +201,9 @@ const GradingModal = ({
                       </div>
                     ))
                   ) : (
-                    <div className={styles.emptyState}>No detailed answers recorded.</div>
+                    <div className={styles.emptyState}>
+                      No detailed answers recorded.
+                    </div>
                   )}
                 </div>
               </div>
@@ -194,20 +221,45 @@ const GradingModal = ({
                 height="100%"
               />
             ) : (
-              !loading && <div className={styles.errorState}>No viewable content found.</div>
+              !loading && (
+                <div className={styles.errorState}>
+                  No viewable content found.
+                </div>
+              )
             )}
           </div>
 
           <div className={styles.gradingPanel}>
             <div className={styles.section}>
-              <h4><Award size={18} /> Feedback</h4>
+              <h4>
+                <Award size={18} /> Feedback
+              </h4>
               <div className={styles.aiFeedbackBox}>
                 {submission.feedback || "No feedback available."}
               </div>
+              <br />
+              {submission.is_flagged && (
+                <div className={styles.proctoringAlert}>
+                  <h4>
+                    <ShieldAlert size={16} /> Termination Details
+                  </h4>
+                  <p>
+                    <strong>Reason:</strong>{" "}
+                    {submission.termination_reason ||
+                      "Multiple suspicious eye movements detected."}
+                  </p>
+                  <p className={styles.disclaimer}>
+                    This quiz was automatically closed by the AI Proctoring
+                    system.
+                  </p>
+                </div>
+              )}
             </div>
 
             <div className={styles.overrideSection}>
-              <h4>{type === "quiz" ? "Quiz Manual Override" : "Teacher Override"}</h4>
+              <h4>
+                {type === "quiz" ? "Quiz Manual Override" : "Teacher Override"}
+              </h4>
               <div className={styles.inputGroup}>
                 <label>Final Score (Max: {totalMarks})</label>
                 <div className={styles.scoreInputWrapper}>
@@ -221,7 +273,11 @@ const GradingModal = ({
                   <span className={styles.maxMarkLabel}>/ {totalMarks}</span>
                 </div>
               </div>
-              <button onClick={handleUpdateGrade} className={styles.saveBtn} disabled={saving}>
+              <button
+                onClick={handleUpdateGrade}
+                className={styles.saveBtn}
+                disabled={saving}
+              >
                 {saving ? "Saving..." : "Confirm & Verify Grade"}
               </button>
             </div>
