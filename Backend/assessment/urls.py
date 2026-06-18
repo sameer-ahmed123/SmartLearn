@@ -16,7 +16,8 @@ from assessment.views import (
     quiz_detail_by_lecture,
     get_quiz_submissions,
     grade_assignment_submission,
-    teacher_quiz_update_score
+    teacher_quiz_update_score,
+    student_calendar_deadlines  # 🔥 Naya view import kiya gaya hai
 )
 
 app_name = "assessment"
@@ -37,6 +38,9 @@ urlpatterns = [
          name='student-assignment-list'),
     path('assignment/<int:assignment_id>/submit/',
          submit_assignment, name='submit-assignment'),
+    
+    # 🔥 Naya Calendar Deadlines Endpoint
+    path('student-calendar-deadlines/', student_calendar_deadlines, name='student-calendar-deadlines'),
 
     # --- Teacher Lists ---
     path('teacher-list/', teacher_assignment_list,

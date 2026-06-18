@@ -575,3 +575,21 @@ def get_room_messages(request, room_id):
         "timestamp": m.timestamp
     } for m in messages]
     return Response(data)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def teacher_calendar_lectures(request):
+    user = request.user
+    # Teacher ke wahi lectures nikalenge jo unho ne khud create kiye hain
+    lectures = Lecture.objects.filter(content_source__course__teacher=user)
+    
+    events = []
+    for l in lectures:
+        events.append({
+            "id": l.id,
+            "title": f"Lecture: {l.topic}",
+            "created_date": l.created_at.date().isoformat(), # Format: YYYY-MM-DD
+            "course": l.content_source.course.title,
+            "type": "lecture"
+        })
+    return Response({"events": events}, status=200)

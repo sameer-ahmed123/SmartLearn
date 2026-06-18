@@ -199,6 +199,31 @@ const StudentAssignmentPage = () => {
 
             {hasScore && (
               <div className={styles.resultCard}>
+                
+                {/* 🔥 PLAGIARISM WARNING BANNER ADDED HERE */}
+                {submission.is_plagiarized && (
+                  <div style={{ 
+                    background: '#fef2f2', 
+                    border: '1px solid #ef4444', 
+                    padding: '16px', 
+                    borderRadius: '8px', 
+                    marginBottom: '20px',
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: '12px'
+                  }}>
+                    <AlertCircle size={20} color="#ef4444" style={{ marginTop: '2px', flexShrink: 0 }} />
+                    <div>
+                      <h4 style={{ color: '#b91c1c', margin: '0 0 4px 0', fontWeight: 'bold', fontSize: '1rem' }}>
+                        Plagiarism / AI Content Detected ({submission.plagiarism_percentage}%)
+                      </h4>
+                      <p style={{ color: '#7f1d1d', margin: 0, fontSize: '0.875rem', lineHeight: '1.4' }}>
+                        Strict Policy Alert: Specific tasks or answers flagged with high plagiarism or AI generation have been graded as 0 marks.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
                 <div className={styles.resultHeader}>
                   <Award size={24} color="#10b981" />
                   <h3>AI Grading Results</h3>

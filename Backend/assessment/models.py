@@ -114,6 +114,10 @@ class AssignmentSubmission(models.Model):
     is_graded = models.BooleanField(default=False)
     is_overridden = models.BooleanField(default=False)
 
+    # 🔥 Plagiarism and AI-generation check fields
+    plagiarism_percentage = models.IntegerField(default=0)
+    is_plagiarized = models.BooleanField(default=False)
+
     class Meta:
         unique_together = ('user', 'assignment')
         db_table = "assignment_submission"

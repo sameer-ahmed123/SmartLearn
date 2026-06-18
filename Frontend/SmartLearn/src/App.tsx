@@ -145,7 +145,7 @@ const App: React.FC = () => {
           </Route>
         </Routes>
 
-        {isTeacherPage && <SmartChat />}
+        {/* {isTeacherPage && <SmartChat />} */}
       </Suspense>
     </>
   );

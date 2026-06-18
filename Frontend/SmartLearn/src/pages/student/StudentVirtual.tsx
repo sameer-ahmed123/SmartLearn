@@ -32,6 +32,9 @@ const VirtualStudyRoomPage = () => {
   const peerConnection = useRef<RTCPeerConnection | null>(null);
   const localStream = useRef<MediaStream | null>(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  
+  // 🔥 Hidden file input trigger ke liye ref
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const roomId = "study_room_1"; 
 
@@ -246,6 +249,15 @@ const VirtualStudyRoomPage = () => {
     }
   };
 
+  // 🔥 File selection handle karne ka logic
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      console.log("Selected file to upload:", file.name);
+      // Backend integration ke liye aap yahan FormData bana kar API hit kar sakte hain
+    }
+  };
+
   return (
     <div className="room-wrapper" style={{ height: '100vh', display: 'flex', overflow: 'hidden' }}>
       <div className="video-section" style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '15px' }}>
@@ -261,11 +273,13 @@ const VirtualStudyRoomPage = () => {
         }}>
           {/* Screen 1: You */}
           <div className="video-card" style={{ background: '#111', borderRadius: '12px', overflow: 'hidden', position: 'relative' }}>
+            <div className="video-placeholder" style={{ height: '100%' }}>
               {isCamOn ? (
                 <video ref={localVideoRef} autoPlay playsInline muted className="video-feed" style={{ height: '100%', width: '100%', objectFit: 'cover' }} />
               ) : (
                 <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><span className="avatar-big">Y</span></div>
               )}
+            </div>
             <div className="video-overlay-info">
               <span>You (Host)</span>
               {!isMicOn && <MicOff size={14} color="#ef4444" />}
@@ -274,8 +288,10 @@ const VirtualStudyRoomPage = () => {
 
           {/* Screen 2: Partner */}
           <div className="video-card" style={{ background: '#111', borderRadius: '12px', overflow: 'hidden', position: 'relative' }}>
+            <div className="video-placeholder" style={{ height: '100%' }}>
               <video ref={remoteVideoRef} autoPlay playsInline className="video-feed" style={{ height: '100%', width: '100%', objectFit: 'cover' }} />
               {!remoteVideoRef.current?.srcObject && <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><span className="avatar-big">P</span></div>}
+            </div>
             <div className="video-overlay-info">
               <span>Partner</span>
             </div>
@@ -413,7 +429,22 @@ const VirtualStudyRoomPage = () => {
                 <FileText size={20} />
                 <div><p>Course_Notes.pdf</p><span>Click to download</span></div>
               </div>
-              <button className="upload-btn">+ Share Note</button>
+              
+              {/* 🔥 Hidden file input field selection ke liye */}
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                onChange={handleFileUpload} 
+                style={{ display: 'none' }} 
+              />
+              
+              {/* Button click par input trigger hoga */}
+              <button 
+                className="upload-btn" 
+                onClick={() => fileInputRef.current?.click()}
+              >
+                + Share Note
+              </button>
             </div>
           )}
         </div>

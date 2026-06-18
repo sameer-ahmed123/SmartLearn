@@ -117,12 +117,31 @@ def grade_assignment_with_ai(rubric, tasks, student_text):
             generation_config={"response_mime_type": "application/json"}
         )
 
+        # 🔥 Prompt updated with aggressive AI-text patterns analysis instructions
         prompt = f"""
+        You are an elite academic evaluator and an advanced AI-text and plagiarism detection system.
         Grade this student assignment based on the provided tasks and rubric.
         Tasks: {tasks}
         Rubric: {rubric}
         Student Work Content: {student_text}
-        Return ONLY a valid JSON object: {{"score": 85, "feedback": "Your feedback here."}}
+
+        CRITICAL PLAGIARISM & AI-DETECTION INSTRUCTIONS:
+        1. Perform a microscopic analysis on 'Student Work Content' for any patterns of AI generation. This includes looking for overly smooth/predictable phrasing, lack of natural human structural variance, standard chat-style list transitions, common LLM vocabulary headers, or text directly synthesized by an AI assistant like ChatGPT, Claude, or Gemini itself.
+        2. Assign an exact 'plagiarism_percentage' from 0 to 100 based on your strict analysis. If the text exhibits clear signs of being entirely or mostly AI-generated, this value MUST be high (e.g., 75% to 100%).
+        3. Set 'is_plagiarized' to true if the 'plagiarism_percentage' is greater than 30%.
+        
+        STRICT GRADING & OVERRIDE RULE:
+        - If 'is_plagiarized' is true OR if individual questions/tasks are flagged as AI-generated, you MUST dynamically set the marks for those specific plagiarized questions/tasks to 0.
+        - Calculate the final total 'score' reflecting these dynamic deductions. If the entire document is AI-generated, the final total 'score' MUST be 0.
+        - In the 'feedback', keep your thorough task evaluation context intact, but prepended or appended with a clear message indicating the exact percentage of AI text/plagiarism detected and the penalty applied.
+
+        Return ONLY a valid JSON object matching this structure: 
+        {{
+            "score": 0, 
+            "feedback": "Your detailed grading feedback here. Clearly state AI/plagiarism findings if detected.",
+            "plagiarism_percentage": 95,
+            "is_plagiarized": true
+        }}
         """
 
         response = model.generate_content(prompt)
@@ -133,4 +152,9 @@ def grade_assignment_with_ai(rubric, tasks, student_text):
     except Exception as e:
         # This will catch the 404 and print the details
         print(f"AI Grading Error Details: {e}")
-        return {"score": 0, "feedback": "Grading service temporarily unavailable."}
+        return {
+            "score": 0, 
+            "feedback": "Grading service temporarily unavailable.",
+            "plagiarism_percentage": 0,
+            "is_plagiarized": False
+        }

@@ -262,7 +262,12 @@ def submit_assignment(request, assignment_id):
             request.user, assignment, file_obj)
         return Response({
             "message": "Assignment graded by AI",
-            "submission": {"score": submission.score, "feedback": submission.feedback}
+            "submission": {
+                "score": submission.score, 
+                "feedback": submission.feedback,
+                "plagiarism_percentage": submission.plagiarism_percentage,
+                "is_plagiarized": submission.is_plagiarized
+            }
         }, status=201)
     except Exception as e:
         return Response({"message": "Auto-grading failed. Manual review required.", "error": str(e)}, status=201)
@@ -304,7 +309,9 @@ def assignment_detail_update(request, assignment_id):
         data['user_submission'] = {
             "score": sub.score if sub and sub.score is not None else 0,
             "feedback": sub.feedback if sub else "No feedback available yet.",
-            "submitted_at": sub.submitted_at if sub else None
+            "submitted_at": sub.submitted_at if sub else None,
+            "plagiarism_percentage": sub.plagiarism_percentage if sub else 0,
+            "is_plagiarized": sub.is_plagiarized if sub else False
         } if sub else None
 
         return Response(data)
@@ -370,3 +377,31 @@ def grade_assignment_submission(request, submission_id):
     submission.feedback = request.data.get('feedback', '')
     submission.save()
     return Response({"message": "Graded successfully", "score": submission.score})
+
+
+# ===========================================================
+# NEW: CALENDAR EVENTS VIEW FOR ASSIGNMENT DEADLINES
+# ===========================================================
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def student_calendar_deadlines(request):
+    """
+    🔥 Returns list of published assignment deadlines for the current student's calendar view.
+    """
+    user = request.user
+    # Student ke courses ke filters use karte hue dashboard list nikaal rahe hain
+    assignments = Assignment.objects.student_dashboard(user).filter(status='published', deadline__isnull=False)
+    
+    events = []
+    for asm in assignments:
+        title = asm.assignment_data.get('title', 'Untitled Assignment') if isinstance(asm.assignment_data, dict) else "Untitled Assignment"
+        events.append({
+            "id": asm.id,
+            "title": f"Assignment: {title}",
+            "due_date": asm.deadline.isoformat(), # Standard readable ISO format string for frontend calendars
+            "course": asm.lecture.content_source.course.title,
+            "type": "assignment"
+        })
+        
+    return Response({"events": events}, status=200)

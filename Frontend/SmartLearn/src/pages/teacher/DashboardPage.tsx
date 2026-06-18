@@ -51,6 +51,9 @@ const TeacherDashboardPage = () => {
   const [studentProgress, setStudentProgress] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewDate, setViewDate] = useState(new Date());
+  
+  // 🔥 New State: For storing teacher's created lectures events
+  const [lectureEvents, setLectureEvents] = useState<any[]>([]);
 
   const user = useAuthStore((state) => state.user);
   const displayName = user?.full_name || "User";
@@ -77,6 +80,14 @@ const TeacherDashboardPage = () => {
         const sProgress = analyticsRes.data.studentProgress || [];
         console.log(sProgress)
         setStudentProgress(sProgress);
+
+        // 🔥 Fetching Teacher's explicit calendar lecture data inside asynchronous block
+        try {
+          const lecturesEventRes = await apiClient.get("/lectures/teacher-calendar-lectures/");
+          setLectureEvents(lecturesEventRes.data.events || []);
+        } catch (calendarErr) {
+          console.error("Failed to load teacher calendar metrics", calendarErr);
+        }
 
         console.log("metricsRes from dashboardPage", metricsRes);
         console.log("assignRes from dashboardPage", assignRes);
@@ -156,17 +167,42 @@ const TeacherDashboardPage = () => {
     const isCurrentMonth =
       now.getFullYear() === year && now.getMonth() === month;
     const days = [];
+    
     for (let i = 0; i < firstDay; i++)
       days.push(<span key={`empty-${i}`} className={styles.calEmpty}></span>);
+      
     for (let i = 1; i <= daysInMonth; i++) {
+      // 🔥 ISO format match logic tracking to check lecture creation trace mapping 
+      const currentSlotDateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(i).padStart(2, "0")}`;
+      
+      const dayLecture = lectureEvents.find((event: any) => {
+        if (!event.created_date) return false;
+        return event.created_date === currentSlotDateStr;
+      });
+
+      const isToday = isCurrentMonth && i === now.getDate();
+      const isLectureDay = !!dayLecture;
+
+      let dayClassName = styles.calDay;
+      if (isToday) {
+        dayClassName = styles.calActive;
+      } else if (isLectureDay) {
+        dayClassName = `${styles.calDay} ${styles.calLectureHighlight || ""}`;
+      }
+
       days.push(
         <span
           key={i}
-          className={
-            isCurrentMonth && i === now.getDate()
-              ? styles.calActive
-              : styles.calDay
-          }
+          className={dayClassName}
+          title={isLectureDay ? `${dayLecture.title} (${dayLecture.course})` : undefined}
+          style={isLectureDay && !isToday ? { 
+            background: "rgba(16, 185, 129, 0.15)", // Premium green translucent wrap
+            color: "#10b981", 
+            border: "1px solid #10b981", 
+            borderRadius: "4px", 
+            cursor: "pointer",
+            fontWeight: "bold"
+          } : {}}
         >
           {i}
         </span>,

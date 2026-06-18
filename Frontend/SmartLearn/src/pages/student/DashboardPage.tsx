@@ -48,6 +48,12 @@ const StudentDashboardPage = () => {
   const [assignChartData, setAssignChartData] = useState<any[]>([]);
   const [quizPieData, setQuizPieData] = useState<any[]>([]);
   const [lectureChartData, setLectureChartData] = useState<any[]>([]);
+  
+  // Recent Lectures list tracking state matching Lecture Page logic structure
+  const [recentLectures, setRecentLectures] = useState<any[]>([]); 
+  
+  // For keeping track of published assignment due dates
+  const [deadlines, setDeadlines] = useState<any[]>([]);
 
   const handlePrevMonth = () =>
     setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() - 1, 1));
@@ -57,15 +63,11 @@ const StudentDashboardPage = () => {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const response = await apiClient.get("/dashboard/metrics/student/");
-        console.log(response);
-        setMetrics(response.data.metrics);
-
         setLoading(true);
 
         // 1. Fetch main metrics
         const metricsRes = await apiClient.get("/dashboard/metrics/student/");
-        const m = metricsRes.data;
+        const m = metricsRes.data.metrics || metricsRes.data;
         setMetrics(m);
 
         // 2. Fetch Assignment Stats
@@ -90,18 +92,46 @@ const StudentDashboardPage = () => {
           { name: "Pending", value: qs.pending },
         ]);
 
-        // 4. Lecture Chart - Values matched with Lecture Page Logic
-        // 'Completed' uses completed_lectures, 'Pending' uses pending_assignments
-        setLectureChartData([
-          { name: "Courses", value: m?.enrolled_courses || 0, fill: "#6366f1" },
-          {
-            name: "Lectures",
-            value: m?.completed_lectures || 0,
-            fill: "#f59e0b",
-          },
-          { name: "Completed", value: 0 || 0, fill: "#10b981" },
-          { name: "Pending", value: 0 || 0, fill: "#ef4444" },
-        ]);
+        // 4. Fetch Calendar Deadlines Data
+        try {
+          const deadlinesRes = await apiClient.get("/assessments/student-calendar-deadlines/");
+          setDeadlines(deadlinesRes.data.events || []);
+        } catch (err) {
+          console.error("Failed to load deadlines:", err);
+        }
+
+        // 5. Fetch Lectures and calculate explicitly using exact filter engine logic
+        try {
+          const lecturesRes = await apiClient.get("/lectures/student-lectures/");
+          const lecturesList = Array.isArray(lecturesRes.data) 
+            ? lecturesRes.data 
+            : (lecturesRes.data.lectures || []);
+
+          setRecentLectures(lecturesList);
+
+          // 🔥 FIXED: Direct mapping of your explicit Lecture Page filter rule logic here
+          const completedCount = lecturesList.filter(l => (l.review_progress || 0) >= 100).length;
+          const pendingCount = lecturesList.filter(l => (l.review_progress || 0) < 100).length;
+          
+          const totalCourses = m?.enrolled_courses || 0;
+          const totalLectures = metrics?.completed_lectures || lecturesList.length || 0;
+
+          setLectureChartData([
+            { name: "Courses", value: totalCourses, fill: "#6366f1" },
+            { name: "Lectures", value: totalLectures, fill: "#f59e0b" },
+            { name: "Completed", value: completedCount, fill: "#10b981" },
+            { name: "Pending", value: pendingCount, fill: "#ef4444" },
+          ]);
+        } catch (lectureErr) {
+          console.error("Explicit lecture processing failed, utilizing direct metrics.", lectureErr);
+          setLectureChartData([
+            { name: "Courses", value: m?.enrolled_courses || 0, fill: "#6366f1" },
+            { name: "Lectures", value: m?.total_lectures || m?.completed_lectures || 0, fill: "#f59e0b" },
+            { name: "Completed", value: m?.completed_lectures || 0, fill: "#10b981" },
+            { name: "Pending", value: m?.pending_lectures || 0, fill: "#ef4444" },
+          ]);
+        }
+
       } catch (error) {
         console.error("API Error:", error);
       } finally {
@@ -120,17 +150,41 @@ const StudentDashboardPage = () => {
     const isCurrentMonth =
       now.getFullYear() === year && now.getMonth() === month;
     const days = [];
+    
     for (let i = 0; i < firstDay; i++)
       days.push(<span key={`empty-${i}`} className={styles.calEmpty}></span>);
+      
     for (let i = 1; i <= daysInMonth; i++) {
+      const currentSlotDateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(i).padStart(2, "0")}`;
+      
+      const dayAssignment = deadlines.find((event: any) => {
+        if (!event.due_date) return false;
+        return event.due_date.startsWith(currentSlotDateStr);
+      });
+
+      const isToday = isCurrentMonth && i === now.getDate();
+      const isDeadlineDay = !!dayAssignment;
+
+      let dayClassName = styles.calDay;
+      if (isToday) {
+        dayClassName = styles.calActive;
+      } else if (isDeadlineDay) {
+        dayClassName = `${styles.calDay} ${styles.calDeadlineHighlight || ""}`;
+      }
+
       days.push(
         <span
           key={i}
-          className={
-            isCurrentMonth && i === now.getDate()
-              ? styles.calActive
-              : styles.calDay
-          }
+          className={dayClassName}
+          title={isDeadlineDay ? `${dayAssignment.title} (${dayAssignment.course})` : undefined}
+          style={isDeadlineDay && !isToday ? { 
+            background: "rgba(239, 68, 68, 0.15)", 
+            color: "#ef4444", 
+            border: "1px solid #ef4444", 
+            borderRadius: "4px", 
+            cursor: "pointer",
+            fontWeight: "bold"
+          } : {}}
         >
           {i}
         </span>,
