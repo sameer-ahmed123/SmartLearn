@@ -26,12 +26,12 @@ export function SignupForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const [error, setError] = useState(""); 
+  const [error, setError] = useState("");
   const login = useAuthStore((state) => state.login);
   const navigate = useNavigate();
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -40,9 +40,19 @@ export function SignupForm() {
     }));
   };
 
+  const getSignupErrorMessage = (data: any) => {
+    if (data?.email?.[0]) return data.email[0];
+    if (data?.password?.[0]) return data.password[0];
+    if (data?.full_name?.[0]) return data.full_name[0];
+    if (data?.role?.[0]) return data.role[0];
+    if (data?.detail) return data.detail;
+
+    return "Signup failed! Please check your details and try again.";
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(""); 
+    setError("");
 
     const { full_name, email, role, password, confirmPassword } = formData;
 
@@ -65,7 +75,7 @@ export function SignupForm() {
 
     if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
       return setError(
-        "Password should contain at least one special character."
+        "Password should contain at least one special character.",
       );
     }
 
@@ -84,8 +94,8 @@ export function SignupForm() {
       const { user, access, refresh } = login_response.data;
       login(user, access, refresh);
       navigate("/");
-    } catch {
-      setError("Signup failed! Try again.");
+    } catch (err: any) {
+      setError(getSignupErrorMessage(err.response?.data));
     }
   };
 
@@ -164,7 +174,7 @@ export function SignupForm() {
               cursor: "pointer",
               color: "#666",
               display: "flex",
-              alignItems: "center"
+              alignItems: "center",
             }}
           >
             {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -196,7 +206,7 @@ export function SignupForm() {
               cursor: "pointer",
               color: "#666",
               display: "flex",
-              alignItems: "center"
+              alignItems: "center",
             }}
           >
             {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
